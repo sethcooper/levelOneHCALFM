@@ -71,7 +71,10 @@ function setProgress(progress) {
 function mirrorSelection() {
   $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
   $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
-  $('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
+  // TODO, make this appear nicely without doublewriting
+  //if ($('#MASKED_RESOURCES').val().search($('#dropdown option:selected').attr("maskedresources")) == -1) {
+  //  $('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
+  //}
 }
 
 function checkCheckboxes() {
