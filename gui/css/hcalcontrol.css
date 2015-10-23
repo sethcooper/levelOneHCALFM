@@ -1,0 +1,218 @@
+.hcal_control_state { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+}
+
+.hcal_control_Initial { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #2E2EFE;
+	font-weight:bold;
+}
+
+.hcal_control_Initializing { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #CC2EFA;
+	font-weight:bold;
+}
+
+.hcal_control_Halting { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9E29C1;
+	font-weight:bold;
+}
+
+
+.hcal_control_Halted { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #772390;
+	font-weight:bold;
+}
+
+
+.hcal_control_Uninitialized { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #707070;
+	font-weight:bold;
+}
+
+.hcal_control_Stopping { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #8719AC;
+	font-weight:bold;
+}
+
+.hcal_control_Configuring { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #31D5D8;
+	font-weight:bold;
+}
+
+
+.hcal_control_Configured { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #1FBFA5;
+	font-weight:bold;
+}
+
+
+.hcal_control_Ready { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #6CC19C;
+	font-weight:bold;
+}
+
+
+.hcal_control_Starting { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #7FCE24;
+	font-weight:bold;
+}
+
+
+.hcal_control_Resuming { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #7FCE24;
+	font-weight:bold;
+}
+
+
+.hcal_control_Running { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #00BF10;
+	font-weight:bold;
+}
+
+
+.hcal_control_Active { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9BBF52;
+	font-weight:bold;
+}
+
+
+.hcal_control_Enabled { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9BBF52;
+	font-weight:bold;
+}
+
+
+.hcal_control_Pausing { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #FF9E00;
+	font-weight:bold;
+}
+
+
+.hcal_control_Paused { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #FF8000;
+	font-weight:bold;
+}
+
+.hcal_control_Recovering { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9F8D00;
+	font-weight:bold;
+}
+
+.hcal_control_Resetting { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #9800E4;
+	font-weight:bold;
+}
+
+.hcal_control_Error { font-family : Verdana, Verdana, sans-serif;
+	font-size : x-large;
+	text-align : left;
+	color: #F51D00;
+	font-weight:bold;
+}
+
+.hcal_control_Supervisor { font-family : Verdana, Verdana, sans-serif;
+	font-size : large;
+	text-align : center;
+	color: #F51D00;
+	font-weight:bold;
+}
+
+.hcal_control_label1 {
+	font-family : Verdana, Verdana, sans-serif;
+	color : black;
+	font-size : small;
+	text-align : left;
+}
+
+.hcal_control_label2 {
+	font-family : Verdana, Verdana, sans-serif;
+	color : #666666;
+	font-size : small;
+	text-align : left;
+}
+
+.hcal_control_label3{
+	font-family : Verdana, Verdana, sans-serif;
+	color : #000099;
+	font-size : small;
+	text-align : left;
+}
+
+.hcal_control_label4{
+	font-family : Verdana, Verdana, sans-serif;
+	color : black;
+	font-size : large;
+	text-align : left;
+}
+
+.hcal_control_button1 {
+	font-family : Verdana, Verdana, sans-serif;
+	color : black;
+	font-size : small;
+	text-align : center;
+}
+
+
+.tbl {display:none;}
+
+.container{
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  display:inline-block;
+  margin:0px 10px 5px 5px;
+  vertical-align:top;
+}
+.progressbar {
+  color: #fff;
+  text-align: right;
+  height: 25px;
+  width: 0;
+  background-color: #0ba1b5;
+  border-radius: 3px;
+}
+
+ul {
+  list-style-type: none;
+  columns: 3;
+  -webkit-columns: 3;
+  -moz-columns: 3;
+}
