@@ -5441,7 +5441,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       execXML.getDocumentElement().normalize();
 
 
-      String maskedApp = "hcalDCCVMEReadout_0";
+      ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+      String maskedApp = ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       String[] maskedAppParts = maskedApp.split("_");
       String maskedAppClass = maskedAppParts[0];
       String maskedAppInstance = maskedAppParts[1];
