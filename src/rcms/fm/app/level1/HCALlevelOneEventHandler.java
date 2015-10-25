@@ -233,10 +233,11 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
         logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
         for (int i=0; i < nodes.getLength(); i++) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+					logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
-            logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+            String MaskedResourcesFromXML= nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
+            MaskedResources += MaskedResourcesFromXML;
+            logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked applications " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
         } 
         logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);

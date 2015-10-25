@@ -5449,52 +5449,56 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
 
       ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-      String maskedApp = ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      String[] maskedAppParts = maskedApp.split("_");
-      String maskedAppClass = maskedAppParts[0];
-      String maskedAppInstance = maskedAppParts[1];
+      String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+      String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
+      String newExecXMLstring = "";
+      for (String maskedApp: maskedAppArray) {
+        String[] maskedAppParts = maskedApp.split("_");
+        String maskedAppClass = maskedAppParts[0];
+        String maskedAppInstance = maskedAppParts[1];
 
-      //Remove masked applications from xc:Context nodes
-      NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-      int NxcContexts = xcContextNodes.getLength();
-      int removedContexts = 0;
-      for (int i=0; i < NxcContexts; i++) {
-        Element currentContextNode = (Element) xcContextNodes.item(i-removedContexts);
-        NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
-        int removedApplications = 0;
-        for (int j=0; j < xcApplicationNodes.getLength(); j++) {
-          Node currentApplicationNode = xcApplicationNodes.item(j-removedApplications);
-          String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
-          String xcApplicationInstance = xcApplicationNodes.item(j-removedApplications).getAttributes().getNamedItem("instance").getNodeValue();
-          if (xcApplicationClass.equals(maskedAppClass) && xcApplicationInstance.equals(maskedAppInstance)){
-            currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-            removedApplications+=1;
+        //Remove masked applications from xc:Context nodes
+        NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        int NxcContexts = xcContextNodes.getLength();
+        int removedContexts = 0;
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i-removedContexts);
+          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
+          int removedApplications = 0;
+          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
+            Node currentApplicationNode = xcApplicationNodes.item(j-removedApplications);
+            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
+            String xcApplicationInstance = xcApplicationNodes.item(j-removedApplications).getAttributes().getNamedItem("instance").getNodeValue();
+            if (xcApplicationClass.equals(maskedAppClass) && xcApplicationInstance.equals(maskedAppInstance)){
+              currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+              removedApplications+=1;
+            }
           }
         }
-      }
 
-      //Remove masked applications' i2o connections from i2o:protocol node
-      NodeList i2oTargetNodes = execXML.getDocumentElement().getElementsByTagName("i2o:target");
-      int Ni2oTargetNodes = i2oTargetNodes.getLength();
-      int removedi2oTargets = 0;
-      for (int i=0; i < Ni2oTargetNodes; i++) {
-        Node i2oTargetNode = i2oTargetNodes.item(i-removedi2oTargets);
-        if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppClass) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppInstance)){
-          i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
-          removedi2oTargets+=1;
+        //Remove masked applications' i2o connections from i2o:protocol node
+        NodeList i2oTargetNodes = execXML.getDocumentElement().getElementsByTagName("i2o:target");
+        int Ni2oTargetNodes = i2oTargetNodes.getLength();
+        int removedi2oTargets = 0;
+        for (int i=0; i < Ni2oTargetNodes; i++) {
+          Node i2oTargetNode = i2oTargetNodes.item(i-removedi2oTargets);
+          if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppClass) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppInstance)){
+            i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
+            removedi2oTargets+=1;
+          }
         }
+        
+        DOMSource domSource = new DOMSource(execXML);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+        newExecXMLstring = writer.toString();
+        newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
       }
-      
-      DOMSource domSource = new DOMSource(execXML);
-      StringWriter writer = new StringWriter();
-      StreamResult result = new StreamResult(writer);
-      TransformerFactory tf = TransformerFactory.newInstance();
-      Transformer transformer = tf.newTransformer();
-      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-      transformer.transform(domSource, result);
-      String newExecXMLstring = writer.toString();
-      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
       return newExecXMLstring;
     }
     catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
