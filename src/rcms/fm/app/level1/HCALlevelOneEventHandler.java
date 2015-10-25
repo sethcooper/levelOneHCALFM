@@ -1151,6 +1151,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
+      logger.info("[JohnLog2] " + functionManager.FMname + " state notification while in the RUNNING state. ");
       computeNewState((StateNotification) obj);
       return;
 
@@ -1427,6 +1428,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
+
       computeNewState((StateNotification) obj);
       return;
 
@@ -1488,7 +1490,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if (fmChild.isActive()) {
             if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
               try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+                logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
                 fmChild.execute(HCALInputs.STOP);
               }
               catch (CommandException e) {

@@ -264,7 +264,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
     {
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has userXML that says: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() );
+      logger.info("[JohnLog2] " + functionManager.FMname + ": This FM has userXML that says: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() );
       Boolean doHandleTriggerAdapter = ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml().contains("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
       if (doHandleTriggerAdapter) {
         logger.info("[HCAL base] HandleTriggerAdapter = " + doHandleTriggerAdapter + ". This means we are in local mode and the TriggerAdapter is required.");
@@ -3511,11 +3511,11 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
-        logger.debug("[HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
+        logger.info("[JohnLog2] [HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
-          logger.debug("[HCAL " + functionManager.FMname + "] new state = " + functionManager.calcState.getStateString() + " for FM: " + functionManager.getURI());
+          logger.info("[JohnLog2] [HCAL " + functionManager.FMname + "] new state = " + functionManager.calcState.getStateString() + " for FM: " + functionManager.getURI());
 
           {
             String actualState = functionManager.getState().getStateString();
@@ -3572,9 +3572,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
+              logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED");
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { 
+
+                logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED from the RUNNING state");
+
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
                 if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
 
@@ -3825,6 +3830,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
 
     }
+    logger.info("[JohnLog2] " + functionManager.FMname + ": got done with isRUBuildersEmpty");
     return reply;
   }
 
@@ -3860,7 +3866,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     while(true) {
       try {
-        Thread.sleep(10000);
+        Thread.sleep(2000);
+        logger.info("[JohnLog2] " + functionManager.FMname + "still waiting for the RU to empty.");
       }
       catch (Exception e) {
         String errMessage = "[HCAL " + functionManager.FMname + "] Sleeping thread failed while waiting for the RU builder to flush!";

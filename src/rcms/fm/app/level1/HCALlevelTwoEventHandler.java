@@ -242,7 +242,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null) {
 
       //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has HandleTriggerAdapter = " + HandleTriggerAdapter.toString());
+      logger.info("[JohnLog2] " + functionManager.FMname + ": This FM has HandleTriggerAdapter = " + HandleTriggerAdapter.toString() );
       if (HandleTriggerAdapter) {
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         getTriggerAdapter();
@@ -1752,8 +1752,9 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null) {
       }
 
       // stop the event building gracefully
+      logger.info("[JohnLog2] [HCAL LVL2 " + functionManager.FMname + "] This FM has HandleTriggerAdapter = " + String.valueOf(HandleTriggerAdapter));
       if (HandleTriggerAdapter) {
-
+        logger.info("[JohnLog2] [HCAL LVL2 " + functionManager.FMname + "] This FM has HandleTriggerAdapter = true, so it's starting the stop sequence.");
         // check if all events were build before stopping
         if(!isRUBuildersEmpty()) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Could not flush the EVMs ...";
@@ -2014,7 +2015,6 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null) {
 
     }
     else if (obj instanceof StateEnteredEvent) {
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing stoppingAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing stoppingAction");
 
       // reset the non-async error state handling
@@ -2042,13 +2042,17 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null) {
       }
 
       // stop the triggering
+      logger.info("[JohnLog2] " + functionManager.FMname + ": This FM has HandleTriggerAdapter = " + HandleTriggerAdapter.toString() + "and is going to halt the triggeradapter now.");
       if (HandleTriggerAdapter) {
+        logger.info("[JohnLog2] " + functionManager.FMname + ": got inside the halting triggeradapter loop!");
         if (functionManager.containerTriggerAdapter!=null) {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": successfully found the containerTriggerAdapter, and it's not null.");
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
+             logger.info("[JohnLog2] " + functionManager.FMname + ": successfully checked that containerTriggerAdapter is not empty.");
 
             {
-              String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
-              logger.debug(debugMessage);
+              String debugMessage = "[JohnLog2] [HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for stoppingAction() found- good!";
+              logger.info(debugMessage);
             }
 
             try {
@@ -2243,7 +2247,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null) {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stoppingAction executed ...")));
 
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stoppingAction executed ...");
+      logger.info("[JohnLog2] [HCAL LVL2 " + functionManager.FMname + "] stoppingAction is finished for this FM...");
 
     }
   }
