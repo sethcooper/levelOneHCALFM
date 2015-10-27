@@ -106,6 +106,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // loop over the ecalsup executives to strip the connections
      
       String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+      logger.info("[JohnLog2] " + functionManager.FMname + ": MaskedResources has length " + MaskedResources.length());
       if (MaskedResources.length() > 0) {
         logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
@@ -235,9 +236,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         for (int i=0; i < nodes.getLength(); i++) {
 					logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            String MaskedResourcesFromXML= nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
-            MaskedResources += MaskedResourcesFromXML;
-            logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked applications " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+            String maskedAppsNodeContent =  nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
+            if (maskedAppsNodeContent != null && !maskedAppsNodeContent.isEmpty()) {
+              String MaskedResourcesFromXML= maskedAppsNodeContent.replace("|",";");
+              MaskedResources += MaskedResourcesFromXML;
+              logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked applications " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+            }
           }
         } 
         logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
