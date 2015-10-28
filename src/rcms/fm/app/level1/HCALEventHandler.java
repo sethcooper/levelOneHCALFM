@@ -670,7 +670,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -1991,7 +1991,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     FullPIControlSequence = TmpPIControl;
 
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
+    logger.info("[JohnLog2] [HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
@@ -3471,7 +3471,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // toState: target state
   public void computeNewState(StateNotification newState) {
 
-    logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
+    logger.info("[sethlog] HCALEventHandler::computeNewState() [HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
 
     if (newState.getToState() == null) {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
@@ -3511,155 +3511,170 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
+
         logger.info("[JohnLog2] [HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
           logger.info("[JohnLog2] [HCAL " + functionManager.FMname + "] new state = " + functionManager.calcState.getStateString() + " for FM: " + functionManager.getURI());
 
-          {
-            String actualState = functionManager.getState().getStateString();
-            String toState = functionManager.calcState.getStateString();
+        
+          String actualState = functionManager.getState().getStateString();
+          String toState = functionManager.calcState.getStateString();
 
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! static state to go not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state! From state: " + actualState + " to state: " + toState;
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! static state to go not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state! From state: " + actualState + " to state: " + toState;
 
-            if (toState.equals(HCALStates.TTSTEST_MODE.getStateString())) {
-              if (actualState.equals(HCALStates.PREPARING_TTSTEST_MODE.getStateString())) { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
-              else if (actualState.equals(HCALStates.TESTING_TTS.getStateString()))       { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.INITIAL.getStateString())) {
-              if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETINITIAL); }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.HALTED.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETHALT);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Uninitialized yet ...");
-                  }
-                }
-              }
-              else if (actualState.equals(HCALStates.HALTING.getStateString()))       { functionManager.fireEvent(HCALInputs.SETHALT); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    { functionManager.fireEvent(HCALInputs.SETHALT); }
-              else if (actualState.equals(HCALStates.RESETTING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETHALT); }
-              else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
-              else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
-              logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED");
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { 
-
-                logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED from the RUNNING state");
-
-                functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Ready yet ...");
-                  }
-                }
-              }
-              else if (actualState.equals(HCALStates.STOPPING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.RUNNING.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETSTART); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETSTART); }
-              else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
-              else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETSTART);
-
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Active yet ...");
-                  }
-                }
-              }
-              else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
-              else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.PAUSED.getStateString())) {
-              if (actualState.equals(HCALStates.PAUSING.getStateString()))         { functionManager.fireEvent(HCALInputs.SETPAUSE); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETPAUSE); }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
-            else if (toState.equals(HCALStates.STOPPING.getStateString())) {
-              if (actualState.equals(HCALStates.RUNNING.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
-              else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
-              else {
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-            }
+          if (toState.equals(HCALStates.TTSTEST_MODE.getStateString())) {
+            if (actualState.equals(HCALStates.PREPARING_TTSTEST_MODE.getStateString())) { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
+            else if (actualState.equals(HCALStates.TESTING_TTS.getStateString()))       { functionManager.fireEvent(HCALInputs.SETTTSTEST_MODE); }
             else {
-              String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
-              logger.error(errMessage2);
-              functionManager.sendCMSError(errMessage2);
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
             }
           }
+          else if (toState.equals(HCALStates.INITIAL.getStateString())) {
+            if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETINITIAL); }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else if (toState.equals(HCALStates.HALTED.getStateString())) {
+            if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
+              if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
+
+                if (HCALSuperVisorIsOK) {
+                  functionManager.fireEvent(HCALInputs.SETHALT);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
+                }
+                else {
+                  AllButHCALSuperVisorIsOK = true;
+                  logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Uninitialized yet ...");
+                }
+              }
+            }
+            else if (actualState.equals(HCALStates.HALTING.getStateString()))       { functionManager.fireEvent(HCALInputs.SETHALT); }
+            else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    { functionManager.fireEvent(HCALInputs.SETHALT); }
+            else if (actualState.equals(HCALStates.RESETTING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETHALT); }
+            else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
+            else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
+            logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED");
+            if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+            else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+            else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { 
+
+              logger.info("[JohnLog2] " + functionManager.FMname + "Got a tostate command to go to CONFIGURED from the RUNNING state");
+
+              functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+            else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
+              if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
+
+                if (HCALSuperVisorIsOK) {
+                  functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+                }
+                else {
+                  AllButHCALSuperVisorIsOK = true;
+                  logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Ready yet ...");
+                }
+              }
+            }
+            else if (actualState.equals(HCALStates.STOPPING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+            else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else if (toState.equals(HCALStates.RUNNING.getStateString())) {
+            if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETSTART); }
+            else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETSTART); }
+            else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
+            else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
+              if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
+
+                if (HCALSuperVisorIsOK) {
+                  functionManager.fireEvent(HCALInputs.SETSTART);
+
+                }
+                else {
+                  AllButHCALSuperVisorIsOK = true;
+                  logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Active yet ...");
+                }
+              }
+            }
+            else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
+            else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else if (toState.equals(HCALStates.PAUSED.getStateString())) {
+            if (actualState.equals(HCALStates.PAUSING.getStateString()))         { functionManager.fireEvent(HCALInputs.SETPAUSE); }
+            else if (actualState.equals(HCALStates.RECOVERING.getStateString())) { functionManager.fireEvent(HCALInputs.SETPAUSE); }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else if (toState.equals(HCALStates.STOPPING.getStateString())) {
+            if (actualState.equals(HCALStates.RUNNING.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
+            else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
+            else {
+              logger.error(errMessage);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          else {
+            String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
+            logger.error(errMessage2);
+            functionManager.sendCMSError(errMessage2);
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          }
+        
+        }
+        else {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": state was either undefined or not in target state!");
+          //try {
+          //  Thread.sleep(250); 
+          //}
+          //catch(InterruptedException ex) {
+          //  Thread.currentThread().interrupt();
+          //}
+          //String actualState = functionManager.getState().getStateString();
+          //if (actualState.equals(HCALStates.RUNNING.getStateString())) {
+          //  logger.info("[JohnLog2] " + functionManager.FMname + ": Try again!");
+          //  computeNewState(newState);
+          //}
         }
       }
     }
@@ -5408,7 +5423,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
                   functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Stopping the TA ...")));
 
-                  if (!SpecialFMsAreControlled) { functionManager.fireEvent(HCALInputs.STOP); }
+                  if (!SpecialFMsAreControlled) {
+										logger.info("[sethlog] TriggerAdapterWatchThread::run() [HCAL " + functionManager.FMname + "]  fireEvent(HCALInputs.STOP) !");
+										functionManager.fireEvent(HCALInputs.STOP);
+									}
 
                   logger.debug("[HCAL " + functionManager.FMname + "] TriggerAdapter should have reported to be in the Ready state, which means the events are taken ...");
                   logger.info("[HCAL " + functionManager.FMname + "] All L1As were sent, i.e. Trigger adapter is in the Ready state, changing back to Configured state ...");
@@ -5435,6 +5453,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     }
   }
+
   public String stripExecXML(String execXMLstring) throws UserActionException{
     DocumentBuilder docBuilder;
     try {

@@ -665,10 +665,11 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
       // compile LPM control sequence incorporating the local definitions found in the UserXML
       getPIControl();
-
+      logger.info("[JohnLog2] " + functionManager.FMname + ": just tried to get PIControl");
 
       // get the FedEnableMask found in the UserXML
       if (functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK) != null && ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString() == "") {
+        logger.info("[JohnLog2] " + functionManager.FMname + ": just tried to get FedEnableMask");
         getFedEnableMask();
         FedEnableMask = ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK to be sent to the hcalSupervisor is: " + FedEnableMask);
@@ -879,6 +880,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       // leave intermediate state directly only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
         if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
+          logger.info("[sethlog] configureAction() [HCAL LVL2 " + functionManager.FMname + "] fire the HCALInputs.SETCONFIGURE event");
           functionManager.fireEvent(HCALInputs.SETCONFIGURE);
         }
       }
@@ -1451,6 +1453,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
+      logger.info("[sethlog] runningAction() " + functionManager.FMname + " state notification while in the RUNNING state; computeNewState() for this FM ");
       computeNewState((StateNotification) obj);
       return;
 
@@ -2010,6 +2013,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
   public void stoppingAction(Object obj) throws UserActionException {
     if (obj instanceof StateNotification) {
 
+
       // triggered by State Notification from child resource
       computeNewState((StateNotification) obj);
       return;
@@ -2230,10 +2234,11 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
           }
         }
       }
-
+      
       // leave intermediate state only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
         if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": about to fire SETCONFIGURE");
           functionManager.fireEvent(HCALInputs.SETCONFIGURE);
         }
       }

@@ -649,7 +649,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       getLPMControl();
 
       // get PI control sequence to be sent to controlled LVL2 FMs
+     
       getPIControl();
+      logger.info("[JohnLog2] " + functionManager.FMname + ": just tried to get PIControl");
 
       // prepare run mode to be passed to level 2
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
@@ -753,7 +755,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               if (fmChild.isActive()) {
                 if ( !(fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2"))) {
                   try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
+                    logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
                     fmChild.execute(configureInput);
                   }
                   catch (CommandException e) {
@@ -777,7 +779,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
           if (functionManager.FMsWereConfiguredOnce) {
             if (!functionManager.ErrorState) {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+              logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
               if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
                 functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
@@ -799,7 +801,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               fmChild = (FunctionManager) it.next();
               if (fmChild.isActive()) {
                 try {
-                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
+                  logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
                   fmChild.execute(configureInput);
                 }
                 catch (CommandException e) {
@@ -824,7 +826,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
       else {
         if (!functionManager.ErrorState) {
-          logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+          logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
           if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
             functionManager.fireEvent(HCALInputs.SETCONFIGURE);
           }
@@ -1156,7 +1158,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
-      logger.info("[JohnLog2] " + functionManager.FMname + " state notification while in the RUNNING state. ");
+      logger.info("[JohnLog2] " + functionManager.FMname + " state notification while in the RUNNING state; computeNewState() for this FM ");
       computeNewState((StateNotification) obj);
       return;
 
