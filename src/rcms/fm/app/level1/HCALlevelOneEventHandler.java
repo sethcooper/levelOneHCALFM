@@ -106,7 +106,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // loop over the ecalsup executives to strip the connections
      
       String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      logger.info("[JohnLog2] " + functionManager.FMname + ": MaskedResources has length " + MaskedResources.length());
       if (MaskedResources.length() > 0) {
         logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
@@ -234,14 +233,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
         logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
         for (int i=0; i < nodes.getLength(); i++) {
-					logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+          logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            String maskedAppsNodeContent =  nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
-            if (maskedAppsNodeContent != null && !maskedAppsNodeContent.isEmpty()) {
-              String MaskedResourcesFromXML= maskedAppsNodeContent.replace("|",";");
-              MaskedResources += MaskedResourcesFromXML;
-              logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked applications " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-            }
+            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
+            logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
         } 
         logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
@@ -649,9 +644,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       getLPMControl();
 
       // get PI control sequence to be sent to controlled LVL2 FMs
-     
       getPIControl();
-      logger.info("[JohnLog2] " + functionManager.FMname + ": just tried to get PIControl");
 
       // prepare run mode to be passed to level 2
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
@@ -755,7 +748,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               if (fmChild.isActive()) {
                 if ( !(fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2"))) {
                   try {
-                    logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
+                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
                     fmChild.execute(configureInput);
                   }
                   catch (CommandException e) {
@@ -779,7 +772,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
           if (functionManager.FMsWereConfiguredOnce) {
             if (!functionManager.ErrorState) {
-              logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
               if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
                 functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
@@ -801,7 +794,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               fmChild = (FunctionManager) it.next();
               if (fmChild.isActive()) {
                 try {
-                  logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
                   fmChild.execute(configureInput);
                 }
                 catch (CommandException e) {
@@ -826,7 +819,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
       else {
         if (!functionManager.ErrorState) {
-          logger.info("[sethLog] configureAction() [HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+          logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
           if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
             functionManager.fireEvent(HCALInputs.SETCONFIGURE);
           }
@@ -1158,7 +1151,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
-      logger.info("[JohnLog2] " + functionManager.FMname + " state notification while in the RUNNING state; computeNewState() for this FM ");
       computeNewState((StateNotification) obj);
       return;
 
@@ -1435,7 +1427,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
-
       computeNewState((StateNotification) obj);
       return;
 
@@ -1497,7 +1488,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if (fmChild.isActive()) {
             if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
               try {
-                logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
                 fmChild.execute(HCALInputs.STOP);
               }
               catch (CommandException e) {

@@ -403,34 +403,34 @@ public class HCALFunctionManager extends UserFunctionManager {
   // will be called by the framework and explicitly by the HCAL level 1 FM method computeState()
   public State getUpdatedState() {
 
-    logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] getting Updated State ...");
+    logger.debug("[HCAL " + FMname + "] Getting the updated state ...");
 
     // without the qualified group we cannout do anything ;-)
     if (!qualifiedGroup.isInitialized()) {
-      logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] QualifiedGroup not initialized.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
+      logger.debug("[HCAL " + FMname + "] QualifiedGroup not initialized.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
 
       return this.getState();
     }
 
     // catch very early state calculation problem when svCalc is not constructed
     if (svCalc == null) {
-      logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] scCalc not constructed.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
+      logger.debug("[HCAL " + FMname + "] scCalc not constructed.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
       return this.getState();
     }
 
     // if child FMs are available calculate the resulting state incorporate the state of all child FMs 
     if (containerFMChildren.isEmpty() && containerFUResourceBroker.isEmpty() && containerFUEventProcessor.isEmpty() && containerStorageManager.isEmpty() ) {
-      logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] No FM resources for asynchronous state transitions found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + FMrole);
+      logger.debug("[HCAL " + FMname + "] No FM resources for asynchronous state transitions found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + FMrole);
       return this.getState();
     }
     else {
-      logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] FM resources for asynchronous state transitions found.\nThis FM has the role: " + FMrole);
+      logger.debug("[HCAL " + FMname + "] FM resources for asynchronous state transitions found.\nThis FM has the role: " + FMrole);
       calcState = svCalc.getState();
     }
 
-    logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
+    logger.debug("[HCAL " + FMname + "] the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
 
-    logger.info("[sethlog] getUpdatedState() [HCAL " + FMname + "] ... getting the updated state done.");
+    logger.debug("[HCAL " + FMname + "] ... getting the updated state done.");
 
     return calcState;
 
