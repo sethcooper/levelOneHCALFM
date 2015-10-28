@@ -670,7 +670,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
