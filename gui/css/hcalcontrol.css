@@ -188,31 +188,3 @@
 	font-size : small;
 	text-align : center;
 }
-
-
-.tbl {display:none;}
-
-.container{
-  width: 300px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  overflow: hidden;
-  display:inline-block;
-  margin:0px 10px 5px 5px;
-  vertical-align:top;
-}
-.progressbar {
-  color: #fff;
-  text-align: right;
-  height: 25px;
-  width: 0;
-  background-color: #0ba1b5;
-  border-radius: 3px;
-}
-
-ul {
-  list-style-type: none;
-  columns: 3;
-  -webkit-columns: 3;
-  -moz-columns: 3;
-}

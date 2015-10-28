@@ -11,10 +11,6 @@ import java.util.Map;
 import java.util.Vector;
 import java.lang.Double;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.IOException;
-
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQMessageException;
@@ -23,19 +19,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.w3c.dom.DOMException;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.soap.SOAPException;
 
 import rcms.errorFormat.CMS.CMSError;
 import rcms.fm.fw.StateEnteredEvent;
@@ -54,11 +41,9 @@ import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
-import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
-import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
@@ -88,8 +73,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   public void init() throws rcms.fm.fw.EventHandlerException {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     qualifiedGroup  = functionManager.getQualifiedGroup();
-    super.init();
-      
+
+    super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
     logger.debug("[HCAL LVL2] init() called: functionManager = " + functionManager );
   }
@@ -113,57 +98,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Initializing ...")));
 
-      // get the parameters of the command
-      ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-      
-if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString().isEmpty()) {
-        String MaskedResources = ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES,new StringT(MaskedResources)));
-        String[] MaskedResourceArray = MaskedResources.split(";");
-        List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
-        List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
-        for (String MaskedApplication: MaskedResourceArray) {
-          String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
-          logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          for (QualifiedResource qr : xdaqApplicationList) {
-            if (qr.getName().equals(MaskedApplication) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
-              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
-              logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
-              qr.setActive(false);
-            }
-          }
-        }
-      List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      // loop over the and  strip the connections
-     
-        logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
-        for( QualifiedResource qr : xdaqExecList) {
-          XdaqExecutive exec = (XdaqExecutive)qr;
-          logger.info("[JohnLog2] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
-          XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-          String oldExecXML = config.getXml();
-          try {
-            String newExecXML = stripExecXML(oldExecXML);
-            config.setXml(newExecXML);
-            logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-          }
-          catch (UserActionException e) {
-            String errMessage = e.getMessage();
-            logger.info("[JohnLog2] " + functionManager.FMname + " got an error while trying to strip the ExecXML: " + errMessage);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-          System.out.println("[JohnLogSystem] " +qr.getName() + " has executive xml: " +  configRetrieved.getXml());
-        }
-      }
-      else {
-        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive any applications requested to be masekd.";
-        logger.warn(warnMessage);
-      }
-
       // initialize all XDAQ executives
       initXDAQ();
 
@@ -185,6 +119,8 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
       thread3.start();
 
+      // get the parameters of the command
+      ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
       // check parameter set
       if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
@@ -227,22 +163,11 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         }
       }
 
-      if (parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED) != null) {
-        String RunConfigSelected = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED,new StringT(RunConfigSelected)));
-      }
-      else {
-        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive the user-selected CfgSnippet key.";
-        logger.warn(warnMessage);
-      }
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
-
-      //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has HandleTriggerAdapter = " + HandleTriggerAdapter.toString());
       if (HandleTriggerAdapter) {
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         getTriggerAdapter();
@@ -287,7 +212,6 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Resetting")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR,new StringT("")));
 
       // kill all XDAQ executives
       destroyXDAQ();
@@ -2564,6 +2488,5 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] testingTTSAction executed ...");
     }
   }
-
 }
 

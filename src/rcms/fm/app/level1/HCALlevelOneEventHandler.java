@@ -11,28 +11,18 @@ import java.util.Map;
 import java.util.Vector;
 import java.lang.Double;
 
-import java.io.StringReader; 
-import java.io.IOException;
-
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQMessageException;
-import rcms.resourceservice.db.Group;
-import rcms.fm.resource.qualifiedresource.XdaqExecutive;
-import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.soap.SOAPException;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import rcms.errorFormat.CMS.CMSError;
 import rcms.fm.fw.StateEnteredEvent;
@@ -100,35 +90,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
     }
     else if (obj instanceof StateEnteredEvent) {
-      setMaskedFMs();
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
-      List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-      // loop over the ecalsup executives to strip the connections
-     
-      String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      if (MaskedResources.length() > 0) {
-        logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
-        for( QualifiedResource qr : xdaqExecList) {
-          XdaqExecutive exec = (XdaqExecutive)qr;
-          XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-          String oldExecXML = config.getXml();
-          try {
-            String newExecXML = stripExecXML(oldExecXML);
-            config.setXml(newExecXML);
-            logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-          }
-          catch (UserActionException e) {
-            String errMessage = e.getMessage();
-            logger.info(errMessage);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-          System.out.println(qr.getName() + " has edited executive xml: " +  configRetrieved.getXml());
-        }
-      }
       System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
 
@@ -213,41 +174,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(Sid)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
-      String RunConfigSelected = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-      pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
-      String CfgSnippetKeySelected = ((StringT)functionManager.getParameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
-      pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(RunConfigSelected)));
-      String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-      logger.info("[JohnLog2] " + functionManager.FMname + ": Started out with masked resources: " + MaskedResources);
-      try {
-        DocumentBuilder docBuilder;
-        logger.info("[JohnLog2] " + functionManager.FMname + ": The xmlString was: " + xmlString );
-
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        InputSource inputSource = new InputSource();
-        inputSource.setCharacterStream(new StringReader(xmlString));
-        Document userXML = docBuilder.parse(inputSource);
-        userXML.getDocumentElement().normalize();
-
-        NodeList nodes = null;
-        nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
-        logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
-        for (int i=0; i < nodes.getLength(); i++) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-          if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
-            logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-          }
-        } 
-        logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
-      }
-      catch (ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[JohnLog2] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
-      }
-      logger.info("[JohnLog2] " + functionManager.FMname + ": About to set the initial list of masked resources: " + MaskedResources );
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
-      pSet.put(new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
-
       // prepare command plus the parameters to send
       Input initInput = new Input(HCALInputs.INITIALIZE.toString());
       initInput.setParameters( pSet );
@@ -258,19 +184,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            try {
-              logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-              fmChild.execute(initInput);
-            }
-            catch (CommandException e) {
-              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-            }
+
+          try {
+            logger.info("[HCAL LVL1 " + functionManager.FMname + "] Will send " + initInput + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            fmChild.execute(initInput);
+          }
+          catch (CommandException e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + initInput + " failed ...";
+            logger.error(errMessage,e);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
         }
 
@@ -316,13 +241,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Resetting")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR,new StringT("")));
 
       // kill all XDAQ executives
-      //destroyXDAQ();
+      destroyXDAQ();
 
       // init all XDAQ executives
-      //initXDAQ();
+      initXDAQ();
 
       if (!functionManager.containerFMChildren.isEmpty()) {
 
@@ -679,22 +603,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
             FunctionManager fmChild = null;
             while (it.hasNext()) {
-              if (fmChild.isActive()) {
-                fmChild = (FunctionManager) it.next();
+              fmChild = (FunctionManager) it.next();
 
-                if (fmChild.getRole().toString().equals("Level2_Priority_1") ) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
-                    fmChild.execute(configureInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if (fmChild.getRole().toString().equals("Level2_Priority_1") ) {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+                  fmChild.execute(configureInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -711,20 +634,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if ( fmChild.getRole().toString().equals("Level2_Priority_2") ) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
-                    fmChild.execute(configureInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if ( fmChild.getRole().toString().equals("Level2_Priority_2") ) {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+                  fmChild.execute(configureInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -745,20 +667,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if ( !(fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2"))) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
-                    fmChild.execute(configureInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if ( !(fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2"))) {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found non priority FM childs - good! fireEvent: " + configureInput);
+                  fmChild.execute(configureInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -792,19 +713,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                try {
-                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
-                  fmChild.execute(configureInput);
-                }
-                catch (CommandException e) {
-                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
+
+              try {
+                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
+                fmChild.execute(configureInput);
+              }
+              catch (CommandException e) {
+                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
           }
@@ -956,20 +876,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if (fmChild.getRole().toString().equals("Level2_Priority_1")) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " and role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
-                    fmChild.execute(startInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if (fmChild.getRole().toString().equals("Level2_Priority_1"))
+              {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " and role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
+                  fmChild.execute(startInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -987,20 +907,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
-                    fmChild.execute(startInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if (fmChild.getRole().toString().equals("Level2_Priority_2"))
+              {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
+                  fmChild.execute(startInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -1020,21 +940,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if ( !(fmChild.getRole().toString().equals("Level2_FilterFarm") || fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2") || fmChild.getRole().toString().equals("Level2_Laser")) ) {
-                  if (!(fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm"))) {
-                    try {
-                      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which needs no specific order when starting, executing: " + startInput);
-                      fmChild.execute(startInput);
-                    }
-                    catch (CommandException e) {
-                      String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                      logger.error(errMessage,e);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                    }
+
+              if ( !(fmChild.getRole().toString().equals("Level2_FilterFarm") || fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2") || fmChild.getRole().toString().equals("Level2_Laser")) )
+              {
+                if (!(fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm"))) {
+                  try {
+                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which needs no specific order when starting, executing: " + startInput);
+                    fmChild.execute(startInput);
+                  }
+                  catch (CommandException e) {
+                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                    logger.error(errMessage,e);
+                    functionManager.sendCMSError(errMessage);
+                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                   }
                 }
               }
@@ -1053,20 +973,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if (fmChild.getRole().toString().equals("Level2_FilterFarm") || (fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm"))) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which does e.g. event building, executing: " + startInput);
-                    fmChild.execute(startInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if (fmChild.getRole().toString().equals("Level2_FilterFarm") || (fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm")))
+              {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which does e.g. event building, executing: " + startInput);
+                  fmChild.execute(startInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -1084,20 +1004,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
-              if (fmChild.isActive()) {
-                if (fmChild.getRole().toString().equals("Level2_Laser")) {
-                  try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which does e.g. event building, executing: " + startInput);
-                    fmChild.execute(startInput);
-                  }
-                  catch (CommandException e) {
-                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                  }
+
+              if (fmChild.getRole().toString().equals("Level2_Laser"))
+              {
+                try {
+                  logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which does e.g. event building, executing: " + startInput);
+                  fmChild.execute(startInput);
+                }
+                catch (CommandException e) {
+                  String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                 }
               }
             }
@@ -1311,24 +1231,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals(HCALStates.HALTING.toString()) || fmChild.refreshState().toString().equals(HCALStates.HALTED.toString()))) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.HALT);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.HALT + " failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
+
+          if (! (fmChild.refreshState().toString().equals(HCALStates.HALTING.toString()) || fmChild.refreshState().toString().equals(HCALStates.HALTED.toString()))) {
+            try {
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+              fmChild.execute(HCALInputs.HALT);
             }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Halted\".\nWill sent not send" + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            catch (CommandException e) {
+              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.HALT + " failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
             }
+          }
+          else {
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Halted\".\nWill sent not send" + HCALInputs.HALT + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
           }
         }
       }
@@ -1385,24 +1304,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.COLDRESET);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
+
+          if (! (fmChild.refreshState().toString().equals("ColdResetting")) ) {
+            try {
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will sent " + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+              fmChild.execute(HCALInputs.COLDRESET);
             }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            catch (CommandException e) {
+              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
             }
+          }
+          else {
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"ColdResetting\".\nWill sent not send" + HCALInputs.COLDRESET + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
           }
         }
       }
@@ -1485,24 +1403,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         FunctionManager fmChild = null;
         while (it.hasNext()) {
           fmChild = (FunctionManager) it.next();
-          if (fmChild.isActive()) {
-            if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-              try {
-                logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
-                fmChild.execute(HCALInputs.STOP);
-              }
-              catch (CommandException e) {
-                String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " during stoppingAction() failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
+
+          if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
+            try {
+              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+              fmChild.execute(HCALInputs.STOP);
             }
-            else {
-              logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Configured\".\nWill sent not send" + HCALInputs.STOP + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+            catch (CommandException e) {
+              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " during stoppingAction() failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
             }
+          }
+          else {
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] This FM is already \"Configured\".\nWill sent not send" + HCALInputs.STOP + " to FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
           }
         }
 

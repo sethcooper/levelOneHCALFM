@@ -164,11 +164,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT> hcalPIControl = new CommandParameter<StringT>(HCALParameters.HCAL_PICONTROL, new StringT(""));
     CommandParameter<BooleanT> configureUSE_PRIMARY_TCDS = new CommandParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS, new BooleanT(true));
     CommandParameter<StringT> configureSUPERVISOR_ERROR = new CommandParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(""));
-    CommandParameter<StringT> configureAVAILABLE_RUN_CONFIGS = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS, new StringT(""));
-    CommandParameter<StringT> configureRUN_CONFIG_SELECTED = new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(""));
-    CommandParameter<StringT> configureCFGSNIPPET_KEY_SELECTED = new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(""));
-    CommandParameter<StringT> configureAVAILABLE_RESOURCES = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES, new StringT(""));
-    CommandParameter<StringT> configureMASKED_RESOURCES = new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(""));
     // define parameter set
     ParameterSet<CommandParameter> configureParameters = new ParameterSet<CommandParameter>();
 
@@ -188,11 +183,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(hcalPIControl);
       configureParameters.add(configureUSE_PRIMARY_TCDS);
       configureParameters.add(configureSUPERVISOR_ERROR);
-      configureParameters.add(configureAVAILABLE_RUN_CONFIGS);
-      configureParameters.add(configureRUN_CONFIG_SELECTED);
-      configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
-      configureParameters.add(configureAVAILABLE_RESOURCES);
-      configureParameters.add(configureMASKED_RESOURCES);
     } catch (ParameterException nothing) {
       // Throws an exception if a parameter is duplicate
       throw new StateMachineDefinitionException( "Could not add to configureParameters. Duplicate Parameter?", nothing );

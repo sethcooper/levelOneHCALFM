@@ -44,7 +44,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
-  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
   <script type="text/javascript" src="../js/stateNotification.js"></script>
   <script type="text/javascript" src="../js/common.js"></script>
   <script type="text/javascript" src="../js/control.js"></script>
@@ -70,31 +69,125 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
   </script>
 
-  <script>
+  <script type="text/javascript">
+    function turn_off_visibility(tbid) {document.getElementById(tbid).style.display="none";}
+  </script>
+
+  <script type="text/javascript">
+    function turn_on_visibility(tbid) {document.getElementById(tbid).style.display="table";}
+  </script>
+
+  <script type="text/javascript">
+    function toggle_visibility(tbid) {
+      if(document.getElementById(tbid).style.display != "table") {document.getElementById(tbid).style.display = "table";}
+      else {document.getElementById(tbid).style.display="none";}
+    }
+  </script>
+
+  <script type="text/javascript">
+    function activate_relevant_table(tbid) {
+      if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
+      else {turn_off_visibility(tbid);}
+    }
+  </script>
+
+  <script type="text/javascript">
+    function copyContents(element, tgt) {
+      tgt.appendChild(element);
+    }
+  </script>
+
+  <script type="text/javascript">
+    function makecheckbox(checkbox, parameter) {
+      document.getElementById(checkbox).innerHTML = '<input id=\"globalParameterCheckBox' + document.getElementById(parameter).getAttribute("name").substring(20) + '\" type=\"checkbox\" onclick=\"onClickGlobalParameterCheckBox(\'' + document.getElementById(parameter).getAttribute("name").substring(20) + '\', \'' + parameter + '\')\">';
+    }
+  </script>
+
+  <script type="text/javascript">
+    function removeduplicatecheckbox(parameter) {
+      document.getElementById("globalParameterCheckBox"+document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.removeChild(document.getElementById("globalParameterCheckBox"+document.getElementById(parameter).getAttribute("name").substring(20)));
+    }
+  </script>
+
+  <script type="text/javascript">
+    function hideduplicatefield(parameter) {
+      document.getElementById("globalParameterName"+document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display="none";
+    }
+  </script>
+
+  <script type="text/javascript">
     function getfullpath() {
       var fullpath = document.getElementsByClassName("control_label2")[0];
       var eloginfo = document.getElementById("elogInfo");
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
+      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  " + ${pars.NUMBER_OF_EVENTS} + " events ";
     }
+  </script>
+
+  <script type="text/javascript">
+    function showsupervisorerror() {
+      var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
+        if (errMessage!="not set" && errMessage!="") {
+          document.getElementById("supervisorRow").style.display="";
+          document.getElementById("supervisorError").innerHTML = errMessage;
+        }
+      }
+  </script>
+
+  <!--The scripts below this line use jQuery. -->
+  <script>
+    $(document).ready(function() {
+      var initcolor= $('#currentState').text()
+      $('#currentState').attr("class", "hcal_control_"+initcolor)
+      $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');")
+    });
+  </script>
+
+  <script>
+    $(document).ready(function() {
+      setInterval(function() {
+        var colorhack= $('#currentState').text()
+        $('#currentState').attr("class", "hcal_control_"+colorhack)
+        $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');")
+      }, 750);
+    });
   </script>
 
   <script>
     $(document).ready(function() {
        setProgress(Math.round(${pars.HCAL_EVENTSTAKEN}/${pars.NUMBER_OF_EVENTS} * 1000)/10);
     });
-  </script>
 
-  <script>
-    function activate_relevant_table(tbid) {
-      if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
-      else {turn_off_visibility(tbid);}
+    function setProgress(progress) {
+       var progressBarWidth =progress*$(".container").width()/ 100;
+       $(".progressbar").width(progressBarWidth).html(progress + "% &nbsp; &nbsp;");
     }
   </script>
   <!-- Custom javascript section end -->
 
+  <style type="text/css">
+    .tbl {display:none;}
+
+    .container{
+      width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      display:inline-block;
+      margin:0px 10px 5px 5px;
+      vertical-align:top;
+    }
+    .progressbar {
+      color: #fff;
+      text-align: right;
+      height: 25px;
+      width: 0;
+      background-color: #0ba1b5;
+      border-radius: 3px;
+    }
+  </style>
 </head>
 
-<body onLoad='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onLoad="onLoad(); activate_relevant_table('AllParamTables'); onClickCommandParameterCheckBox(); removeduplicatecheckbox('NUMBER_OF_EVENTS'); removeduplicatecheckbox('RUN_NUMBER'); copyContents(NUMBER_OF_EVENTS,newNUMBER_OF_EVENTS); makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS'); copyContents(HCAL_EVENTSTAKEN,newHCAL_EVENTSTAKEN); copyContents(RUN_NUMBER,newRUN_NUMBER); makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER'); copyContents(HCAL_TIME_OF_FM_START,newHCAL_TIME_OF_FM_START); hideduplicatefield('NUMBER_OF_EVENTS'); hideduplicatefield('RUN_NUMBER'); hideduplicatefield('HCAL_EVENTSTAKEN'); hideduplicatefield('HCAL_TIME_OF_FM_START'); removeduplicatecheckbox('USE_RESET_FOR_RECOVER'); removeduplicatecheckbox('USE_PRIMARY_TCDS'); getfullpath(); showsupervisorerror();">
 
 
 <!-- Table T1 begin -->
@@ -147,6 +240,9 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                     <rcms.control:refreshButtonRenderer cssClass="button1" onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
                     <rcms.control:showTreeButtonRenderer cssClass="button1" onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/>
                     <rcms.control:showStatusTableButtonRenderer cssClass="button1" onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
+                    <!--
+                    <rcms.control:showParameterButtonRenderer cssClass="button1" onClickFunction="onShowParameterButton()" name="Parameter Display" indentation="10"/>
+                    -->
                   </td>
                 </tr>
                 <tr>
@@ -156,8 +252,10 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                     </div>
                     <br>
                     <div id="commandParameterCheckBoxSection" class="control_label1">
+                      <!--<rcms.control:commandParameterCheckboxRenderer title="&nbsp;Show Command Parameter Section" indentation="11"/>-->
                       <input id="commandParameterCheckBox" type="checkbox" onclick="onClickCommandParameterCheckBox(); toggle_visibility('Blork');" value="" name="commandParameterCheckBox ">  &nbsp; Show Command Parameter Section
                     </div>
+                    <!--<input type="checkbox" onclick="toggle_visibility('Blork');"> &nbsp; View Command Parameters -->
                   </td>
                 </tr>
               </table>
@@ -181,33 +279,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                                 <td class="title_center_black_yellow_bg" width="155">
                                   Value
-                                </td>
-                              </tr>
-                              <tr>
-                                <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black" width="155">
-                                </td>
-                                <td class="label_left_black">
-                                  <strong>Local Run Key</strong><div id="dropdowndiv"></div>
-                                </td>
-                                <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black" width="155">
-                                </td>
-                              </tr>
-                              <tr>
-                                <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black" width="155">
-                                </td>
-                                <td class="label_left_black">
-                                  <strong>Mastersnippet</strong>
-                                </td>
-                                <td id ="newRUN_CONFIG_SELECTED" class="label_center_black" width="155">
-                                </td>
-                              </tr>
-                              <tr>
-                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black" width="155">
-                                </td>
-                                <td class="label_left_black">
-                                  <strong>Masked Resources</strong>
-                                </td>
-                                <td id ="newMASKED_RESOURCES" class="label_center_black" width="155">
                                 </td>
                               </tr>
                               <tr>
@@ -258,17 +329,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <!--Supervisor error box-->
                                 <td id="supervisorCell" class="label_center_black" colspan="3">
                                   <div id="supervisorError" class="hcal_control_Supervisor"></div>
-                                </td>
-                              </tr>
-                              <tr>
-                                <!--Area for masking checkboxes-->
-                                <td class="label_center_black" colspan="3">
-                                  <div>
-                                    <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask Qualified Resources</strong>
-                                    <br>
-                                      Masked resources: <span id="maskTest"></span>
-                                    <div id="masks" class="tbl"></div>
-                                  </div>
                                 </td>
                               </tr>
                               <tr>

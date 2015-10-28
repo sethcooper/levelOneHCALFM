@@ -110,12 +110,6 @@ public class HCALParameters {
 	public static final String USE_PRIMARY_TCDS = "USE_PRIMARY_TCDS";
 	//Parameter for displaying the supervisor's overallErrorMessage
 	public static final String SUPERVISOR_ERROR = "SUPERVISOR_ERROR";
-	//Parameter for selecting the kind of run
-	public static final String AVAILABLE_RUN_CONFIGS = "AVAILABLE_RUN_CONFIGS";
-	public static final String RUN_CONFIG_SELECTED = "RUN_CONFIG_SELECTED";
-	public static final String CFGSNIPPET_KEY_SELECTED = "CFGSNIPPET_KEY_SELECTED";
-	public static final String AVAILABLE_RESOURCES = "AVAILABLE_RESOURCES";
-	public static final String MASKED_RESOURCES = "MASKED_RESOURCES";
 	// standard level 1 parameter set
 	public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
 
@@ -238,19 +232,8 @@ public class HCALParameters {
 
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(STARTED_WITH_RUN_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
 
-
-		/**
-                 * parameters to select the specific run behaviors
-                 */
-                  
 		// Parameter to set the behavior of the "Recover" button.
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<BooleanT>(USE_RESET_FOR_RECOVER, new BooleanT(true)));
-
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(AVAILABLE_RUN_CONFIGS, new StringT("none found")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RUN_CONFIG_SELECTED, new StringT("not set")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CFGSNIPPET_KEY_SELECTED, new StringT("not set")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(AVAILABLE_RESOURCES, new StringT("none found")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(MASKED_RESOURCES, new StringT("")));
 
 		// Parameter to see the supervisor's overallErrorMessage
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(SUPERVISOR_ERROR, new StringT(""), FunctionManagerParameter.Exported.READONLY));
