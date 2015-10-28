@@ -674,9 +674,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
       configureInput.setParameters( pSet );
+      logger.info("[JohnLog2] just created a new Input called configureInput");
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
+        logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
 
         // include scheduling ToDo
 
@@ -691,7 +692,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
                 if (fmChild.getRole().toString().equals("Level2_Priority_1") ) {
                   try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+                    logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
                     fmChild.execute(configureInput);
                   }
                   catch (CommandException e) {
@@ -710,7 +711,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           while (!waitforFMswithRole("Level2_Priority_1",HCALStates.CONFIGURED.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_1.");
+            logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_1.");
           }
 
           {
@@ -721,7 +722,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               if (fmChild.isActive()) {
                 if ( fmChild.getRole().toString().equals("Level2_Priority_2") ) {
                   try {
-                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+                    logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
                     fmChild.execute(configureInput);
                   }
                   catch (CommandException e) {
@@ -740,7 +741,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           while (!waitforFMswithRole("Level2_Priority_2",HCALStates.CONFIGURED.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_2.");
+            logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_2.");
           }
 
 
@@ -774,7 +775,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           while (!waitforFMswithNotTheRole("Level2_Priority_1","Level2_Priority_2","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, or Level2_Laser");
+            logger.info("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, or Level2_Laser");
           }
 
           if (functionManager.FMsWereConfiguredOnce) {
@@ -819,7 +820,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           while (!waitforFMswithNotTheRole("dummy","dummy","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString());
+            logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString());
           }
         }
 
@@ -949,7 +950,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       startInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + startInput);
+        logger.info("[JohnLog2] [HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + startInput);
 
         if (SpecialFMsAreControlled) {
 
