@@ -241,7 +241,6 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
 
-      //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
       logger.info("[JohnLog2] " + functionManager.FMname + ": This FM has HandleTriggerAdapter = " + HandleTriggerAdapter.toString() );
       if (HandleTriggerAdapter) {
