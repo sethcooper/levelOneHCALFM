@@ -2209,11 +2209,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   }
 
   protected void setMaskedFMs() {
-    String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for sending the maskedApplications list!";
-    logger.info(debugMessage);
-
-    // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
-
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     // TODO send all masked applications defined in global parameter 
     String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
@@ -2236,101 +2231,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
   }
 
-  protected void sendMaskedApplications() {
-    if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-      String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for sending the maskedApplications list!";
-      logger.info(debugMessage);
-
-      XDAQParameter pam = null;
-
-      // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
-
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
-
-      // TODO send all masked applications defined in global parameter 
-      String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      if (MaskedResources.length() > 0) {
-        MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
-        logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedResources " + MaskedResources);
-        // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-        for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-          try {
-            pam =((XdaqApplication)qr).getXDAQParameter();
-            pam.select("maskedApplications");
-
-            pam.setValue("maskedApplications",MaskedResources);
-            logger.debug("[HCAL " + functionManager.FMname + "] sending maskedApplications list ...");
-
-            pam.send();
-          }
-          catch (XDAQTimeoutException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendMaskedApplications(). Perhaps the supervisor is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          catch (XDAQException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendMaskedApplications()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-        String[] MaskedResourceArray = MaskedResources.split(";");
-        List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-        List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
-        for (String MaskedApplication: MaskedResourceArray) {
-          String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
-          logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          for (QualifiedResource qr : xdaqApplicationList) {
-            if (qr.getName().equals(MaskedApplication) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
-              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
-              if (!qr.getName().contains("PeerTransportATCP")) { 
-                try {
-                  pam = null;
-                  logger.info("[JohnLog] " + functionManager.FMname + ": about to retrieve XDAQParameters for " + qr.getName());
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  String isMasked = "true";
-                  pam.select("IsMasked");
-                  pam.setValue("IsMasked",  isMasked);
-                  logger.info("[JohnLog] " + functionManager.FMname + ": about to send IsMasked to " + qr.getName());
-                  pam.send();
-                  logger.info("[JohnLog] " + functionManager.FMname + ":: Set IsMasked for " + qr.getName() + " to " + isMasked);
-
-                  pam = null;
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select("IsMasked");
-                  String isMaskedRetrieved = pam.getValue("IsMasked");
-                  logger.info("[JohnLog] " + functionManager.FMname + ":: Checked IsMasked again after setting it, and got " + isMaskedRetrieved + " from " + qr.getName());
-                }
-                catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendMaskedApplications(). Timeout sending isMasked to the masked app(s).";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-                catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendMaskedApplications(). Couldn't send isMasked to the masked app(s).";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 
   // get the TriggerAdapter name from the HCAL supervisor only if no trigger adapter was already set
   protected void getTriggerAdapter() {
