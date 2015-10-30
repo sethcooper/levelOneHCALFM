@@ -670,8 +670,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -2641,6 +2641,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         }
 
         if ((fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm")) || fmChild.getRole().toString().equals("Level2_FilterFarm") ) {
+          //TODO -- Why does this break configuring?!
           logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
           SpecialFMsAreControlled = true;
         }
@@ -5263,20 +5264,22 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         // poll the status of the FMs which do the event building every 5 sec
         if (icount%5==0) {
+					logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
 
             // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
-            if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
+            //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
 
+					    logger.info("[JohnLog2] " + functionManager.FMname + ": found SpecialFMsAreControlled=true and about to loop over other level2s.");
               Iterator it1 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-              FunctionManager fmChild_HCAL_FilterFarm = null;
+              FunctionManager fmChild_HCAL_EvmTrig = null;
               while (it1.hasNext()) {
-                fmChild_HCAL_FilterFarm = (FunctionManager) it1.next();
+                fmChild_HCAL_EvmTrig = (FunctionManager) it1.next();
 
-                if (fmChild_HCAL_FilterFarm.getRole().toString().equals("Level2_FilterFarm"))
+                if (fmChild_HCAL_EvmTrig.getRole().toString().equals("EvmTrig"))
                 {
-                  if (fmChild_HCAL_FilterFarm.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild_HCAL_FilterFarm.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) {
-                    logger.warn("[HCAL " + functionManager.FMname + "] HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
+                  if (fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) {
+                    logger.warn("[JohnLog2] " + functionManager.FMname + ": HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
 
                     NotifiedControlledFMs = true;  // take care that a notification to the controlled child FMs is only sent once
 
@@ -5285,7 +5288,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                     while (it2.hasNext()) {
                       fmChild = (FunctionManager) it2.next();
 
-                      if ( !fmChild.getRole().toString().equals("Level2_FilterFarm") ) {
+                      if ( !fmChild.getRole().toString().equals("EvmTrig") ) {
 
                         if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
                           try {
@@ -5306,7 +5309,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   }
                 }
               }
-            }
+            //}
           }
         }
 
