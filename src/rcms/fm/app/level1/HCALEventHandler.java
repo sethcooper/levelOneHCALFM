@@ -2222,23 +2222,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    List<QualifiedResource> testlevel2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-    for (QualifiedResource qr : testlevel2list) {
-      
-      QualifiedGroup testlevel2group = ((FunctionManager)qr).getQualifiedGroup();
-      //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + testlevel2group.rs.toString());
-      try {
-        logger.info("JohnLog3: the qualified group has this DB connector" + testlevel2group.rs.toString());
-        Group fullConfig = testlevel2group.rs.retrieveLightGroup(qr.getResource());
-        List<Resource> fullconfigList = fullConfig.getChildrenResources();
-        for (Resource testlevel2resource : fullconfigList) {
-          logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + testlevel2resource.getName());
-        }
-      }
-      catch (DBConnectorException ex) {
-        logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
-      }
-    }
     // TODO send all masked applications defined in global parameter 
     String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
     if (MaskedResources.length() > 0) {
@@ -2254,7 +2237,29 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": found the matching FM in the qr list: " + qr.getName());
             logger.info("[JohnLog3] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
             qr.setActive(false);
-            logger.info("[JohnLog3] " + functionManager.FMname + ": The FM that has just been masked has qualified group: " + ((FunctionManager)qr).getQualifiedGroup().print());
+            
+            QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
+            //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
+            try {
+              logger.info("JohnLog3: the qualified group has this DB connector" + level2group.rs.toString());
+              Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
+              List<Resource> fullconfigList = fullConfig.getChildrenResources();
+              String allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+              for (Resource level2resource : fullconfigList) {
+                logger.info("[JohnLog3] " + functionManager.FMname + ": The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
+                if (!level2resource.getName().contains("JobControl")) {
+                  allMaskedResources+=level2resource.getName();
+                  allMaskedResources+=";";
+                }
+                logger.info("[JohnLog3] " + functionManager.FMname + ": The new list of all masked resources is: " + allMaskedResources);
+              }
+              logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
+              logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
+            }
+            catch (DBConnectorException ex) {
+              logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
+            }
           }
         }
       }
@@ -5479,6 +5484,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
       String newExecXMLstring = "";
       for (String maskedApp: maskedAppArray) {
+        logger.info("[JohnLog3] " + functionManager.FMname + ": about to strip " + maskedApp + " from the executives' XML.");
         String[] maskedAppParts = maskedApp.split("_");
         String maskedAppClass = maskedAppParts[0];
         String maskedAppInstance = maskedAppParts[1];
@@ -5528,7 +5534,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       return newExecXMLstring;
     }
     catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
-      throw new UserActionException("[JohnLog2] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
+      throw new UserActionException("[JohnLog3] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  
 }
