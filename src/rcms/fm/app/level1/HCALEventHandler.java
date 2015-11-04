@@ -89,6 +89,8 @@ import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.ns.event.NotificationEvent;
+import rcms.ns.utils.NotificationHelper;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.ResourceException;
@@ -5267,6 +5269,11 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 					logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
 
+            NotificationEvent ne = new NotificationEvent();
+            ne.setType(NotificationHelper.MAINTENANCE_TYPE);
+            ne.setContent(NotificationHelper.ENFORCE_RELOAD);
+            functionManager.sendNotificationEvent( ne );  
+            logger.info("[JohnLog2] " + functionManager.FMname + ": just sent the NotificationEvent");
             // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
             //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
 
