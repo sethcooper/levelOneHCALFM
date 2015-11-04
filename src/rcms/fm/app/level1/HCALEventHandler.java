@@ -80,6 +80,11 @@ import rcms.statemachine.definition.Input;
 import rcms.fm.fw.user.UserEvent;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.common.db.DBConnectorException;
+import rcms.common.db.DBConnectorException;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
@@ -2221,11 +2226,19 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     List<QualifiedResource> testlevel2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     for (QualifiedResource qr : testlevel2list) {
-      QualifiedGroup testlevel2QG = ((FunctionManager)qr).getQualifiedGroup();
-      logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager " + qr.getName() + "has qualified group summary: " + testlevel2QG.print());
-      List<QualifiedResource> testlevel2resourceslist = testlevel2QG.seekQualifiedResourcesOfType(new XdaqExecutive());
-      for (QualifiedResource testlevel2resource : testlevel2resourceslist) {
-        logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager this in its XdaqExecutive list: " + testlevel2resource.getName());
+      
+      QualifiedGroup testlevel2group = ((FunctionManager)qr).getQualifiedGroup();
+      //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + testlevel2group.rs.toString());
+      try {
+        logger.info("JohnLog3: the qualified group has this DB connector" + testlevel2group.rs.toString());
+        Group fullConfig = testlevel2group.rs.retrieveLightGroup(qr.getResource());
+        List<Resource> fullconfigList = fullConfig.getChildrenResources();
+        for (Resource testlevel2resource : fullconfigList) {
+          logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + testlevel2resource.getName());
+        }
+      }
+      catch (DBConnectorException ex) {
+        logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
     // TODO send all masked applications defined in global parameter 
