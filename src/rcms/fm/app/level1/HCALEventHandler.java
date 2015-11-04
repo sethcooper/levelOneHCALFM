@@ -2219,6 +2219,15 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
+    List<QualifiedResource> testlevel2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    for (QualifiedResource qr : testlevel2list) {
+      QualifiedGroup testlevel2QG = ((FunctionManager)qr).getQualifiedGroup();
+      logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager " + qr.getName() + "has qualified group summary: " + testlevel2QG.print());
+      List<QualifiedResource> testlevel2resourceslist = testlevel2QG.seekQualifiedResourcesOfType(new XdaqExecutive());
+      for (QualifiedResource testlevel2resource : testlevel2resourceslist) {
+        logger.info("[JohnLog3] " + functionManager.FMname + ": The level 2 function manager this in its XdaqExecutive list: " + testlevel2resource.getName());
+      }
+    }
     // TODO send all masked applications defined in global parameter 
     String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
     if (MaskedResources.length() > 0) {
@@ -2232,8 +2241,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         for (QualifiedResource qr : level2list) {
           if (qr.getName().equals(MaskedFM)) {
             logger.info("[JohnLog] " + functionManager.FMname + ": found the matching FM in the qr list: " + qr.getName());
-            logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+            logger.info("[JohnLog3] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
             qr.setActive(false);
+            logger.info("[JohnLog3] " + functionManager.FMname + ": The FM that has just been masked has qualified group: " + ((FunctionManager)qr).getQualifiedGroup().print());
           }
         }
       }
