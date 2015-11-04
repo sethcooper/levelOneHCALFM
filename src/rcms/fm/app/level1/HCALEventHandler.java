@@ -5320,21 +5320,22 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                     FunctionManager fmChild = null;
                     while (it2.hasNext()) {
                       fmChild = (FunctionManager) it2.next();
+                      if (fmChild.isActive()) { 
+                        if ( !fmChild.getRole().toString().equals("EvmTrig") ) {
 
-                      if ( !fmChild.getRole().toString().equals("EvmTrig") ) {
-
-                        if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-                          try {
-                            logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found FM child named: " + fmChild.getName().toString() + "\nThis FM is in the state: " + fmChild.refreshState().toString() + "\nThe role of this FM: " + fmChild.getRole().toString() + "\nNow we send fireEvent: " + HCALInputs.STOP);
-                            fmChild.execute(HCALInputs.STOP);
-                          }
-                          catch (CommandException e) {
-                            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " failed ...";
-                            logger.error(errMessage,e);
-                            functionManager.sendCMSError(errMessage);
-                            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                          if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
+                            try {
+                              logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found FM child named: " + fmChild.getName().toString() + "\nThis FM is in the state: " + fmChild.refreshState().toString() + "\nThe role of this FM: " + fmChild.getRole().toString() + "\nNow we send fireEvent: " + HCALInputs.STOP);
+                              fmChild.execute(HCALInputs.STOP);
+                            }
+                            catch (CommandException e) {
+                              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " failed ...";
+                              logger.error(errMessage,e);
+                              functionManager.sendCMSError(errMessage);
+                              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                            }
                           }
                         }
                       }
@@ -5483,27 +5484,32 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
       String newExecXMLstring = "";
+      int NxcContexts = 0;
+      int removedContexts = 0;
+      int removedApplications = 0;
       for (String maskedApp: maskedAppArray) {
-        logger.info("[JohnLog3] " + functionManager.FMname + ": about to strip " + maskedApp + " from the executives' XML.");
         String[] maskedAppParts = maskedApp.split("_");
-        String maskedAppClass = maskedAppParts[0];
-        String maskedAppInstance = maskedAppParts[1];
 
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        int NxcContexts = xcContextNodes.getLength();
-        int removedContexts = 0;
+        NxcContexts = xcContextNodes.getLength();
+        removedContexts = 0;
+        removedApplications = 0;
         for (int i=0; i < NxcContexts; i++) {
           Element currentContextNode = (Element) xcContextNodes.item(i-removedContexts);
           NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
-          int removedApplications = 0;
+          removedApplications = 0;
           for (int j=0; j < xcApplicationNodes.getLength(); j++) {
             Node currentApplicationNode = xcApplicationNodes.item(j-removedApplications);
             String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
             String xcApplicationInstance = xcApplicationNodes.item(j-removedApplications).getAttributes().getNamedItem("instance").getNodeValue();
-            if (xcApplicationClass.equals(maskedAppClass) && xcApplicationInstance.equals(maskedAppInstance)){
+            if (xcApplicationClass.equals(maskedAppParts[0]) && xcApplicationInstance.equals(maskedAppParts[1])){
               currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
               removedApplications+=1;
+            }
+            if (currentContextNode.getElementsByTagName("xc:Application").getLength()==0) {
+              currentContextNode.getParentNode().removeChild(currentContextNode);
+              removedContexts +=1;
             }
           }
         }
@@ -5514,7 +5520,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         int removedi2oTargets = 0;
         for (int i=0; i < Ni2oTargetNodes; i++) {
           Node i2oTargetNode = i2oTargetNodes.item(i-removedi2oTargets);
-          if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppClass) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppInstance)){
+          if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
             i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
             removedi2oTargets+=1;
           }

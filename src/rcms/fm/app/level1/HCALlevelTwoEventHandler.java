@@ -136,16 +136,16 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the and  strip the connections
      
-        logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+        logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
           XdaqExecutive exec = (XdaqExecutive)qr;
-          logger.info("[JohnLog2] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
+          logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
           XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
           String oldExecXML = config.getXml();
           try {
             String newExecXML = stripExecXML(oldExecXML);
             config.setXml(newExecXML);
-            logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+            logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
           }
           catch (UserActionException e) {
             String errMessage = e.getMessage();
