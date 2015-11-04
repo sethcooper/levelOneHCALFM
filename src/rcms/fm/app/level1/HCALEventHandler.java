@@ -80,8 +80,6 @@ import rcms.statemachine.definition.Input;
 import rcms.fm.fw.user.UserEvent;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
-import rcms.common.db.DBConnectorException;
-import rcms.common.db.DBConnectorException;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.common.db.DBConnectorException;
