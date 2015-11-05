@@ -2247,10 +2247,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               String allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
               for (Resource level2resource : fullconfigList) {
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
-                if (!level2resource.getName().contains("JobControl")) {
-                  allMaskedResources+=level2resource.getName();
-                  allMaskedResources+=";";
-                }
+                allMaskedResources+=level2resource.getName();
+                allMaskedResources+=";";
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The new list of all masked resources is: " + allMaskedResources);
               }
               logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
