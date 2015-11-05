@@ -74,7 +74,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     function getfullpath() {
       var fullpath = document.getElementsByClassName("control_label2")[0];
       var eloginfo = document.getElementById("elogInfo");
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
+      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
     }
   </script>
 

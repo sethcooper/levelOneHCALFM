@@ -37,21 +37,13 @@ $(document).ready(function() {
   var initcolor= $('#currentState').text();
   $('#currentState').attr("class", "hcal_control_"+initcolor);
   $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-    if (currentState == "Initial" || currentState == "Initializing" || currentState == "Halted") {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
-    }
-    else {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
-    }
 });
 
 $(document).ready(function() {
   setInterval(function() {
     var currentState = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_"+currentState);
-    if (currentState == "Initial" || currentState == "Initializing" || currentState == "Halted") {
+    if (currentState == "Initial") {
       $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
       $('#newMASKED_RESOURCEScheckbox :checkbox').show();
     }
@@ -100,8 +92,6 @@ function makedropdown(availableRunConfigs) {
   for ( var i = 0, l = array.length; i < l; i++ ) {
     var option = array[i].split(':');
     dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
-    // TODO: handle multiple masks. want to split maskedresources on something besides semicolons and then iterate over them inserting semicolons
-    //dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + "'>" + option[0] + "</option>";
   }
   dropdownoption = dropdownoption+"</select>";
   $('#dropdowndiv').html(dropdownoption);
@@ -137,6 +127,21 @@ function makecheckboxes(availableResources) {
   $('#masks').html(maskDivContents);
 }
 
+function hidecheckboxes() {
+    var currentState = $('#currentState').text();
+    if (currentState == "Initial") {
+      $('#dropdowndiv').show();
+      $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
+      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+    }
+    else {
+      $('#dropdowndiv').hide();
+      $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
+      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+    }
+}
 
 function hcalOnLoad() {
   onLoad();
@@ -159,6 +164,7 @@ function hcalOnLoad() {
   copyContents(RUN_NUMBER,newRUN_NUMBER);
   makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
   copyContents(HCAL_TIME_OF_FM_START,newHCAL_TIME_OF_FM_START);
+  hidecheckboxes();
   hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
   hideduplicatefield('RUN_CONFIG_SELECTED');
   hideduplicatefield('MASKED_RESOURCES');

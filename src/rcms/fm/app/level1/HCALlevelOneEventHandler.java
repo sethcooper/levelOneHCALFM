@@ -235,10 +235,11 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         for (int i=0; i < nodes.getLength(); i++) {
           logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue();
+            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
             logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
         } 
+        MaskedResources+=";";
         logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
       }
       catch (ParserConfigurationException | SAXException | IOException e) {
