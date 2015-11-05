@@ -675,8 +675,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -5524,6 +5524,19 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
         
+        //Remove masked applications' i2o connections from i2o:protocol node
+        NodeList xcUnicastNodes = execXML.getDocumentElement().getElementsByTagName("xc:Unicast");
+        int NxcUnicastNodes = xcUnicastNodes.getLength();
+        int removedxcUnicasts = 0;
+        for (int i=0; i < NxcUnicastNodes; i++) {
+          Node xcUnicastNode = xcUnicastNodes.item(i-removedxcUnicasts);
+          if (xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
+            xcUnicastNode.getParentNode().removeChild(xcUnicastNode);
+            removedxcUnicasts+=1;
+          }
+        }
+
+
         DOMSource domSource = new DOMSource(execXML);
         StringWriter writer = new StringWriter();
         StreamResult result = new StreamResult(writer);
