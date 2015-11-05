@@ -85,9 +85,11 @@ function undisable(paramNumber) {
   $(parameterInputBoxID).removeAttr("disabled");
 }
 function clickboxes() {
-  $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
-  $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
-  $('#newMASKED_RESOURCEScheckbox :checkbox').click();
+  if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
+    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
+    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
+    $('#newMASKED_RESOURCEScheckbox :checkbox').click();
+  }
 }
 
 function makedropdown(availableRunConfigs) {
