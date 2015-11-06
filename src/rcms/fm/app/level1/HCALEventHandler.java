@@ -675,8 +675,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -5530,7 +5530,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         int removedxcUnicasts = 0;
         for (int i=0; i < NxcUnicastNodes; i++) {
           Node xcUnicastNode = xcUnicastNodes.item(i-removedxcUnicasts);
-          if (xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
+          if (xcUnicastNode.getAttributes().getNamedItem("instance") != null && xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
+            logger.info("[JohnLog3] " + functionManager.FMname + ": About to remove xc:Unicast node for maskedapp with class " + maskedAppParts[0] + " and instance " + maskedAppParts[1]);
             xcUnicastNode.getParentNode().removeChild(xcUnicastNode);
             removedxcUnicasts+=1;
           }
@@ -5551,6 +5552,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       return newExecXMLstring;
     }
     catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+      logger.error("[JohnLog3] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
       throw new UserActionException("[JohnLog3] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  

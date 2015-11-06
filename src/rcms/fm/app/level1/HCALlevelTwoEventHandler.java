@@ -1468,7 +1468,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
             try {
-              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+              logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
               functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
             }
             catch (QualifiedResourceContainerException e) {
