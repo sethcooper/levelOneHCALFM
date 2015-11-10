@@ -1022,40 +1022,38 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
               if (fmChild.isActive()) {
-                if ( !(fmChild.getRole().toString().equals("Level2_FilterFarm") || fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2") || fmChild.getRole().toString().equals("Level2_Laser")) ) {
-                  if (!(fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm"))) {
-                    try {
-                      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which needs no specific order when starting, executing: " + startInput);
-                      fmChild.execute(startInput);
-                    }
-                    catch (CommandException e) {
-                      String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
-                      logger.error(errMessage,e);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                    }
+                if ( !(fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_Priority_1") || fmChild.getRole().toString().equals("Level2_Priority_2") || fmChild.getRole().toString().equals("Level2_Laser")) ) {
+                  try {
+                    logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which needs no specific order when starting, executing: " + startInput);
+                    fmChild.execute(startInput);
+                  }
+                  catch (CommandException e) {
+                    String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + startInput + " failed ...";
+                    logger.error(errMessage,e);
+                    functionManager.sendCMSError(errMessage);
+                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
                   }
                 }
               }
             }
           }
 
-          while (!waitforFMswithNotTheRole("Level2_Priority_1","Level2_Priority_2","Level2_FilterFarm","dummy","Level2_Laser",HCALStates.RUNNING.toString())) {
+          while (!waitforFMswithNotTheRole("Level2_Priority_1","Level2_Priority_2","EvmTrig","dummy","Level2_Laser",HCALStates.RUNNING.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.RUNNING.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, Level2_FilterFarm, or Level2_Laser");
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.RUNNING.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, EvmTrig, or Level2_Laser");
           }
 
-          // start Level2_FilterFarm
+          // start EvmTrig
           {
             Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
             FunctionManager fmChild = null;
             while (it.hasNext()) {
               fmChild = (FunctionManager) it.next();
               if (fmChild.isActive()) {
-                if (fmChild.getRole().toString().equals("Level2_FilterFarm") || (fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm"))) {
+                if (fmChild.getRole().toString().equals("EvmTrig")) {
                   try {
                     logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " which does e.g. event building, executing: " + startInput);
                     fmChild.execute(startInput);
@@ -1073,10 +1071,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
             }
           }
 
-          while (!waitforFMswithRole("Level2_FilterFarm",HCALStates.RUNNING.toString())) {
+          while (!waitforFMswithRole("EvmTrig",HCALStates.RUNNING.toString())) {
             try { Thread.sleep(1000); }
             catch (Exception ignored) {}
-            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.RUNNING.toString() + "\nAll FMs which have the role: Level2_FilterFarm.");
+            logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.RUNNING.toString() + "\nAll FMs which have the role: EvmTrig.");
           }
 
           // start Level2_Laser

@@ -92,8 +92,6 @@ import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
-import rcms.ns.event.NotificationEvent;
-import rcms.ns.utils.NotificationHelper;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.ResourceException;
@@ -675,8 +673,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -2224,28 +2222,29 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     // TODO send all masked applications defined in global parameter 
     String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-    if (MaskedResources.length() > 0) {
-      MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
-      logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedResources " + MaskedResources);
-      // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-      String[] MaskedResourceArray = MaskedResources.split(";");
-      List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-      for (String MaskedFM: MaskedResourceArray) {
-        logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
-        for (QualifiedResource qr : level2list) {
-          if (qr.getName().equals(MaskedFM)) {
-            logger.info("[JohnLog] " + functionManager.FMname + ": found the matching FM in the qr list: " + qr.getName());
-            logger.info("[JohnLog3] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
-            qr.setActive(false);
-            
-            QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
-            //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-            try {
-              logger.info("JohnLog3: the qualified group has this DB connector" + level2group.rs.toString());
-              Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
-              List<Resource> fullconfigList = fullConfig.getChildrenResources();
-              String allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-              for (Resource level2resource : fullconfigList) {
+    List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+    boolean somebodysHandlingTA = false;
+    for (QualifiedResource qr : level2list) {
+
+      try {
+        QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
+        logger.info("JohnLog3: the qualified group has this DB connector" + level2group.rs.toString());
+        Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
+        List<Resource> fullconfigList = fullConfig.getChildrenResources();
+        if (MaskedResources.length() > 0) {
+          MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
+          logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedResources " + MaskedResources);
+          String[] MaskedResourceArray = MaskedResources.split(";");
+          for (String MaskedFM: MaskedResourceArray) {
+            logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
+            if (qr.getName().equals(MaskedFM)) {
+              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching FM in the qr list: " + qr.getName());
+              logger.info("[JohnLog3] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+              qr.setActive(false);
+              
+              //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
+                String allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+                for (Resource level2resource : fullconfigList) {
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources+=level2resource.getName();
                 allMaskedResources+=";";
@@ -2255,13 +2254,26 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
               logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
             }
-            catch (DBConnectorException ex) {
-              logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
-            }
           }
         }
+        //for (Resource level2resource : fullconfigList) {
+        //  if (somebodysHandlingTA ) { 
+        //  }
+        //  // TODO
+        //  else if (level2resource. {
+        //   qr.setRole("EvmTrig");
+        //   (FunctionManagerResource)qr.setUserXml("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
+        //   logger.info("[JohnLog3] " + functionManager.FMname + ": This FM is handling the trigger adapter.");
+        //   somebodysHandlingTA=true;
+        //  }
+        //}
+      }
+      catch (DBConnectorException ex) {
+        logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
+    logger.warn("[JohnLog3] " + functionManager.FMname + ": Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
+    
   }
 
   protected void sendMaskedApplications() {
@@ -2666,11 +2678,11 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           SpecialFMsAreControlled = true;
         }
 
-        if ((fmChild.getName().toString().equals("HCAL_HBHEa") && fmChild.getRole().toString().equals("Level2_FilterFarm")) || fmChild.getRole().toString().equals("Level2_FilterFarm") ) {
-          //TODO -- Why does this break configuring?!
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
-        }
+        //if (fmChild.getRole().toString().equals("Level2_F-i-l-t-e-r-F-a-r-m") ) {
+        //  //TODO -- Why does this break configuring?!
+        //  logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+        //  SpecialFMsAreControlled = true;
+        //}
 
         if (fmChild.getName().toString().equals("HCAL_Laser") && fmChild.getRole().toString().equals("Level2_Laser")) {
           logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
@@ -5293,11 +5305,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 					logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
 
-            NotificationEvent ne = new NotificationEvent();
-            ne.setType(NotificationHelper.MAINTENANCE_TYPE);
-            ne.setContent(NotificationHelper.ENFORCE_RELOAD);
-            functionManager.sendNotificationEvent( ne );  
-            logger.info("[JohnLog2] " + functionManager.FMname + ": just sent the NotificationEvent");
             // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
             //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
 

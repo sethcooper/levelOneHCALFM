@@ -87,7 +87,7 @@ function clickboxes() {
 function makedropdown(availableRunConfigs) {
   availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
   var array = availableRunConfigs.split(';');
-  var dropdownoption = "<select id='dropdown' > <option value='' maskedresources=''> --SELECT-- </option>";
+  var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
   for ( var i = 0, l = array.length; i < l; i++ ) {
     var option = array[i].split(':');
@@ -128,19 +128,31 @@ function makecheckboxes(availableResources) {
 }
 
 function hidecheckboxes() {
-    var currentState = $('#currentState').text();
-    if (currentState == "Initial") {
-      $('#dropdowndiv').show();
-      $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+  var currentState = $('#currentState').text();
+  if (currentState == "Initial") {
+    $('#dropdowndiv').show();
+    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
+    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+    $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+  }
+  else {
+    $('#dropdowndiv').hide();
+    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
+    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+    $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+  }
+}
+
+function hideinitializebutton() {
+  var button = $('#commandSection :input')
+  button.each(function() {
+    if ($('#CFGSNIPPET_KEY_SELECTED').val() == "not set") {
+      button.hide();
     }
     else {
-      $('#dropdowndiv').hide();
-      $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+      button.show();
     }
+  });
 }
 
 function hcalOnLoad() {
@@ -165,6 +177,7 @@ function hcalOnLoad() {
   makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
   copyContents(HCAL_TIME_OF_FM_START,newHCAL_TIME_OF_FM_START);
   hidecheckboxes();
+  hideinitializebutton();
   hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
   hideduplicatefield('RUN_CONFIG_SELECTED');
   hideduplicatefield('MASKED_RESOURCES');
