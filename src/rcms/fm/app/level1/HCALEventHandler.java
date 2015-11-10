@@ -168,7 +168,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   Boolean HandleMonLoggers = false;
 
   // Switch for whether a TriggerAdapter is used in the configuration. Default is false, as in global runs
-  public Boolean HandleTriggerAdapter = false;
+  //public Boolean HandleTriggerAdapter = false;
 
   // Switch to be able to ignore any errors which would cause the FM state machine to end in an error state
   public String TestMode = "off";
@@ -268,11 +268,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
     {
       logger.info("[JohnLog] " + functionManager.FMname + ": This FM has userXML that says: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() );
-      Boolean doHandleTriggerAdapter = ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml().contains("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
-      if (doHandleTriggerAdapter) {
-        logger.info("[HCAL base] HandleTriggerAdapter = " + doHandleTriggerAdapter + ". This means we are in local mode and the TriggerAdapter is required.");
-        logger.info("[JohnLog] " + functionManager.FMname + ": The function manager with name " + functionManager.FMname + " will handle the trigger adapter.");
-        HandleTriggerAdapter = true;
+      //Boolean doHandleTriggerAdapter = ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml().contains("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
+      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+        logger.info("[JohnLog] " + functionManager.FMname + ": The function manager with name " + functionManager.FMname + " was assigned role EvmTrig and thus will handle the trigger adapter.");
       }
     }
 
@@ -2143,6 +2141,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
+              logger.info("[JohnLog4] " + functionManager.FMname + ": the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
               pam.setValue("ConfigurationDoc",ConfigDoc);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
@@ -2224,6 +2223,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
+    String allMaskedResources = "";
     for (QualifiedResource qr : level2list) {
 
       try {
@@ -2243,30 +2243,32 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               qr.setActive(false);
               
               //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-                String allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+                allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
                 for (Resource level2resource : fullconfigList) {
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources+=level2resource.getName();
                 allMaskedResources+=";";
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The new list of all masked resources is: " + allMaskedResources);
               }
-              logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
-              logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
             }
           }
         }
-        //for (Resource level2resource : fullconfigList) {
-        //  if (somebodysHandlingTA ) { 
-        //  }
-        //  // TODO
-        //  else if (level2resource. {
-        //   qr.setRole("EvmTrig");
-        //   (FunctionManagerResource)qr.setUserXml("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
-        //   logger.info("[JohnLog3] " + functionManager.FMname + ": This FM is handling the trigger adapter.");
-        //   somebodysHandlingTA=true;
-        //  }
-        //}
+        for (Resource level2resource : fullconfigList) {
+          if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA"))          {
+            if (somebodysHandlingTA) { 
+              allMaskedResources+=level2resource.getName(); 
+              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant trigger adapter " + level2resource.getName());
+            }
+            else {
+             qr.getResource().setRole("EvmTrig");
+             logger.info("[JohnLog3] " + functionManager.FMname + ": This FM is handling the trigger adapter.");
+             somebodysHandlingTA=true;
+            }
+          }
+        }
+        logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
+        logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
       }
       catch (DBConnectorException ex) {
         logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
@@ -3844,7 +3846,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // find out if all controlled EVMs are happy before stopping the run
   protected boolean isRUBuildersEmpty() {
 
-    if (HandleTriggerAdapter) {
+    if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
       logger.warn("[HCAL " + functionManager.FMname + "] Checking if the RUs are empty ...");
     }
 
