@@ -2220,21 +2220,24 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     // TODO send all masked applications defined in global parameter 
-    String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+    String MaskedFMs =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+    if (MaskedFMs.length() > 0) {
+      MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
+    }
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
+    boolean itsThisLvl2 = false;
     String allMaskedResources = "";
     for (QualifiedResource qr : level2list) {
-
+      itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.info("JohnLog3: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
-        if (MaskedResources.length() > 0) {
-          MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
-          logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedResources " + MaskedResources);
-          String[] MaskedResourceArray = MaskedResources.split(";");
+        if (MaskedFMs.length() > 0) {
+          logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedFMs " + MaskedFMs);
+          String[] MaskedResourceArray = MaskedFMs.split(";");
           for (String MaskedFM: MaskedResourceArray) {
             logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
             if (qr.getName().equals(MaskedFM)) {
@@ -2254,15 +2257,30 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
         for (Resource level2resource : fullconfigList) {
+          logger.info("[JohnLog3] " + functionManager.FMname + ": the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA"))          {
             if (somebodysHandlingTA) { 
-              allMaskedResources+=level2resource.getName(); 
+              allMaskedResources+=level2resource.getName()+";"; 
               logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant trigger adapter " + level2resource.getName());
             }
+
             else {
              qr.getResource().setRole("EvmTrig");
-             logger.info("[JohnLog3] " + functionManager.FMname + ": This FM is handling the trigger adapter.");
+             logger.info("[JohnLog3] " + functionManager.FMname + ": The following FM is handling the trigger adapter: " + qr.getName());
              somebodysHandlingTA=true;
+             itsThisLvl2=true;
+            }
+          }
+          if (level2resource.getName().contains("hcalTrivialFU"))          {
+            if (somebodysHandlingTA && !itsThisLvl2) { 
+              allMaskedResources+=level2resource.getName()+";"; 
+              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant TrivialFU " + level2resource.getName());
+            }
+          }
+          if (level2resource.getName().contains("hcalEventBuilder"))          {
+            if (somebodysHandlingTA && !itsThisLvl2) { 
+              allMaskedResources+=level2resource.getName()+";"; 
+              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant EventBuilder " + level2resource.getName());
             }
           }
         }
@@ -2274,7 +2292,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
-    logger.warn("[JohnLog3] " + functionManager.FMname + ": Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
+    if (!somebodysHandlingTA) logger.warn("[JohnLog3] " + functionManager.FMname + ": Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
     
   }
 
@@ -2290,7 +2308,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
       QualifiedGroup qg = functionManager.getQualifiedGroup();
 
-      // TODO send all masked applications defined in global parameter 
+      // TODO --fix
       String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       if (MaskedResources.length() > 0) {
         MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
