@@ -2258,29 +2258,32 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         }
         for (Resource level2resource : fullconfigList) {
           logger.info("[JohnLog3] " + functionManager.FMname + ": the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
-          if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA"))          {
-            if (somebodysHandlingTA) { 
-              allMaskedResources+=level2resource.getName()+";"; 
-              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant trigger adapter " + level2resource.getName());
-            }
+          if (!MaskedFMs.contains(qr.getName())) { 
+            if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
+              if (somebodysHandlingTA) { 
+                allMaskedResources+=level2resource.getName()+";"; 
+                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant trigger adapter " + level2resource.getName());
+              }
 
-            else {
-             qr.getResource().setRole("EvmTrig");
-             logger.info("[JohnLog3] " + functionManager.FMname + ": The following FM is handling the trigger adapter: " + qr.getName());
-             somebodysHandlingTA=true;
-             itsThisLvl2=true;
+              else {
+                qr.getResource().setRole("EvmTrig");
+                logger.info("[JohnLog3] " + functionManager.FMname + ": The following FM is handling the trigger adapter: " + qr.getName());
+                somebodysHandlingTA=true;
+                itsThisLvl2=true;
+                
+              }
             }
-          }
-          if (level2resource.getName().contains("hcalTrivialFU"))          {
-            if (somebodysHandlingTA && !itsThisLvl2) { 
-              allMaskedResources+=level2resource.getName()+";"; 
-              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant TrivialFU " + level2resource.getName());
+            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
+              if (somebodysHandlingTA && !itsThisLvl2) { 
+                allMaskedResources+=level2resource.getName()+";"; 
+                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant TrivialFU " + level2resource.getName());
+              }
             }
-          }
-          if (level2resource.getName().contains("hcalEventBuilder"))          {
-            if (somebodysHandlingTA && !itsThisLvl2) { 
-              allMaskedResources+=level2resource.getName()+";"; 
-              logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant EventBuilder " + level2resource.getName());
+            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
+              if (somebodysHandlingTA && !itsThisLvl2) { 
+                allMaskedResources+=level2resource.getName()+";"; 
+                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant EventBuilder " + level2resource.getName());
+              }
             }
           }
         }

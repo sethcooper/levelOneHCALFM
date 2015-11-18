@@ -55,6 +55,7 @@ import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
@@ -239,12 +240,20 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
-
+      
       //sendMaskedApplications();
       // ask the HCAL supervisor for the TriggerAdapter name
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole());
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
+      //
+      
+      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
+      for (QualifiedResource qr : xdaqApplicationList) { 
+        if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
+          if (qr.isActive())functionManager.FMrole="EvmTrig";
+        }
+      }
+      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
+      if (functionManager.FMrole.equals("EvmTrig")) {
+        logger.info("[JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         getTriggerAdapter();
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] OK, now I should have at least one TriggerAdapter to talk to ...");
       }
@@ -756,7 +765,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         waitforHCALsupervisor();
       }
 
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
 
         // configure FEDStreamers ... nothing to do here
 
@@ -1120,7 +1129,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
 
-        if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+        if (functionManager.FMrole.equals("EvmTrig")) {
           logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Now I am trying to talk to a TriggerAdapter (and EVMs, BUs and RUs in case they are defined) ...");
         }
 
@@ -1391,7 +1400,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
             }
           }
           else {
-            if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+            if (functionManager.FMrole.equals("EvmTrig")) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: startAction()";
               logger.error(errMessage);
               functionManager.sendCMSError(errMessage);
@@ -1462,7 +1471,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       functionManager.ErrorState = false;
 
       // only in local runs when all triggers were sent the run is stopped with 60 sec timeout
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
 
         // finally start the TriggerAdapters
         if (functionManager.containerTriggerAdapter!=null) {
@@ -1541,7 +1550,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
         }
         else {
-          if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+          if (functionManager.FMrole.equals("EvmTrig")) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: pauseAction()";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
@@ -1607,7 +1616,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
         }
         else {
-          if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+          if (functionManager.FMrole.equals("EvmTrig")) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: resumeAction()";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
@@ -1669,7 +1678,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       }
 
       // stop i.e. halt the triggering immediately and not waiting for the trigger adapter to report that it is stopped
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
@@ -1692,7 +1701,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
           }
           else {
-            if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+            if (functionManager.FMrole.equals("EvmTrig")) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: haltingAction()";
               logger.error(errMessage);
               functionManager.sendCMSError(errMessage);
@@ -1752,7 +1761,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       }
 
       // stop the event building gracefully
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
 
         // check if all events were build before stopping
         if(!isRUBuildersEmpty()) {
@@ -2042,7 +2051,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       }
 
       // stop the triggering
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
@@ -2068,7 +2077,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
           }
           else {
-            if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+            if (functionManager.FMrole.equals("EvmTrig")) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: stoppingAction()";
               logger.error(errMessage);
               functionManager.sendCMSError(errMessage);
@@ -2115,7 +2124,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       }
 
       // stop the event building gracefully
-      if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
+      if (functionManager.FMrole.equals("EvmTrig")) {
 
         // check if all events were build before stopping
         if(!isRUBuildersEmpty()) {
