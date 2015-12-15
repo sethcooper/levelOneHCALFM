@@ -116,6 +116,9 @@ public class HCALParameters {
 	public static final String CFGSNIPPET_KEY_SELECTED = "CFGSNIPPET_KEY_SELECTED";
 	public static final String AVAILABLE_RESOURCES = "AVAILABLE_RESOURCES";
 	public static final String MASKED_RESOURCES = "MASKED_RESOURCES";
+	public static final String RU_INSTANCE = "RU_INSTANCE";
+	public static final String LPM_SUPERVISOR = "LPM_SUPERVISOR";
+	public static final String EVM_TRIG_FM = "EVM_TRIG_FM";
 	// standard level 1 parameter set
 	public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
 
@@ -251,6 +254,9 @@ public class HCALParameters {
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CFGSNIPPET_KEY_SELECTED, new StringT("not set")));
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(AVAILABLE_RESOURCES, new StringT("none found")));
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(MASKED_RESOURCES, new StringT("")));
+		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RU_INSTANCE, new StringT("")));
+		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(LPM_SUPERVISOR, new StringT("")));
+		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(EVM_TRIG_FM, new StringT("")));
 
 		// Parameter to see the supervisor's overallErrorMessage
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(SUPERVISOR_ERROR, new StringT(""), FunctionManagerParameter.Exported.READONLY));

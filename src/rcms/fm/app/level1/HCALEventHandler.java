@@ -2201,7 +2201,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
       }
     }
-    else {
+    else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: sendRunTypeConfiguration()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
@@ -2213,8 +2213,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   }
 
   protected void setMaskedFMs() {
-    String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for sending the maskedApplications list!";
-    logger.info(debugMessage);
 
     // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
 
@@ -2228,6 +2226,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     boolean somebodysHandlingTA = false;
     boolean itsThisLvl2 = false;
     String allMaskedResources = "";
+    String ruInstance = "";
+    String lpmSupervisor = "";
     for (QualifiedResource qr : level2list) {
       itsThisLvl2 = false;
       try {
@@ -2270,7 +2270,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 logger.info("[JohnLog3] " + functionManager.FMname + ": The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
-                
+                logger.info("[JohnLog3] " + functionManager.FMname + ": About to set EVM_TRIG_FM.");
+                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+                logger.info("[JohnLog3] " + functionManager.FMname + ": Just set EVM_TRIG_FM.");
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
@@ -2284,12 +2286,31 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant EventBuilder " + level2resource.getName());
               }
+              else {
+                ruInstance=level2resource.getName();
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Just found the remaining EventBuilder " + level2resource.getName());
+              }
+            }
+            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
+              if (somebodysHandlingTA && !itsThisLvl2) { 
+                logger.info("[JohnLog3] " + functionManager.FMname + ": Found a Supervisor who is not handling the LPM." + level2resource.getName());
+              }
+              else {
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Found the Supervisor that is handling the LPM." + level2resource.getName());
+                lpmSupervisor=level2resource.getName();
+              }
             }
           }
         }
         logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
         logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
+        logger.info("[JohnLog4] " + functionManager.FMname + ": About to set the RU_INSTANCE.");
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
+        logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RU_INSTANCE to " + ruInstance);
+        logger.info("[JohnLog4] " + functionManager.FMname + ": About to set the LPM_SUPERVISOR.");
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
+        logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the LPM_SUPERVISOR to " + lpmSupervisor);
       }
       catch (DBConnectorException ex) {
         logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
@@ -2299,101 +2320,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     
   }
 
-  protected void sendMaskedApplications() {
-    if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-      String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for sending the maskedApplications list!";
-      logger.info(debugMessage);
-
-      XDAQParameter pam = null;
-
-      // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
-
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
-
-      // TODO --fix
-      String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      if (MaskedResources.length() > 0) {
-        MaskedResources = MaskedResources.substring(0, MaskedResources.length()-1);
-        logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedResources " + MaskedResources);
-        // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-        for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-          try {
-            pam =((XdaqApplication)qr).getXDAQParameter();
-            pam.select("maskedApplications");
-
-            pam.setValue("maskedApplications",MaskedResources);
-            logger.debug("[HCAL " + functionManager.FMname + "] sending maskedApplications list ...");
-
-            pam.send();
-          }
-          catch (XDAQTimeoutException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendMaskedApplications(). Perhaps the supervisor is dead!?";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          catch (XDAQException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendMaskedApplications()";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-        String[] MaskedResourceArray = MaskedResources.split(";");
-        List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-        List<QualifiedResource> xdaqApplicationList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
-        for (String MaskedApplication: MaskedResourceArray) {
-          String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
-          logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          for (QualifiedResource qr : xdaqApplicationList) {
-            if (qr.getName().equals(MaskedApplication) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
-              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
-              if (!qr.getName().contains("PeerTransportATCP")) { 
-                try {
-                  pam = null;
-                  logger.info("[JohnLog] " + functionManager.FMname + ": about to retrieve XDAQParameters for " + qr.getName());
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  String isMasked = "true";
-                  pam.select("IsMasked");
-                  pam.setValue("IsMasked",  isMasked);
-                  logger.info("[JohnLog] " + functionManager.FMname + ": about to send IsMasked to " + qr.getName());
-                  pam.send();
-                  logger.info("[JohnLog] " + functionManager.FMname + ":: Set IsMasked for " + qr.getName() + " to " + isMasked);
-
-                  pam = null;
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select("IsMasked");
-                  String isMaskedRetrieved = pam.getValue("IsMasked");
-                  logger.info("[JohnLog] " + functionManager.FMname + ":: Checked IsMasked again after setting it, and got " + isMaskedRetrieved + " from " + qr.getName());
-                }
-                catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendMaskedApplications(). Timeout sending isMasked to the masked app(s).";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-                catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendMaskedApplications(). Couldn't send isMasked to the masked app(s).";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 
   // get the TriggerAdapter name from the HCAL supervisor only if no trigger adapter was already set
   protected void getTriggerAdapter() {
@@ -2460,7 +2386,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         }
 
       }
-      else {
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: getTriggerAdapter()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
@@ -4080,7 +4006,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
 
     }
-    else {
+    else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
@@ -5554,7 +5480,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
         
-        //Remove masked applications' i2o connections from i2o:protocol node
+        //Remove masked applications' i2o connections from i2o:unicasts node
         NodeList xcUnicastNodes = execXML.getDocumentElement().getElementsByTagName("xc:Unicast");
         int NxcUnicastNodes = xcUnicastNodes.getLength();
         int removedxcUnicasts = 0;
@@ -5567,6 +5493,49 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
 
+        //Move the lpm application node into the context that holds the pi and ici
+        String  lpm = "tcds::lpm::LPMController";
+        //String  pi = "tcds::pi::PIController";
+        String  ici = "tcds::ici::ICIController";
+        Element lpmApplicationElement = null;
+        Element newLPMnodeContext = null;
+        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        NxcContexts = xcContextNodes.getLength();
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i);
+          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
+          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
+            Node currentApplicationNode = xcApplicationNodes.item(j);
+            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
+            System.out.println("Item " + i + " has class " + xcApplicationClass + " and instance " + currentApplicationNode.getAttributes().getNamedItem("instance").getNodeValue());
+            if (xcApplicationClass.equals(lpm)){
+              lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
+              if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+            }
+            if (xcApplicationClass.equals(ici)){
+              newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
+            }
+          }
+        }
+        if (lpmApplicationElement!=null && functionManager.FMrole.equals("EvmTrig")){
+          if (newLPMnodeContext==null) {
+            logger.error("[JohnLog4] " + functionManager.FMname + ": Could not find a context in this executive that has a PI");
+          }
+          else {
+            newLPMnodeContext.appendChild(lpmApplicationElement);
+          }
+        }
+        
+        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        NxcContexts = xcContextNodes.getLength();
+        int removedLPMContexts = 0;
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i-removedLPMContexts);
+          if ( currentContextNode!=null && currentContextNode.getElementsByTagName("*").getLength()==0) {
+               currentContextNode.getParentNode().removeChild(currentContextNode);
+               removedLPMContexts++;
+           }
+        } 
 
         DOMSource domSource = new DOMSource(execXML);
         StringWriter writer = new StringWriter();

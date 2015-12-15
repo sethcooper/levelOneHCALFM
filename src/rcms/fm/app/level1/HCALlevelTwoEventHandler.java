@@ -76,7 +76,7 @@ import rcms.utilities.fm.task.Task;
 /**
  * Event Handler class for Level 2 HCAL Function Manager
  *
- * @author Arno Heister
+ * @maintainer John Hakala
  *
  */
 
@@ -117,12 +117,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
       
-if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString().isEmpty()) {
+      if (parameterSet.get(HCALParameters.EVM_TRIG_FM) != null) {
+        String evmTrigFM = ((StringT)parameterSet.get(HCALParameters.EVM_TRIG_FM).getValue()).getString();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM,new StringT(evmTrigFM)));
+      }
+      if ( ((StringT)parameterSet.get(HCALParameters.EVM_TRIG_FM).getValue()).getString().equals(functionManager.FMname) ) {
+        functionManager.FMrole="EvmTrig";
+      }
+      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
+      if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString().isEmpty()) {
         String MaskedResources = ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES,new StringT(MaskedResources)));
         String[] MaskedResourceArray = MaskedResources.split(";");
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
-        List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
         for (String MaskedApplication: MaskedResourceArray) {
           String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
           logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
@@ -134,8 +141,9 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
             }
           }
         }
-      List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      // loop over the and  strip the connections
+        logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
+        List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+        // loop over the executives and strip the connections
      
         logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
@@ -167,7 +175,72 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
 
       // initialize all XDAQ executives
       initXDAQ();
-
+      parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+      //for (QualifiedResource qr : xdaqApplicationList) { 
+      //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
+      //    if (qr.isActive())functionManager.FMrole="EvmTrig";
+      //  }
+      //}
+      String ruInstance = "";
+      if (parameterSet.get(HCALParameters.RU_INSTANCE) != null) {
+        ruInstance = ((StringT)parameterSet.get(HCALParameters.RU_INSTANCE).getValue()).getString();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE,new StringT(ruInstance)));
+      }
+      String lpmSupervisor = "";
+      if (parameterSet.get(HCALParameters.LPM_SUPERVISOR) != null) {
+        lpmSupervisor = ((StringT)parameterSet.get(HCALParameters.LPM_SUPERVISOR).getValue()).getString();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR,new StringT(lpmSupervisor)));
+      }
+      for (QualifiedResource qr : xdaqApplicationList) {
+        if (qr.isActive()) {
+          try {
+            XDAQParameter pam = null;
+            pam = ((XdaqApplication)qr).getXDAQParameter();
+            for (String pamName : pam.getNames()){
+              if (pamName.equals("RUinstance")) {
+                pam.select(new String[] {"RUinstance"});
+                pam.setValue("RUinstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("BUInstance")) {
+                pam.select(new String[] {"BUInstance"});
+                pam.setValue("BUInstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("EVMinstance")) {
+                pam.select(new String[] {"EVMinstance"});
+                pam.setValue("EVMinstance", ruInstance.split("_")[1]);
+                pam.send();
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+              if (pamName.equals("HandleLPM")) {
+                pam.select(new String[] {"HandleLPM"});
+                pam.setValue("HandleLPM", "true");
+                pam.send();
+                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+              }
+            }
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
+            logger.error(errMessage,e);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
+            logger.error(errMessage,e);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          }
+        }
+      }
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
@@ -177,8 +250,10 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       // start the HCALSupervisor watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-      thread2.start();
+      if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+        thread2.start();
+      }
 
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
@@ -245,13 +320,6 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
       // ask the HCAL supervisor for the TriggerAdapter name
       //
       
-      List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
-      for (QualifiedResource qr : xdaqApplicationList) { 
-        if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
-          if (qr.isActive())functionManager.FMrole="EvmTrig";
-        }
-      }
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
       if (functionManager.FMrole.equals("EvmTrig")) {
         logger.info("[JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         getTriggerAdapter();
@@ -358,7 +426,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         }
 
       }
-      else {
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
@@ -1411,7 +1479,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
           }
         }
       }
-      else {
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: startAction()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
@@ -1503,6 +1571,21 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("running like hell ...")));
       }
+      //XdaqApplicationContainer lpmContainer =  new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController"));      
+      //if (!lpmContainer.isEmpty()) {
+      //  logger.info("[JohnLog4] " + functionManager.FMname + ": Sending Enable to the LPMController.");
+      //  try {
+      //    lpmContainer.execute(HCALInputs.HCALSTART);
+      //  }
+      //  catch (QualifiedResourceContainerException e) {
+      //    String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (LPMController=Enable) failed ... Message: " + e.getMessage();
+      //    logger.error(errMessage,e);
+      //    functionManager.sendCMSError(errMessage);
+      //    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      //    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+      //    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      //  }
+      //}
       // patch for pause-resume behavior
       functionManager.FMWasInPausedState = false;
     }
@@ -1751,7 +1834,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
         }
 
       }
-      else {
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
@@ -2114,7 +2197,7 @@ if (parameterSet.get(HCALParameters.MASKED_RESOURCES) != null && !((StringT)para
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
       }
-      else {
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: stoppingAction()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);

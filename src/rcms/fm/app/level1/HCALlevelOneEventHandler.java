@@ -70,7 +70,7 @@ import rcms.fm.fw.service.parameter.ParameterServiceException;
 /**
  * Event Handler class for HCAL Function Managers
  *
- * @author Arno Heister
+ * @maintaner John Hakala
  *
  */
 
@@ -103,7 +103,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			setMaskedFMs();
 			QualifiedGroup qg = functionManager.getQualifiedGroup();
 			List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-			// loop over the ecalsup executives to strip the connections
+			// loop over the executives to strip the connections
 
 			String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
 			if (MaskedResources.length() > 0) {
@@ -248,6 +248,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			logger.info("[JohnLog2] " + functionManager.FMname + ": About to set the initial list of masked resources: " + MaskedResources );
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
+
+			String ruInstance =  ((StringT)functionManager.getParameterSet().get(HCALParameters.RU_INSTANCE).getValue()).getString();
+      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the RU_INSTANCE " + ruInstance);
+			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
+
+			String lpmSupervisor =  ((StringT)functionManager.getParameterSet().get(HCALParameters.LPM_SUPERVISOR).getValue()).getString();
+      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
+			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
+
+			String evmTrigFM =  ((StringT)functionManager.getParameterSet().get(HCALParameters.EVM_TRIG_FM).getValue()).getString();
+      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the EVM_TRIG_FM " + evmTrigFM);
+			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
 
 			// prepare command plus the parameters to send
 			Input initInput = new Input(HCALInputs.INITIALIZE.toString());
