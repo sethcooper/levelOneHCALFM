@@ -286,6 +286,16 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     destroyed = false;
 
+    // SIC TEST
+    try {
+    logger.info("[SethLog] HCALFunctionManager createAction: try to get the xdaq parameter");
+    net.hep.cms.xdaqctl.XDAQParameter param = new net.hep.cms.xdaqctl.XDAQParameter("http://hcalmon.cms:9945","hcalAlarmer",0);
+    // this does a lazy get. do we need to force the update before getting it?
+    logger.info("[SethLog] HCALFunctionManager createAction: value of alarmer parameter GlobalStatus is " + param.getValue("GlobalStatus"));
+    } catch (Exception e) {
+    logger.info("[SethLog] HCALFunctionManager createAction: caught an Exception when trying to get the parameter: ["+ e.toString() + "]");
+    }
+    // SIC TEST
     System.out.println("[HCAL " + FMname + "] createAction executed ...");
     logger.debug("[HCAL " + FMname + "] createAction executed ...");
   }

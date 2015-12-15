@@ -36,6 +36,8 @@ public final class HCALStates {
 
 	public static final State RUNNING = new State("Running");
 
+	public static final State RUNNINGDEGRADED = new State("RunningDegraded");
+
 	public static final State ACTIVE = new State("Active");
 
 	public static final State ENABLED = new State("Enabled");
