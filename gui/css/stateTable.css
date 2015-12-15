@@ -1,0 +1,100 @@
+.Initial {
+	background-color: black;
+	color: white;
+}
+
+.Halted {
+	background-color: blue;
+	color: white;
+}
+
+.Halting {
+	background-color: blue;
+	color: red;
+}
+
+.Configured {
+	background-color: orange;
+	color: black;
+}
+
+.Configuring {
+	background-color: orange;
+	color: red;
+}
+
+.Ready {
+	background-color: orange;
+	color: black;
+}
+
+.Running {
+	background-color: green;
+	color: white;
+}
+
+.Enabled {
+	background-color: green;
+	color: white;
+}
+
+.Error {
+	background-color: red;
+	color: white;
+}
+
+.Faulty {
+	background-color: red;
+	color: white;
+}
+
+
+.Failed {
+	background-color: red;
+	color: white;
+}
+
+
+.failed {
+	background-color: red;
+	color: white;
+}
+
+.Initialized {
+	background-color: blue;
+	color: white;
+}
+
+.NotInitialized {
+	background-color: white;
+	color: black;
+}
+
+
+.stateTable {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+}
+
+.stateTableEntry {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #666;
+}
+
+.stateTableHeading {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+}
+
+.FM {
+	background-color: #CCCCCC;
+	color: #111111
+}
+	
+.XDAQ {
+	background-color: #EEEEEE;
+	color: #222222
+}	
+

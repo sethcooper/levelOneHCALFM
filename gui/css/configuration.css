@@ -1,0 +1,20 @@
+.configuration_title{
+	font-family : arial, helvetica, sans-serif;
+	color : black;
+	font-size : medium;
+	text-align : left;
+	font-weight: bold;
+}
+
+.control_label {
+	font-family : arial, helvetica, sans-serif;
+	color : black;
+	font-size : small;
+	text-align : left;
+}
+.configuration_button {
+	font-family : arial, helvetica, sans-serif;
+	color : black;
+	font-size : small;
+	text-align : center;
+}
