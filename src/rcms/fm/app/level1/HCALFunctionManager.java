@@ -510,6 +510,18 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
         svCalc.add(sv);
       }
+      {
+        StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.RUNNINGDEGRADED);
+        sv.registerConditionState(containerFMChildren,HCALStates.RUNNINGDEGRADED);
+        sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
+        sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
+        sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
+        if (asynchcalSupervisor) {
+          sv.registerConditionState(containerhcalSupervisor,HCALStates.ACTIVE);
+        }
+        svCalc.add(sv);
+      }
 
       {
         StateVector sv = new StateVector();

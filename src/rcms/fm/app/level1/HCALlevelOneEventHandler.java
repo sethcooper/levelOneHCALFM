@@ -78,7 +78,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 	static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
 
-	public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {}
+	public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
+    addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
+  }
 
 	public void init() throws rcms.fm.fw.EventHandlerException {
 
@@ -1186,6 +1188,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		if (obj instanceof StateNotification) {
 
 			// triggered by State Notification from child resource
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside runningAction(); computeNewState()");
 			computeNewState((StateNotification) obj);
 			return;
 
@@ -1462,6 +1465,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		if (obj instanceof StateNotification) {
 
 			// triggered by State Notification from child resource
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside stoppingAction(); computeNewState()");
 			computeNewState((StateNotification) obj);
 			return;
 

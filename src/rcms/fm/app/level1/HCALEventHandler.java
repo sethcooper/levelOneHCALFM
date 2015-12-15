@@ -3480,14 +3480,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // toState: target state
   public void computeNewState(StateNotification newState) {
 
-    logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
+    logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
 
     if (newState.getToState() == null) {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
     else {
-      logger.debug("[HCAL " + functionManager.FMname + "] received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+      logger.warn("[SethLog HCAL " + functionManager.FMname + "] received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
     }
 
     // search the resource which sent the notification
@@ -3520,7 +3520,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
-        logger.debug("[HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
+        logger.warn("[SethLog HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
@@ -3584,6 +3584,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+              else if (actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
                 if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
 
@@ -3645,7 +3646,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.STOPPING.getStateString())) {
-              if (actualState.equals(HCALStates.RUNNING.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
+              if (actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
                 logger.error(errMessage);
@@ -4724,6 +4725,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNING.toString())));
             functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNINGDEGRADED.toString())));
+            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+          }
         }
 
         // move the little fishys every 2s
@@ -4733,7 +4738,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             LittleA.movehim();
           }
           // move the little fishy when running
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+               (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             LittleB.movehim();
           }
         }
@@ -5159,7 +5165,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         // poll HCAL supervisor status in the "Configured" and "Running" state every 20 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
         if (icount%20==0) {
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) || functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) || functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())
+                || functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
             if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
               {
@@ -5271,12 +5278,13 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         // poll the status of the FMs which do the event building every 5 sec
         if (icount%5==0) {
 					logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
 
             // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
             //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
 
-					    logger.info("[JohnLog2] " + functionManager.FMname + ": found SpecialFMsAreControlled=true and about to loop over other level2s.");
+					    logger.info("[JohnLog2] " + functionManager.FMname + ": about to loop over other level2s.");
               Iterator it1 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
               FunctionManager fmChild_HCAL_EvmTrig = null;
               while (it1.hasNext()) {
@@ -5322,14 +5330,15 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         // poll TriggerAdapter status every 5 sec
         if (icount%5==0) {
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             // check the state of the TriggerAdapter
             if (functionManager.containerTriggerAdapter!=null) {
               if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
                 {
                   String debugMessage = "[HCAL " + functionManager.FMname + "] TriggerAdapter found for asking its state - good!";
-                  logger.debug(debugMessage);
+                  logger.info(debugMessage);
                 }
 
                 XDAQParameter pam = null;
@@ -5374,7 +5383,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
                     }
 
-                    logger.debug("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
+                    logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
 
                     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
 
@@ -5413,7 +5422,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
                   functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Stopping the TA ...")));
 
-                  if (!SpecialFMsAreControlled) { functionManager.fireEvent(HCALInputs.STOP); }
+                  if (!SpecialFMsAreControlled) {
+                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
+                    functionManager.fireEvent(HCALInputs.STOP);
+                  }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] TriggerAdapter should have reported to be in the Ready state, which means the events are taken ...");
                   logger.info("[HCAL " + functionManager.FMname + "] All L1As were sent, i.e. Trigger adapter is in the Ready state, changing back to Configured state ...");
@@ -5434,7 +5446,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
       // stop the TriggerAdapter watchdog thread
       System.out.println("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-      logger.debug("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
+      logger.warn("[SethLog HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
 
       TriggerAdapterWatchThreadList.remove(this);
 
