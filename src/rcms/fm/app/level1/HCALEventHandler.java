@@ -3177,6 +3177,25 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         }
 
         {
+          String localRunKeyOnStopping = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          Parameter<StringT> localrunkey;
+          if (!localRunKeyOnStopping.equals("")) {
+            localrunkey = new Parameter<StringT>("LOCAL_RUN_KEY",new StringT(localRunKeyOnStopping));
+          }
+          else {
+            localrunkey = new Parameter<StringT>("LOCAL_RUN_KEY",new StringT("not set"));
+          }
+          try {
+            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Local Run Key: " + localrunkey.getValue().toString());
+            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(localrunkey); }
+          }
+          catch (RunInfoException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error - RunInfoException occured  when publishing the RunKey used ...\nProbably this is OK when the FM was destroyed.";
+            logger.error(errMessage,e);
+          }
+        }
+
+        {
           Parameter<StringT> CfgScript;
           if (!FullCfgScript.equals("")) {
             CfgScript = new Parameter<StringT>("CfgScript",new StringT(PasswordFree(FullCfgScript)));
