@@ -465,6 +465,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       svCalc = new StateVectorCalculation(resourceGroup);
 
 
+      //FIXME: Don't register the condition states if the lists are empty
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.INITIAL);
