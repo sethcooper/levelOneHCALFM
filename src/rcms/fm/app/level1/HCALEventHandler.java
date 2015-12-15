@@ -5288,59 +5288,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         Date now = Calendar.getInstance().getTime();
 
-        //// poll the status of the FMs which do the event building every 5 sec
-        //if (icount%5==0) {
-				//	logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
-        //  if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
-        //        (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
-
-        //    // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
-        //    //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
-
-				//	    logger.info("[JohnLog2] " + functionManager.FMname + ": about to loop over other level2s.");
-        //      Iterator it1 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        //      FunctionManager fmChild_HCAL_EvmTrig = null;
-        //      while (it1.hasNext()) {
-        //        fmChild_HCAL_EvmTrig = (FunctionManager) it1.next();
-
-        //        if (fmChild_HCAL_EvmTrig.getRole().toString().equals("EvmTrig"))
-        //        {
-        //          if (fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) {
-        //            logger.warn("[JohnLog2] " + functionManager.FMname + ": HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
-
-        //            NotifiedControlledFMs = true;  // take care that a notification to the controlled child FMs is only sent once
-
-        //            Iterator it2 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-        //            FunctionManager fmChild = null;
-        //            while (it2.hasNext()) {
-        //              fmChild = (FunctionManager) it2.next();
-        //              if (fmChild.isActive()) { 
-        //                if ( !fmChild.getRole().toString().equals("EvmTrig") ) {
-
-        //                  if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-        //                    try {
-        //                      logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found FM child named: " + fmChild.getName().toString() + "\nThis FM is in the state: " + fmChild.refreshState().toString() + "\nThe role of this FM: " + fmChild.getRole().toString() + "\nNow we send fireEvent: " + HCALInputs.STOP);
-        //                      fmChild.execute(HCALInputs.STOP);
-        //                    }
-        //                    catch (CommandException e) {
-        //                      String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " failed ...";
-        //                      logger.error(errMessage,e);
-        //                      functionManager.sendCMSError(errMessage);
-        //                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        //                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-        //                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        //                    }
-        //                  }
-        //                }
-        //              }
-        //            }
-        //          }
-        //        }
-        //      }
-        //    //}
-        //  }
-        //}
-
         // poll TriggerAdapter status every 5 sec
         if (icount%5==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
