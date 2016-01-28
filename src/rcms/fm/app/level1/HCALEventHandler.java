@@ -188,7 +188,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   public Integer sessionId = 0;
 
   // Toggle the usage of offical run numbers
-  public boolean OfficialRunNumbers = false;
+  public boolean OfficialRunNumbers = true;
   public boolean RunInfoPublish = false;
   public boolean RunInfoPublishfromXDAQ = false;
 
@@ -289,6 +289,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
 
     // Get the setting for whether official run numbers should be used from the userXML
+    // TODO: Fix this to use the new method for userXMLelements 
     {
       String useOfficialRunNumbers = GetUserXMLElement("OfficialRunNumbers");
       if (useOfficialRunNumbers.equals("true_butwithnoRunInfoFromXDAQ")) {
@@ -323,40 +324,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       if (!useTestMode.equals("")) {
         TestMode = useTestMode;
         logger.warn("[HCAL base] TestMode: " + TestMode + " enabled - ignoring anything which would set the state machine to an error state!");
-      }
-    }
-
-    // Automatic eLog publishing // TODO this is deprecated
-    {
-      String doElogPublish = GetUserXMLElement("ElogPublish");
-      if (doElogPublish.equals("true") || TestMode.equals("ElogPublish")) {
-        ElogPublish = true;
-
-        // get elog publisher data
-        String ElogHost     = GetUserXMLElement("ElogHost");
-        String ElogPort     = GetUserXMLElement("ElogPort");
-        String ElogBook     = GetUserXMLElement("ElogBook");
-        String ElogUser     = GetUserXMLElement("ElogUser");
-        String ElogPassword = GetUserXMLElement("ElogPassword");
-        // construct elog publisher
-
-        logger.debug("[HCAL base] Will publish to Elog: " + ElogHost + ":" + ElogPort + ", book = " + ElogBook + ", user = " + ElogUser + ", password = " + ElogPassword );
-
-        ElogPublisher = new ElogPublisher(ElogHost,new Integer(ElogPort),ElogBook,ElogUser,ElogPassword);
-
-        logger.debug("[HCAL base] ... Elog publisher activated.");
-      }
-      else {
-        logger.debug("[HCAL base] Elog run summary not activated.");
-      }
-    }
-
-    // MonLogger handling (probably outdated) // TODO this MonLogger should all be removed
-    {
-      String doHandleMonLoggers = GetUserXMLElement("HandleMonLoggers");
-      if (doHandleMonLoggers.equals("true")) {
-        logger.info("[HCAL base] ControlMonLoggers = " + doHandleMonLoggers + ". This means this FM controls the defined MonLogger applications for this run config.");
-        HandleMonLoggers = true;
       }
     }
 
@@ -3318,38 +3285,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.error(errMessage,e);
           }
         }
-
-        /*{
-          String FullShifterList = "Preamble:\n";
-
-        // find comment tag in the userXML
-        String ShifteruserXML = GetUserXMLElement("Shifters");
-        if (ShifteruserXML.equals("")) { FullShifterList += "not used"; }
-
-        FullShifterList += "\nShifters:\n";
-
-        // if there is any user add in the comment field of the FM add this too
-        String ShifterUserGUI = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_SHIFTERS).getValue()).getString();
-        if (!ShifterUserGUI.equals("")) {
-        FullShifterList += ShifterUserGUI;
-        }
-        else {
-        if (RunType.equals("local")) {
-        logger.warn("[HCAL " + functionManager.FMname + "] HCAL Shifter list is empty! Please add your name ...\nProbably this is OK when the FM was destroyed.");
-        }
-        FullShifterList += "not set";
-        }
-
-        Parameter<StringT> Shifters = new Parameter<StringT>("Shifters",new StringT(FullShifterList));
-        try {
-        logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Shifter list:\n" + Shifters.getValue().toString());
-        if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Shifters); }
-        }
-        catch (RunInfoException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-        logger.error(errMessage,e);
-        }
-        }*/
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
