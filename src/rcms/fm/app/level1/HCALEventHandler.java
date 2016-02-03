@@ -280,7 +280,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String doRunInfoPublish =  "";
       try{
-        if( !getHCALuserXML().getElementsByTagName("RunInfoPublish").equals(null) ) { 
+        if(!getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("RunInfoPublish").equals(null) && getHCALuserXML().getElementsByTagName("RunInfoPublish").getLength() == 1 ) { 
+          
           doRunInfoPublish = getHCALuserXML().getElementsByTagName("RunInfoPublish").item(0).getTextContent();
         }
       }
@@ -302,7 +303,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useOfficialRunNumbers = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("OfficialRunNumbers").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("OfficialRunNumbers").equals(null) && getHCALuserXML().getElementsByTagName("OfficialRunNumbers").getLength() == 1  ) {
          useOfficialRunNumbers = getHCALuserXML().getElementsByTagName("OfficialRunNumbers").item(0).getTextContent();
         } 
       }
@@ -326,7 +327,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String NewRunSequenceName = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("RunSequenceName").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("RunSequenceName").equals(null) && getHCALuserXML().getElementsByTagName("RunSequenceName").getLength() == 1  ) {
           NewRunSequenceName = getHCALuserXML().getElementsByTagName("RunSequenceName").item(0).getTextContent();
         }
       }
@@ -347,7 +348,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useTestMode = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("TestMode").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("TestMode").equals(null) && getHCALuserXML().getElementsByTagName("TestMode").getLength() == 1  ) {
           useTestMode = getHCALuserXML().getElementsByTagName("TestMode").item(0).getTextContent();
         }
       }
@@ -423,7 +424,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useHCALSupervisorAsyncEnable = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("HCALSupervisorAsyncEnable").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("HCALSupervisorAsyncEnable").equals(null) && getHCALuserXML().getElementsByTagName("HCALSupervisorAsyncEnable").getLength() == 1  ) {
           useHCALSupervisorAsyncEnable = getHCALuserXML().getElementsByTagName("HCALSupervisorAsyncEnable").item(0).getTextContent();
         }
       }
@@ -446,7 +447,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useStopATCP = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("StopATCP").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("StopATCP").equals(null) && getHCALuserXML().getElementsByTagName("StopATCP").getLength() == 1  ) {
           useStopATCP = getHCALuserXML().getElementsByTagName("StopATCP").item(0).getTextContent();
         }
       }
@@ -468,7 +469,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useStopFEDStreamer = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("StopFEDStreamer").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("StopFEDStreamer").equals(null) && getHCALuserXML().getElementsByTagName("StopFEDStreamer").getLength() == 1  ) {
           useStopFEDStreamer=getHCALuserXML().getElementsByTagName("StopFEDStreamer").item(0).getTextContent();
         }
       }
@@ -491,7 +492,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String doForceNotToUseAsyncCommunication = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("ForceNotToUseAsyncCommunication").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("ForceNotToUseAsyncCommunication").equals(null) && getHCALuserXML().getElementsByTagName("ForceNotToUseAsyncCommunication").getLength() == 1  ) {
           doForceNotToUseAsyncCommunication=getHCALuserXML().getElementsByTagName("ForceNotToUseAsyncCommunication").item(0).getTextContent();
         }
       }
@@ -516,7 +517,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       String theNumberOfEvents = "";
       GetUserXMLElement("NumberOfEvents");
       try {
-        if ( !getHCALuserXML().getElementsByTagName("NumberOfEvents").equals(null) )  {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("NumberOfEvents").equals(null) && getHCALuserXML().getElementsByTagName("NumberOfEvents").getLength() == 1  )  {
           theNumberOfEvents=getHCALuserXML().getElementsByTagName("NumberOfEvents").item(0).getTextContent();
         }
       }
@@ -534,7 +535,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String theZeroSuppressionSnippetName = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("ZeroSuppressionSnippetName").equals(null) )  {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("ZeroSuppressionSnippetName").equals(null) && getHCALuserXML().getElementsByTagName("ZeroSuppressionSnippetName").getLength() == 1  )  {
           theZeroSuppressionSnippetName=getHCALuserXML().getElementsByTagName("ZeroSuppressionSnippetName").item(0).getTextContent();
         }
       }
@@ -551,7 +552,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String theSpecialZeroSuppressionSnippetName = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("SpecialZeroSuppressionSnippetName").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("SpecialZeroSuppressionSnippetName").equals(null) && getHCALuserXML().getElementsByTagName("SpecialZeroSuppressionSnippetName").getLength() == 1  ) {
           theSpecialZeroSuppressionSnippetName=getHCALuserXML().getElementsByTagName("SpecialZeroSuppressionSnippetName").item(0).getTextContent();
         }
       }
@@ -568,7 +569,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String theVdMSnippetName = "";
       try {
-        if ( !getHCALuserXML().getElementsByTagName("VdMSnippetName").equals(null) )  {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("VdMSnippetName").equals(null) && getHCALuserXML().getElementsByTagName("VdMSnippetName").getLength() == 1  )  {
           theVdMSnippetName=getHCALuserXML().getElementsByTagName("VdMSnippetName").item(0).getTextContent();
         }
       }
@@ -585,7 +586,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useResetForRecover = ""; 
       try {
-        if ( !getHCALuserXML().getElementsByTagName("UseResetForRecover").equals(null) ) {
+        if ( !getHCALuserXML().equals(null) && !getHCALuserXML().getElementsByTagName("UseResetForRecover").equals(null) && getHCALuserXML().getElementsByTagName("UseResetForRecover").getLength() == 1  ) {
           useResetForRecover=getHCALuserXML().getElementsByTagName("UseResetForRecover").item(0).getTextContent();
         }
       }
@@ -5599,17 +5600,20 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
   }  
 
-  public Document getHCALuserXML() throws UserActionException {
+  public Element getHCALuserXML() throws UserActionException {
     try {
       // return the userXML
+      logger.info("[JohnLog5] " + functionManager.FMname + ": starting the getHCALuserXML method.");
       String userXmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
 
+      logger.info("[JohnLog5] " + functionManager.FMname + ": got the userXML.");
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(userXmlString));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
-      return hcalUserXML;
+      logger.info("[JohnLog5] " + functionManager.FMname + ": formatted the userXML.");
+      return hcalUserXML.getDocumentElement();
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
       String errMessage = "[JohnLog] " + functionManager.FMname + ": Got an error when trying to retrieve the userXML: " + e.getMessage();
