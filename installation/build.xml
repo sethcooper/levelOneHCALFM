@@ -4,12 +4,13 @@
 	
 	<!-- Properties the user needs to modify -->
 	<property name="fm.name" value="HCALFM" />
+	<property name="output.dir" value="./jars" />
 	
 	<property file="../../../tomcat/webapps/rcms/WEB-INF/conf/RCMS.properties" />
 	
 	<!-- Other properties -->
 	<property name="jakarta.common" value="${jakarta.home}/common/lib" />
-	<property name="jakarta.fmdeploy" value="${jakarta.home}/webapps/ROOT/functionmanagers" />
+	<property name="jakarta.fmdeploy" value="${output.dir}" />
 
 	<property name="rcms.webapp" value="${rcms.framework}/rcms" />
 	<property name="rcms.classes" value="${rcms.webapp}/WEB-INF/classes" />
