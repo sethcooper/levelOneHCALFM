@@ -107,7 +107,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 			String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
 			if (MaskedResources.length() > 0) {
-				logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+				//logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
 				for( QualifiedResource qr : xdaqExecList) {
 					XdaqExecutive exec = (XdaqExecutive)qr;
 					XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
