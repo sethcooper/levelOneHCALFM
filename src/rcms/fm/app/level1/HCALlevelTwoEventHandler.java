@@ -466,6 +466,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     if (obj instanceof StateNotification) {
 
       // triggered by State Notification from child resource
+      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] configureAction(): received state notification so computeNewState!");
       computeNewState((StateNotification) obj);
       return;
 
@@ -1523,6 +1524,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
         if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
           functionManager.fireEvent( HCALInputs.SETSTART );
         }
       }
@@ -2131,7 +2133,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-v
+
       // stopping the MonLogger application
       if (HandleMonLoggers) {
         try {

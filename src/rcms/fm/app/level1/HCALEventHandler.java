@@ -2652,8 +2652,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     Iterator fmChItr = allChildFMs.iterator();
     while (fmChItr.hasNext()) {
       FunctionManager fmChild = (FunctionManager) fmChItr.next();
+      logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
       // role is set at beginning of init() so it's already set here
       if (fmChild.getRole().toString().equals("EvmTrig")) {
+        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
         fmChItr.remove();
       }
     }
@@ -2664,6 +2666,22 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
+
+    //// look at the containers
+    //{
+    //  Iterator it = functionManager.containerFMChildrenNoEvmTrig.getQualifiedResourceList().iterator();
+    //  FunctionManager fmChild = null;
+    //  while (it.hasNext()) {
+    //    fmChild = (FunctionManager) it.next();
+    //    logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildrenNoEvmTrig: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //  }
+    //  it = functionManager.containerFMEvmTrig.getQualifiedResourceList().iterator();
+    //  fmChild = null;
+    //  while (it.hasNext()) {
+    //    fmChild = (FunctionManager) it.next();
+    //    logger.warn("[HCAL " + functionManager.FMname + "] in containerEvmTrig: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //  }
+    //}
 
     // see if we have any "special" FMs
     {
@@ -2921,73 +2939,74 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // make entry into the HCAL elog
   protected void publishElogSummary() {
-    if (ElogPublish) {
-      try {
-        String subject = "Start of Run:" + functionManager.RunNumber +", sequence number: " + RunSeqNumber;
-        String type = "automatic HCAL run summary";
-        String category = "USC55 local runs";
+    //boolean ElogPublish = false;
+    //if (ElogPublish) {
+    //  try {
+    //    String subject = "Start of Run:" + functionManager.RunNumber +", sequence number: " + RunSeqNumber;
+    //    String type = "automatic HCAL run summary";
+    //    String category = "USC55 local runs";
 
-        String text = "Summary of run: "+ functionManager.RunNumber + "\n\n";
-        text += "The run was started at: " + StartTime + " and ended at " + StopTime + ".\n";
-        text += "The Run sequence number is: " + RunSeqNumber + "\n";
-        text += TriggersToTake + " events were successfully taken.\n\n";
+    //    String text = "Summary of run: "+ functionManager.RunNumber + "\n\n";
+    //    text += "The run was started at: " + StartTime + " and ended at " + StopTime + ".\n";
+    //    text += "The Run sequence number is: " + RunSeqNumber + "\n";
+    //    text += TriggersToTake + " events were successfully taken.\n\n";
 
-        text += "Setup used: " + functionManager.RunSetupDetails + "\n\n";
+    //    text += "Setup used: " + functionManager.RunSetupDetails + "\n\n";
 
-        {
-          if (!FullCfgScript.equals("not set")) {
-            text += "HCAL CfgScript: \n" + FullCfgScript + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullCfgScript.equals("not set")) {
+    //        text += "HCAL CfgScript: \n" + FullCfgScript + "\n\n";
+    //      }
+    //    }
 
-        {
-          if (!FullTTCciControlSequence.equals("not set")) {
-            text += "TTCciControlSequence: \n" + FullTTCciControlSequence + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullTTCciControlSequence.equals("not set")) {
+    //        text += "TTCciControlSequence: \n" + FullTTCciControlSequence + "\n\n";
+    //      }
+    //    }
 
-        {
-          if (!FullLTCControlSequence.equals("not set")) {
-            text += "LTCControlSequence: \n" + FullLTCControlSequence + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullLTCControlSequence.equals("not set")) {
+    //        text += "LTCControlSequence: \n" + FullLTCControlSequence + "\n\n";
+    //      }
+    //    }
 
-        {
-          if (!FullTCDSControlSequence.equals("not set")) {
-            text += "TCDSControlSequence: \n" + FullTCDSControlSequence + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullTCDSControlSequence.equals("not set")) {
+    //        text += "TCDSControlSequence: \n" + FullTCDSControlSequence + "\n\n";
+    //      }
+    //    }
 
-        {
-          if (!FullLPMControlSequence.equals("not set")) {
-            text += "LPMControlSequence: \n" + FullLPMControlSequence + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullLPMControlSequence.equals("not set")) {
+    //        text += "LPMControlSequence: \n" + FullLPMControlSequence + "\n\n";
+    //      }
+    //    }
 
-        {
-          if (!FullPIControlSequence.equals("not set")) {
-            text += "PIControlSequence: \n" + FullPIControlSequence + "\n\n";
-          }
-        }
+    //    {
+    //      if (!FullPIControlSequence.equals("not set")) {
+    //        text += "PIControlSequence: \n" + FullPIControlSequence + "\n\n";
+    //      }
+    //    }
 
-        logger.info("[HCAL " + functionManager.FMname + "] sending to the Elog: "+ text);
+    //    logger.info("[HCAL " + functionManager.FMname + "] sending to the Elog: "+ text);
 
-        boolean ok = ElogPublisher.publishText(text,subject,type,category);
+    //    boolean ok = ElogPublisher.publishText(text,subject,type,category);
 
-        if (!ok)
-        {
-          String reply = ElogPublisher.getReply();
-          logger.warn("[HCAL " + functionManager.FMname + "] could not publish run summary to Elog: " + reply);
-        }
+    //    if (!ok)
+    //    {
+    //      String reply = ElogPublisher.getReply();
+    //      logger.warn("[HCAL " + functionManager.FMname + "] could not publish run summary to Elog: " + reply);
+    //    }
 
-      }
-      catch (ElogPublisherException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! ElogPublisherException: something seriously went wrong when publishing the run summary ...";
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-      }
+    //  }
+    //  catch (ElogPublisherException e) {
+    //    String errMessage = "[HCAL " + functionManager.FMname + "] Error! ElogPublisherException: something seriously went wrong when publishing the run summary ...";
+    //    logger.error(errMessage,e);
+    //    functionManager.sendCMSError(errMessage);
+    //  }
 
-    }
+    //}
   }
 
   // get and set a session ID (called only when in local run mode)
@@ -3510,14 +3529,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // toState: target state
   public void computeNewState(StateNotification newState) {
 
-    logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
+    logger.warn("[SethLog HCAL " + functionManager.FMname + "] 1 BEGIN computeNewState(): calculating new state for FM\n@ URI: "+ functionManager.getURI());
 
     if (newState.getToState() == null) {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
     else {
-      logger.warn("[SethLog HCAL " + functionManager.FMname + "] received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+      logger.warn("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
     }
 
     // search the resource which sent the notification
@@ -3550,7 +3569,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
-        logger.warn("[SethLog HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
+        logger.warn("[SethLog HCAL " + functionManager.FMname + "] 3 calcState = " + functionManager.calcState.getStateString() + ", from state (actualState): " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
@@ -3611,15 +3630,28 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is INITIALIZING, but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
+              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RECOVERING, but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
+              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RUNNING, but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
+              else if (actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))     {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RUNNINGDEGRADED, but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
                 if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
 
                   if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is CONFIGURING, toState is CONFIGURED, SO DO NOT SETCONFIGURE ...");
+                    //functionManager.fireEvent(HCALInputs.SETCONFIGURE);
                   }
                   else {
                     AllButHCALSuperVisorIsOK = true;
@@ -3627,7 +3659,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   }
                 }
               }
-              else if (actualState.equals(HCALStates.STOPPING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+              else if (actualState.equals(HCALStates.STOPPING.getStateString())) {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is STOPPING, but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
                 logger.error(errMessage);
@@ -3638,13 +3673,20 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.RUNNING.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETSTART); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETSTART); }
+              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is INITIALIZING, but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
+              }
+              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RECOVERING, but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
+              }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
                 if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
 
                   if (HCALSuperVisorIsOK) {
+                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is STARTING, supervisor IS OK, but SETSTART ...");
                     functionManager.fireEvent(HCALInputs.SETSTART);
 
                   }
@@ -5031,6 +5073,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
 
                     // leave intermediate state directly only when not talking to asynchronous applications
+                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler run(): 'not talking to asynch apps' SETCONFIGURE ...");
                     functionManager.fireEvent(HCALInputs.SETCONFIGURE);
                   }
                   else {
@@ -5041,6 +5084,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
                     if (HCALSuperVisorIsOK && AllButHCALSuperVisorIsOK) {
                       // leave intermediate state cause all other asynchronous applications are ready to go
+                      logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler run(): 'supervisorIsOk' SETCONFIGURE ...");
                       functionManager.fireEvent(HCALInputs.SETCONFIGURE);
                       logger.debug("[HCAL " + functionManager.FMname + "] Finally also the HCALSupervisor is Ready ...");
                     }
@@ -5055,7 +5099,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-              else { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
+              else {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler run(): 'some kind of error' SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+              }
             }
           }
 
@@ -5161,6 +5208,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
 
                     // leave intermediate state directly only when not talking to asynchronous applications
+                    logger.warn("[HCAL " + functionManager.FMname + "] status=Active SETSTART ...");
                     functionManager.fireEvent(HCALInputs.SETSTART);
                   }
                   else {
@@ -5171,6 +5219,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
                     if (HCALSuperVisorIsOK && AllButHCALSuperVisorIsOK) {
                       // leave intermediate state cause all other asynchronous applications are ready to go
+                      logger.warn("[HCAL " + functionManager.FMname + "] HCALSuperVisorIsOK SETSTART ...");
                       functionManager.fireEvent(HCALInputs.SETSTART);
                       logger.debug("[HCAL " + functionManager.FMname + "] Finally also the HCALSupervisor is Enabled ...");
                     }
@@ -5187,7 +5236,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-              else { functionManager.fireEvent(HCALInputs.SETSTART); }
+              else {
+                logger.warn("[HCAL " + functionManager.FMname + "] Some kind of error, but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
+              }
             }
           }
 

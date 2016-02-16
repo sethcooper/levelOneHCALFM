@@ -446,6 +446,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		if (obj instanceof StateNotification) {
 
 			// triggered by State Notification from child resource
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside configureAction(); computeNewState()");
 			computeNewState((StateNotification) obj);
 			return;
 
@@ -797,12 +798,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 							}
 						}
 					}
-
-					while (!waitforFMswithNotTheRole("Level2_Priority_1","Level2_Priority_2","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
-						try { Thread.sleep(1000); }
-						catch (Exception ignored) {}
-						logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, or Level2_Laser");
-					}
+          
+          //XXX SIC TEST
+					//while (!waitforFMswithNotTheRole("Level2_Priority_1","Level2_Priority_2","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
+					//	try { Thread.sleep(1000); }
+					//	catch (Exception ignored) {}
+					//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\n All FMs which do not have the role: Level2_Priority_1, Level2_Priority_2, or Level2_Laser");
+					//}
 
 					if (functionManager.FMsWereConfiguredOnce) {
 						if (!functionManager.ErrorState) {
@@ -851,14 +853,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				}
 
 			}
-			else {
+			//else {
 				if (!functionManager.ErrorState) {
 					logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
 					if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
 						functionManager.fireEvent(HCALInputs.SETCONFIGURE);
 					}
 				}
-			}
+			//}
 
 			// set actions
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
@@ -873,6 +875,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		if (obj instanceof StateNotification) {
 
 			// triggered by State Notification from child resource
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside startingAction(); computeNewState()");
 			computeNewState((StateNotification) obj);
 			return;
 
