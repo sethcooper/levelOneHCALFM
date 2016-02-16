@@ -97,6 +97,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		if (obj instanceof StateNotification) {
 
 			// triggered by State Notification from child resource
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Received state notification inside initAction(); computeNewState()");
 			computeNewState((StateNotification) obj);
 			return;
 

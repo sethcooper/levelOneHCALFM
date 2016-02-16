@@ -955,7 +955,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // leave intermediate state directly only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
         if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-          functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+          //logger.warn("[SethLog HCAL LVL2 " + functionManager.FMname + "] fireEvent(SETCONFIGURE)!");
+          //functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+          logger.warn("[SethLog HCAL LVL2 " + functionManager.FMname + "] DO NOT DO THE fireEvent(SETCONFIGURE)!");
         }
       }
 

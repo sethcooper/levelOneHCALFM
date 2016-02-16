@@ -100,8 +100,6 @@ import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
 import rcms.xdaqctl.XDAQMessage;
-import rcms.utilities.elogPublisher.ElogPublisher;
-import rcms.utilities.elogPublisher.ElogPublisherException;
 import rcms.utilities.runinfo.RunInfo;
 import rcms.utilities.runinfo.RunInfoConnectorIF;
 import rcms.utilities.runinfo.RunInfoException;
@@ -175,10 +173,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // Connector to log session db, used to create session identifiers
   public LogSessionConnector logSessionConnector;
-
-  // Handle ELOG publishing // TODO this is deprecated
-  public boolean ElogPublish = false;
-  public ElogPublisher ElogPublisher = null;
 
   // Start and stopping time of a run // TODO these are broken
   public Date StartTime = null;
@@ -289,7 +283,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
 
     // Get the setting for whether official run numbers should be used from the userXML
-    // TODO: Fix this to use the new method for userXMLelements 
     {
       String useOfficialRunNumbers = GetUserXMLElement("OfficialRunNumbers");
       if (useOfficialRunNumbers.equals("true_butwithnoRunInfoFromXDAQ")) {
@@ -638,8 +631,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -3317,6 +3310,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.error(errMessage,e);
           }
         }
+
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
