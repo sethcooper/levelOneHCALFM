@@ -3650,8 +3650,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
 
                   if (HCALSuperVisorIsOK) {
-                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is CONFIGURING, toState is CONFIGURED, SO DO NOT SETCONFIGURE ...");
-                    //functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is CONFIGURING, toState is CONFIGURED, SO DO SETCONFIGURE ...!");
+                    functionManager.fireEvent(HCALInputs.SETCONFIGURE);
                   }
                   else {
                     AllButHCALSuperVisorIsOK = true;

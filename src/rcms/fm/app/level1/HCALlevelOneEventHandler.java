@@ -845,22 +845,25 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 						}
 					}
 
-					while (!waitforFMswithNotTheRole("dummy","dummy","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
-						try { Thread.sleep(1000); }
-						catch (Exception ignored) {}
-						logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString());
-					}
+          //XXX SIC TEST
+          // this is needed if we fire SETCONFIGURE BELOW
+					//while (!waitforFMswithNotTheRole("dummy","dummy","dummy","dummy","dummy",HCALStates.CONFIGURED.toString())) {
+					//	try { Thread.sleep(1000); }
+					//	catch (Exception ignored) {}
+					//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for all FMs to be in the state "+ HCALStates.CONFIGURED.toString());
+					//}
 				}
 
 			}
-			//else {
-				if (!functionManager.ErrorState) {
-					logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
-					if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-						functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-					}
-				}
-			//}
+      //XXX SIC TEST2
+			////else {
+			//	if (!functionManager.ErrorState) {
+			//		logger.debug("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETCONFIGURE);
+			//		if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
+			//			functionManager.fireEvent(HCALInputs.SETCONFIGURE);
+			//		}
+			//	}
+			////}
 
 			// set actions
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
