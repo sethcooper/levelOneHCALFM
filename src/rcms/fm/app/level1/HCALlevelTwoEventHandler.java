@@ -132,40 +132,48 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
         for (String MaskedApplication: MaskedResourceArray) {
           String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
-          logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
+          //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
           for (QualifiedResource qr : xdaqApplicationList) {
             if (qr.getName().equals(MaskedApplication) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
-              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
-              logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+              //logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list: " + qr.getName());
+              //logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
             }
           }
         }
-        logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
+        //logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "]: This FM has role: " + functionManager.FMrole);
         List<QualifiedResource> xdaqExecList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
         // loop over the executives and strip the connections
      
-        logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+        //logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
           XdaqExecutive exec = (XdaqExecutive)qr;
-          logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
+          //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found qualified resource: " + qr.getName());
           XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
           String oldExecXML = config.getXml();
           try {
             String newExecXML = stripExecXML(oldExecXML);
             config.setXml(newExecXML);
-            logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+            //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
           }
           catch (UserActionException e) {
             String errMessage = e.getMessage();
-            logger.info("[JohnLog2] " + functionManager.FMname + " got an error while trying to strip the ExecXML: " + errMessage);
+            //logger.info("[JohnLog2] " + functionManager.FMname + " got an error while trying to strip the ExecXML: " + errMessage);
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "]: got an error while trying to strip the ExecXML: " + errMessage);
             functionManager.sendCMSError(errMessage);
             functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
             functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
           XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-          System.out.println("[JohnLogSystem] " +qr.getName() + " has executive xml: " +  configRetrieved.getXml());
+          System.out.println("[HCAL LVL2 System] " +qr.getName() + " has executive xml: " +  configRetrieved.getXml());
         }
       }
       else {
@@ -201,25 +209,29 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.select(new String[] {"RUinstance"});
                 pam.setValue("RUinstance", ruInstance.split("_")[1]);
                 pam.send();
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("HandleLPM")) {
                 pam.select(new String[] {"HandleLPM"});
                 pam.setValue("HandleLPM", "true");
                 pam.send();
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
             }
           }
@@ -321,7 +333,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //
       
       if (functionManager.FMrole.equals("EvmTrig")) {
-        logger.info("[JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
+        //logger.info("JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         getTriggerAdapter();
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] OK, now I should have at least one TriggerAdapter to talk to ...");
       }
@@ -1547,7 +1560,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty() && !functionManager.FMWasInPausedState) {
             try {
-              logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+              //logger.info("[JohnLog4] [HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
+              logger.info("[HCAL LVL2 " + functionManager.FMname + "] Issuing the L1As i.e. sending Enable to the TriggerAdapter ...");
               functionManager.containerTriggerAdapter.execute(HCALInputs.HCALSTART);
             }
             catch (QualifiedResourceContainerException e) {
@@ -2117,7 +2131,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-
+v
       // stopping the MonLogger application
       if (HandleMonLoggers) {
         try {
@@ -2328,6 +2342,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       logger.info("[JohnLog] about to call publishRunInfoSummary");
+      logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
