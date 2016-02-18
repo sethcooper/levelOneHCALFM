@@ -265,14 +265,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   }
 
   public void init() throws rcms.fm.fw.EventHandlerException {
-    logger.info("[JohnLog] " + functionManager.FMname + ":  Executed init()");
+   logger.info("[HCAL " + functionManager.FMname + "]:  Executed init()");
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
     {
-      logger.info("[JohnLog] " + functionManager.FMname + ": This FM has userXML that says: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() );
+      logger.info("[HCAL " + functionManager.FMname + "]: This FM has userXML that says: " + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() );
       //Boolean doHandleTriggerAdapter = ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml().contains("<HandleTriggerAdapter>true</HandleTriggerAdapter>");
       if (((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getRole().equals("EvmTrig")) {
-        logger.info("[JohnLog] " + functionManager.FMname + ": The function manager with name " + functionManager.FMname + " was assigned role EvmTrig and thus will handle the trigger adapter.");
+        logger.info("[HCAL " + functionManager.FMname + "]: The function manager with name " + functionManager.FMname + " was assigned role EvmTrig and thus will handle the trigger adapter.");
       }
     }
 
@@ -614,17 +614,17 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       nodes = getHCALuserXML().getElementsByTagName("RunConfig");
       String availableRunConfigs="";
       for (int i=0; i < nodes.getLength(); i++) {
-        logger.info("[JohnLog] " + functionManager.FMname + ": Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+        logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + ", snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue()+ ", and maskedapps: " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
 
         availableRunConfigs += nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue() + ":" + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue() + ";";
 
-        logger.info("[JohnLog2] " + functionManager.FMname + ": availableRunConfigs is now: " + availableRunConfigs);
+        logger.debug("[HCAL " + functionManager.FMname + "]: availableRunConfigs is now: " + availableRunConfigs);
       }
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS,new StringT(availableRunConfigs)));
     }
     catch (DOMException | UserActionException e) {
-      logger.error("[JohnLog] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
+      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
 
     String availableResources = "";
@@ -704,11 +704,11 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       nodes = getHCALuserXML().getElementsByTagName("RunConfig");
 
       for (int i=0; i < nodes.getLength(); i++) {
-        logger.info("[JohnLog] " + functionManager.FMname + ": Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
+        logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + " and snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue());
       }
       String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-      logger.info("[JohnLog] " + functionManager.FMname + ": The selected snippet was: " + selectedRun);
+      logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);
       HCALFunctionManager fmChild = null;
 
       try {
@@ -716,15 +716,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         if (selectedRun == "not set" ) {
-          logger.info("[JohnLog] " + functionManager.FMname + ": This FM did not get the selected run. It will now look for one from the LVL1");
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
           ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
           selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
           if (selectedRun == "not set") {
-            logger.info("[JohnLog] " + functionManager.FMname + ": This FM got 'not set' after it looked for the run config selected from the LVL1, so it'll try looking another way...");
             ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
             selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[JohnLog] " + functionManager.FMname + ": This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
         //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
@@ -740,19 +739,19 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         transformer.transform(domSource, result);
 
-        logger.info("[JohnLog] " + functionManager.FMname + ": ===========================");
-        logger.info("[JohnLog] " + functionManager.FMname + ": ===========================");
-        logger.info("[JohnLog] " + functionManager.FMname + ": XML loaded from the master snippet is:");
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
+        logger.info("[HCAL " + functionManager.FMname + "]: ===========================");
+        logger.info("[HCAL " + functionManager.FMname + "]: ===========================");
+        logger.info("[HCAL " + functionManager.FMname + "]: XML loaded from the master snippet is:");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
         logger.info(writer.toString());
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
 
         NodeList CfgScripts =  masterSnippet.getDocumentElement().getElementsByTagName("CfgScript");
-        logger.info("[JohnLog] " + functionManager.FMname + ": The CfgScript has this in it:");
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
+        logger.info("[HCAL " + functionManager.FMname + "]: The CfgScript has this in it:");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
         ConfigDoc = CfgScripts.item(0).getTextContent();
         logger.info(ConfigDoc);
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
 
 
 
@@ -769,18 +768,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         xmlString = writer.toString();
         xmlString = xmlString.replace("<mastersnippet>\n","").replace("\n</mastersnippet>\n","");
         xmlString = xmlString.replace("&amp;","&");
-        logger.info("[JohnLog] " + functionManager.FMname + ": XML with CfgScript element removed and root element tags removed is now:");
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
-        logger.info(xmlString);
-        logger.info("[JohnLog] " + functionManager.FMname + ": ---------------------------");
+        logger.debug("[HCAL " + functionManager.FMname + "]: XML with CfgScript element removed and root element tags removed is now:");
+        logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
+        logger.debug(xmlString);
+        logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
         configString = xmlString;
       }
       catch (TransformerException e) {
-        logger.error("[JohnLog] " + functionManager.FMname + ": Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
       }
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException  | UserActionException e) {
-      logger.error("[JohnLog] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
+      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
     String TmpCfgScript = "";
 
@@ -2198,7 +2197,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
-              logger.info("[JohnLog4] " + functionManager.FMname + ": the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
+              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
               pam.setValue("ConfigurationDoc",ConfigDoc);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
@@ -2289,91 +2288,90 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
-        logger.info("JohnLog3: the qualified group has this DB connector" + level2group.rs.toString());
+        logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
         if (MaskedFMs.length() > 0) {
-          logger.info("[JohnLog] " + functionManager.FMname + ":: Got MaskedFMs " + MaskedFMs);
+          logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
           String[] MaskedResourceArray = MaskedFMs.split(";");
           for (String MaskedFM: MaskedResourceArray) {
-            logger.info("[JohnLog] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
+            logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
             if (qr.getName().equals(MaskedFM)) {
-              logger.info("[JohnLog] " + functionManager.FMname + ": found the matching FM in the qr list: " + qr.getName());
-              logger.info("[JohnLog3] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+              logger.debug("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
               
-              //logger.info("[JohnLog3] " + functionManager.FMname + ": LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
+              //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
                 allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
                 for (Resource level2resource : fullconfigList) {
-                logger.info("[JohnLog3] " + functionManager.FMname + ": The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
+                logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources+=level2resource.getName();
                 allMaskedResources+=";";
-                logger.info("[JohnLog3] " + functionManager.FMname + ": The new list of all masked resources is: " + allMaskedResources);
+                logger.info("[HCAL " + functionManager.FMname + "]: The new list of all masked resources is: " + allMaskedResources);
               }
             }
           }
         }
         for (Resource level2resource : fullconfigList) {
-          logger.info("[JohnLog3] " + functionManager.FMname + ": the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
+          logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
               if (somebodysHandlingTA) { 
                 allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant trigger adapter " + level2resource.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant trigger adapter " + level2resource.getName());
               }
 
               else {
                 qr.getResource().setRole("EvmTrig");
-                logger.info("[JohnLog3] " + functionManager.FMname + ": The following FM is handling the trigger adapter: " + qr.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
-                logger.info("[JohnLog3] " + functionManager.FMname + ": About to set EVM_TRIG_FM.");
+                logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                logger.info("[JohnLog3] " + functionManager.FMname + ": Just set EVM_TRIG_FM.");
+                logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant TrivialFU " + level2resource.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[JohnLog3] " + functionManager.FMname + ": Just masked the redundant EventBuilder " + level2resource.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
               else {
                 ruInstance=level2resource.getName();
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Just found the remaining EventBuilder " + level2resource.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
-                logger.info("[JohnLog3] " + functionManager.FMname + ": Found a Supervisor who is not handling the LPM." + level2resource.getName());
+                logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
               }
               else {
-                logger.info("[JohnLog4] " + functionManager.FMname + ": Found the Supervisor that is handling the LPM." + level2resource.getName());
+                logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
                 lpmSupervisor=level2resource.getName();
               }
             }
           }
         }
-        logger.info("[JohnLog3] " + functionManager.FMname + ": About to set the new MASKED_RESOURCES list.");
+        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the new MASKED_RESOURCES list.");
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
-        logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the new MASKED_RESOURCES list.");
-        logger.info("[JohnLog4] " + functionManager.FMname + ": About to set the RU_INSTANCE.");
+        logger.info("[HCAL " + functionManager.FMname + "]: Just set the new MASKED_RESOURCES list.");
+        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
-        logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RU_INSTANCE to " + ruInstance);
-        logger.info("[JohnLog4] " + functionManager.FMname + ": About to set the LPM_SUPERVISOR.");
+        logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + ruInstance);
+        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
-        logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the LPM_SUPERVISOR to " + lpmSupervisor);
+        logger.info("[HCAL " + functionManager.FMname + "]: Just set the LPM_SUPERVISOR to " + lpmSupervisor);
       }
       catch (DBConnectorException ex) {
-        logger.error("[JohnLog3] " + functionManager.FMname + ": Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
-    if (!somebodysHandlingTA) logger.warn("[JohnLog3] " + functionManager.FMname + ": Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
+    if (!somebodysHandlingTA) logger.warn("[HCAL " + functionManager.FMname + "]: Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
     
   }
 
@@ -3057,7 +3055,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
 
-    logger.info("[JohnLog] " + functionManager.FMname + ": publishingRunInfoSummary");
+    logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
     if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
 
       // check availability of RunInfo DB
@@ -3069,7 +3067,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
       else {
         logger.debug("[HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB ...");
-        logger.info("[JohnLog] " + functionManager.FMname + ": Start of publishing!");
 
         {
           if (RunType.equals("local")) {
@@ -3428,17 +3425,17 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // make entry into the CMS run info database with info from hcalRunInfoServer
   protected void publishRunInfoSummaryfromXDAQ() {
-    logger.info("[JohnLog] " + functionManager.FMname + ": just called publishRunInfoSummaryfromXDAQ");
+    logger.info("[HCAL " + functionManager.FMname + "]: just called publishRunInfoSummaryfromXDAQ");
     if (functionManager.HCALRunInfo!=null) {
-      logger.info("[JohnLog] " + functionManager.FMname + ": publishRunInfoSummaryfromXDAQ: HCALRunInfo was not null. Good.");
+      logger.info("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: HCALRunInfo was not null. Good.");
       if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
-        logger.info("[JohnLog] " + functionManager.FMname + ": publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
+        logger.debug("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
         // check availability of RunInfo DB
         checkRunInfoDBConnection();
 
         if ( functionManager.HCALRunInfo == null) {
-          logger.warn("[JohnLog] " + functionManager.FMname + ": [HCAL " + functionManager.FMname + "] Cannot publish run info summary!");
-          logger.info("[JohnLog] " + functionManager.FMname + ": [HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e.is RunInfo DB down? Please check the logs ...");
+          logger.warn("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Cannot publish run info summary!");
+          logger.info("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e.is RunInfo DB down? Please check the logs ...");
         }
         else {
 
@@ -3447,7 +3444,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
             //VectorT<VectorT<StringT>> RunInfoFromXDAQ = new VectorT<VectorT<StringT>>();
 
-            logger.info("[JohnLog] " + functionManager.FMname + ": [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
+            logger.debug("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
 
             RunInfoServerReader RISR = new RunInfoServerReader();
 
@@ -3467,7 +3464,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               String value = theInfo.get(key);
               String setValue = "not set";
               if (!value.equals("") && value != null) { setValue = value; }
-              logger.info("[JohnLog] [HCAL " + functionManager.FMname + "] The next parameter from RunInfoFromXDAQ is: " + key + ", and it has value: " + value);
+              logger.debug("[HCAL " + functionManager.FMname + "] The next parameter from RunInfoFromXDAQ is: " + key + ", and it has value: " + value);
 
               // fill HashMap Strings into the RunInfo compliant data type
               if (!key.equals("") && key!=null) {
@@ -3484,7 +3481,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 }
               }
             }
-            logger.info("[JohnLog] [HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
+            logger.info("[HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
           }
           else {
             if (!functionManager.FMrole.equals("HCAL")) {
@@ -3496,7 +3493,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
     }
     else {
-      logger.info("[JohnLog] publishRunInfofromXDAQ(): HCALRunInfo was null.... bad.");
+      logger.info("[HCAL " + functionManager.FMname + "] publishRunInfofromXDAQ(): HCALRunInfo was null.... bad.");
     }
   }
 
@@ -5295,13 +5292,13 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         // poll the status of the FMs which do the event building every 5 sec
         if (icount%5==0) {
-					logger.info("[JohnLog2] " + functionManager.FMname + ": About to check whether an EVMTrig FM has stopped already.");
+					logger.debug("[HCAL " + functionManager.FMname + "]: About to check whether an EVMTrig FM has stopped already.");
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
 
             // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
             //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
 
-					    logger.info("[JohnLog2] " + functionManager.FMname + ": found SpecialFMsAreControlled=true and about to loop over other level2s.");
+					    logger.debug("[HCAL " + functionManager.FMname + "]: found SpecialFMsAreControlled=true and about to loop over other level2s.");
               Iterator it1 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
               FunctionManager fmChild_HCAL_EvmTrig = null;
               while (it1.hasNext()) {
@@ -5310,7 +5307,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 if (fmChild_HCAL_EvmTrig.getRole().toString().equals("EvmTrig"))
                 {
                   if (fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) {
-                    logger.warn("[JohnLog2] " + functionManager.FMname + ": HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
+                    logger.info("[HCAL " + functionManager.FMname + "]: HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
 
                     NotifiedControlledFMs = true;  // take care that a notification to the controlled child FMs is only sent once
 
@@ -5531,7 +5528,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         for (int i=0; i < NxcUnicastNodes; i++) {
           Node xcUnicastNode = xcUnicastNodes.item(i-removedxcUnicasts);
           if (xcUnicastNode.getAttributes().getNamedItem("instance") != null && xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
-            logger.info("[JohnLog3] " + functionManager.FMname + ": About to remove xc:Unicast node for maskedapp with class " + maskedAppParts[0] + " and instance " + maskedAppParts[1]);
+            logger.debug("[HCAL " + functionManager.FMname + "]: About to remove xc:Unicast node for maskedapp with class " + maskedAppParts[0] + " and instance " + maskedAppParts[1]);
             xcUnicastNode.getParentNode().removeChild(xcUnicastNode);
             removedxcUnicasts+=1;
           }
@@ -5563,7 +5560,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         }
         if (lpmApplicationElement!=null && functionManager.FMrole.equals("EvmTrig")){
           if (newLPMnodeContext==null) {
-            logger.error("[JohnLog4] " + functionManager.FMname + ": Could not find a context in this executive that has a PI");
+            logger.error("[HCAL " + functionManager.FMname + "]: Could not find a context in this executive that has a PI");
           }
           else {
             newLPMnodeContext.appendChild(lpmApplicationElement);
@@ -5595,28 +5592,28 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       return newExecXMLstring;
     }
     catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
-      logger.error("[JohnLog3] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
-      throw new UserActionException("[JohnLog3] " + functionManager.FMname + ": Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
+      logger.error("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
+      throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  
 
   public Element getHCALuserXML() throws UserActionException {
     try {
       // return the userXML
-      logger.info("[JohnLog5] " + functionManager.FMname + ": starting the getHCALuserXML method.");
+      logger.info("[HCAL " + functionManager.FMname + "]: starting the getHCALuserXML method.");
       String userXmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
 
-      logger.info("[JohnLog5] " + functionManager.FMname + ": got the userXML.");
+      logger.debug("[HCAL " + functionManager.FMname + "]: got the userXML.");
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(userXmlString));
       Document hcalUserXML = docBuilder.parse(inputSource);
       hcalUserXML.getDocumentElement().normalize();
-      logger.info("[JohnLog5] " + functionManager.FMname + ": formatted the userXML.");
+      logger.debug("[HCAL " + functionManager.FMname + "]: formatted the userXML.");
       return hcalUserXML.getDocumentElement();
     }
     catch (DOMException | ParserConfigurationException | SAXException | IOException e) {
-      String errMessage = "[JohnLog] " + functionManager.FMname + ": Got an error when trying to retrieve the userXML: " + e.getMessage();
+      String errMessage = "[HCAL " + functionManager.FMname + "]: Got an error when trying to retrieve the userXML: " + e.getMessage();
       logger.error(errMessage);
       throw new UserActionException(errMessage);
     }

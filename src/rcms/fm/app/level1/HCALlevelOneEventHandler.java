@@ -107,7 +107,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 			String MaskedResources =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
 			if (MaskedResources.length() > 0) {
-				logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+				//logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
 				for( QualifiedResource qr : xdaqExecList) {
 					XdaqExecutive exec = (XdaqExecutive)qr;
 					XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
@@ -115,7 +116,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 					try {
 						String newExecXML = stripExecXML(oldExecXML);
 						config.setXml(newExecXML);
-						logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+						//logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+						logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
 					}
 					catch (UserActionException e) {
 						String errMessage = e.getMessage();
@@ -218,10 +220,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			String CfgSnippetKeySelected = ((StringT)functionManager.getParameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
 			pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(RunConfigSelected)));
 			String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-			logger.info("[JohnLog2] " + functionManager.FMname + ": Started out with masked resources: " + MaskedResources);
+			//logger.info("[JohnLog2] " + functionManager.FMname + ": Started out with masked resources: " + MaskedResources);
+			logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources);
 			try {
 				DocumentBuilder docBuilder;
-				logger.info("[JohnLog2] " + functionManager.FMname + ": The xmlString was: " + xmlString );
+				//logger.info("[JohnLog2] " + functionManager.FMname + ": The xmlString was: " + xmlString );
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: The xmlString was: " + xmlString );
 
 				docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 				InputSource inputSource = new InputSource();
@@ -231,36 +235,47 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 				NodeList nodes = null;
 				nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
-				logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
+				//logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: RunConfigSelected was " + RunConfigSelected);
 				for (int i=0; i < nodes.getLength(); i++) {
-					logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+					//logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+					logger.info("[HCAL LVL1 " + functionManager.FMname + "] In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+				//logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]:RunConfigSelected was " + RunConfigSelected);
 					if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
 						MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
-						logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+						//logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
+						logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
 					}
 				} 
 				MaskedResources+=";";
-				logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
+				//logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources);
 			}
 			catch (ParserConfigurationException | SAXException | IOException e) {
-				logger.error("[JohnLog2] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
+				//logger.error("[JohnLog2] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
+				logger.error("[HCAL LVL1 " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
 			}
-			logger.info("[JohnLog2] " + functionManager.FMname + ": About to set the initial list of masked resources: " + MaskedResources );
+			//logger.info("[JohnLog2] " + functionManager.FMname + ": About to set the initial list of masked resources: " + MaskedResources );
+			logger.info("[HCAL LVL1 " + functionManager.FMname + "]: About to set the initial list of masked resources: " + MaskedResources );
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
 
 			String ruInstance =  ((StringT)functionManager.getParameterSet().get(HCALParameters.RU_INSTANCE).getValue()).getString();
-      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the RU_INSTANCE " + ruInstance);
+      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the RU_INSTANCE " + ruInstance);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the RU_INSTANCE " + ruInstance);
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
 
 			String lpmSupervisor =  ((StringT)functionManager.getParameterSet().get(HCALParameters.LPM_SUPERVISOR).getValue()).getString();
-      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
+      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
 
 			String evmTrigFM =  ((StringT)functionManager.getParameterSet().get(HCALParameters.EVM_TRIG_FM).getValue()).getString();
-      logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the EVM_TRIG_FM " + evmTrigFM);
+      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the EVM_TRIG_FM " + evmTrigFM);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the EVM_TRIG_FM " + evmTrigFM);
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
 
@@ -977,13 +992,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 								fmChild.getName().toString().equalsIgnoreCase("PSFM")               ||
 								fmChild.getName().toString().equalsIgnoreCase("HCAL_Laser")         
 							 ) { 
-               logger.info("[JohnLog4] " + functionManager.FMname + ": found FMs that need to be prioritized: " + fmChild.getName().toString());
+               //logger.info("[JohnLog4] " + functionManager.FMname + ": found FMs that need to be prioritized: " + fmChild.getName().toString());
+               logger.info("[HCAL LVL1 " + functionManager.FMname + "]: found FMs that need to be prioritized: " + fmChild.getName().toString());
                prioritizeFMstarts = true;  
             }
 					}
 				}
 				if (prioritizeFMstarts) { 
-          logger.info("[JohnLog4] " + functionManager.FMname + ": got prioritizeFMstarts = true, and will now start FMs in order of priority.");
+          //logger.info("[JohnLog4] " + functionManager.FMname + ": got prioritizeFMstarts = true, and will now start FMs in order of priority.");
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "]: got prioritizeFMstarts = true, and will now start FMs in order of priority.");
 					// reset the notification thread
 					NotifiedControlledFMs = false;
 
@@ -997,7 +1014,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 							if (fmChild.isActive()) {
 								if (fmChild.getRole().toString().equals("Level2_Priority_1")) {
 									try {
-										logger.info("[JohnLog4] " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " and role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
+										//logger.info("[JohnLog4] " + functionManager.FMname + "] Found FM with role: " + fmChild.getRole().toString() + " and role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
+										logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Found FM with role: " + fmChild.getRole().toString() + " and role: " + fmChild.getRole().toString() + " which has to be started early, executing: " + startInput);
 										fmChild.execute(startInput);
 									}
 									catch (CommandException e) {
@@ -1476,7 +1494,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			// set action
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
 			functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-			logger.info("[JohnLog] LVL1 about to call publishRunInfoSummary");
+			//logger.info("[JohnLog] LVL1 about to call publishRunInfoSummary");
+			logger.info("[HCAL LVL1 " + functionManager.FMname + "] LVL1 about to call publishRunInfoSummary");
 			publishRunInfoSummary();
 			publishRunInfoSummaryfromXDAQ(); 
 			functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
