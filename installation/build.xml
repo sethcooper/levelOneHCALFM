@@ -41,7 +41,8 @@
 			debuglevel="lines,vars,source"
 			srcdir="${fm.src}"
 			destdir="${fm.classes}"
-			failonerror="true">
+			failonerror="true"
+      nowarn="true">
 			<classpath refid="rcms.classpath"/>
 			<compilerarg value="-Xlint"/>
 	    </javac>
