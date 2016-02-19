@@ -2129,7 +2129,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-v
+
       // stopping the MonLogger application
       if (HandleMonLoggers) {
         try {
@@ -2339,7 +2339,7 @@ v
         }
       }
 
-      logger.info("[JohnLog] about to call publishRunInfoSummary");
+      //logger.info("[JohnLog] about to call publishRunInfoSummary");
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
