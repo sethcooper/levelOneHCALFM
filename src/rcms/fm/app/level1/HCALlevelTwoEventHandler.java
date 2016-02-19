@@ -2129,7 +2129,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // set action
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
-v
+
       // stopping the MonLogger application
       if (HandleMonLoggers) {
         try {
