@@ -361,63 +361,63 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
     }
 
-    // XMAS initalization and subscription
-    // TODO: is this useful?
-    {
-      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
-      if (!functionManager.RunInfoFlashlistName.equals("")) {
-        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
-
-        functionManager.XMASMonitoringEnabled = true;
-
-        functionManager.wseMap = new HashMap<String,WSESubscription>();
-
-        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
-
-        // Get WSEs
-        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
-
-        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-
-    //    // Subscription to the WSEs
-        for (QualifiedResource qr : functionManager.wseList) {
-          try {
-            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
-            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
-            functionManager.wsSubscription.setFilter(WSE_FILTER);
-
-            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
-
-            try {
-              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
-              functionManager.wsSubscription.subscribe();
-            }
-            catch (XDAQTimeoutException e) {
-              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-            }
-            catch (Exception e){
-              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-            }
-
-          }
-          catch (XDAQMessageException e) {
-            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-          }
-
-          // Store subscriptions for later use e.g. unsubscriptions, etc.
-          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
-
-          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
-        }
-      }
-    }
+//    // XMAS initalization and subscription
+//    // TODO: is this useful?
+//    {
+//      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
+//      if (!functionManager.RunInfoFlashlistName.equals("")) {
+//        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
+//
+//        functionManager.XMASMonitoringEnabled = true;
+//
+//        functionManager.wseMap = new HashMap<String,WSESubscription>();
+//
+//        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
+//
+//        // Get WSEs
+//        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
+//
+//        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+//
+//    //    // Subscription to the WSEs
+//        for (QualifiedResource qr : functionManager.wseList) {
+//          try {
+//            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+//            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
+//            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
+//            functionManager.wsSubscription.setFilter(WSE_FILTER);
+//
+//            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
+//
+//            try {
+//              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
+//              functionManager.wsSubscription.subscribe();
+//            }
+//            catch (XDAQTimeoutException e) {
+//              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
+//              logger.error(errMessage,e);
+//              functionManager.sendCMSError(errMessage);
+//            }
+//            catch (Exception e){
+//              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
+//              logger.error(errMessage,e);
+//              functionManager.sendCMSError(errMessage);
+//            }
+//
+//          }
+//          catch (XDAQMessageException e) {
+//            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
+//            logger.error(errMessage,e);
+//            functionManager.sendCMSError(errMessage);
+//          }
+//
+//          // Store subscriptions for later use e.g. unsubscriptions, etc.
+//          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
+//
+//          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
+//        }
+//      }
+//    }
 
 
     // Check if the userXML specifies whether the AsyncEnable feature should be used
@@ -495,7 +495,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       Integer DefaultNumberOfEvents = 0;
       String theNumberOfEvents = "";
-      GetUserXMLElement("NumberOfEvents");
       try { theNumberOfEvents=xmlHandler.getHCALuserXMLelementContent("NumberOfEvents"); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (!theNumberOfEvents.equals("")) {
@@ -676,8 +675,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -3313,34 +3312,34 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
 
-        {
-          String FullComment = "Preamble:\n";
-
-          // find comment tag in the userXML
-          String CommentuserXML = GetUserXMLElement("Comment");
-          if (CommentuserXML.equals("")) { FullComment += "not used"; }
-
-          FullComment += "\nUser comment:\n";
-
-          // if there is any user add in the comment field of the FM add this too
-          String CommentUserGUI = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
-          if (!CommentUserGUI.equals("")) {
-            FullComment += CommentUserGUI;
-          }
-          else {
-            FullComment += "not set";
-          }
-
-          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
+//        {
+//          String FullComment = "Preamble:\n";
+//
+//          // find comment tag in the userXML
+//          String CommentuserXML = GetUserXMLElement("Comment");
+//          if (CommentuserXML.equals("")) { FullComment += "not used"; }
+//
+//          FullComment += "\nUser comment:\n";
+//
+//          // if there is any user add in the comment field of the FM add this too
+//          String CommentUserGUI = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
+//          if (!CommentUserGUI.equals("")) {
+//            FullComment += CommentUserGUI;
+//          }
+//          else {
+//            FullComment += "not set";
+//          }
+//
+//          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
+//          try {
+//            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
+//            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
+//          }
+//          catch (RunInfoException e) {
+//            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
+//            logger.error(errMessage,e);
+//          }
+//        }
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
@@ -5413,139 +5412,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
   }
 
-  public String stripExecXML(String execXMLstring) throws UserActionException{
-    try {
-
-      // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
-
-      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-      InputSource inputSource = new InputSource();
-      inputSource.setCharacterStream(new StringReader(execXMLstring));
-      Document execXML = docBuilder.parse(inputSource);
-      execXML.getDocumentElement().normalize();
-
-
-      ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-      String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
-      String newExecXMLstring = "";
-      int NxcContexts = 0;
-      int removedContexts = 0;
-      int removedApplications = 0;
-      for (String maskedApp: maskedAppArray) {
-        String[] maskedAppParts = maskedApp.split("_");
-
-        //Remove masked applications from xc:Context nodes
-        NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        NxcContexts = xcContextNodes.getLength();
-        removedContexts = 0;
-        removedApplications = 0;
-        for (int i=0; i < NxcContexts; i++) {
-          Element currentContextNode = (Element) xcContextNodes.item(i-removedContexts);
-          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
-          removedApplications = 0;
-          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
-            Node currentApplicationNode = xcApplicationNodes.item(j-removedApplications);
-            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
-            String xcApplicationInstance = xcApplicationNodes.item(j-removedApplications).getAttributes().getNamedItem("instance").getNodeValue();
-            if (xcApplicationClass.equals(maskedAppParts[0]) && xcApplicationInstance.equals(maskedAppParts[1])){
-              currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-              removedApplications+=1;
-            }
-            if (currentContextNode.getElementsByTagName("xc:Application").getLength()==0) {
-              currentContextNode.getParentNode().removeChild(currentContextNode);
-              removedContexts +=1;
-            }
-          }
-        }
-
-        //Remove masked applications' i2o connections from i2o:protocol node
-        NodeList i2oTargetNodes = execXML.getDocumentElement().getElementsByTagName("i2o:target");
-        int Ni2oTargetNodes = i2oTargetNodes.getLength();
-        int removedi2oTargets = 0;
-        for (int i=0; i < Ni2oTargetNodes; i++) {
-          Node i2oTargetNode = i2oTargetNodes.item(i-removedi2oTargets);
-          if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
-            i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
-            removedi2oTargets+=1;
-          }
-        }
-        
-        //Remove masked applications' i2o connections from i2o:unicasts node
-        NodeList xcUnicastNodes = execXML.getDocumentElement().getElementsByTagName("xc:Unicast");
-        int NxcUnicastNodes = xcUnicastNodes.getLength();
-        int removedxcUnicasts = 0;
-        for (int i=0; i < NxcUnicastNodes; i++) {
-          Node xcUnicastNode = xcUnicastNodes.item(i-removedxcUnicasts);
-          if (xcUnicastNode.getAttributes().getNamedItem("instance") != null && xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
-            logger.debug("[HCAL " + functionManager.FMname + "]: About to remove xc:Unicast node for maskedapp with class " + maskedAppParts[0] + " and instance " + maskedAppParts[1]);
-            xcUnicastNode.getParentNode().removeChild(xcUnicastNode);
-            removedxcUnicasts+=1;
-          }
-        }
-
-        //Move the lpm application node into the context that holds the pi and ici
-        String  lpm = "tcds::lpm::LPMController";
-        //String  pi = "tcds::pi::PIController";
-        String  ici = "tcds::ici::ICIController";
-        Element lpmApplicationElement = null;
-        Element newLPMnodeContext = null;
-        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        NxcContexts = xcContextNodes.getLength();
-        for (int i=0; i < NxcContexts; i++) {
-          Element currentContextNode = (Element) xcContextNodes.item(i);
-          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
-          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
-            Node currentApplicationNode = xcApplicationNodes.item(j);
-            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
-            System.out.println("Item " + i + " has class " + xcApplicationClass + " and instance " + currentApplicationNode.getAttributes().getNamedItem("instance").getNodeValue());
-            if (xcApplicationClass.equals(lpm)){
-              lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
-              if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-            }
-            if (xcApplicationClass.equals(ici)){
-              newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
-            }
-          }
-        }
-        if (lpmApplicationElement!=null && functionManager.FMrole.equals("EvmTrig")){
-          if (newLPMnodeContext==null) {
-            logger.error("[HCAL " + functionManager.FMname + "]: Could not find a context in this executive that has a PI");
-          }
-          else {
-            newLPMnodeContext.appendChild(lpmApplicationElement);
-          }
-        }
-        
-        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
-        NxcContexts = xcContextNodes.getLength();
-        int removedLPMContexts = 0;
-        for (int i=0; i < NxcContexts; i++) {
-          Element currentContextNode = (Element) xcContextNodes.item(i-removedLPMContexts);
-          if ( currentContextNode!=null && currentContextNode.getElementsByTagName("*").getLength()==0) {
-               currentContextNode.getParentNode().removeChild(currentContextNode);
-               removedLPMContexts++;
-           }
-        } 
-
-        DOMSource domSource = new DOMSource(execXML);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-        newExecXMLstring = writer.toString();
-        newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-      }
-      return newExecXMLstring;
-    }
-    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
-      logger.error("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
-      throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
-    }
-  }  
 
 }
  

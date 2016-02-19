@@ -28,6 +28,9 @@ import org.xml.sax.SAXException;
 
 import rcms.fm.fw.user.UserActionException;
 
+import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.parameter.ParameterSet;
+import rcms.fm.fw.parameter.type.StringT;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -87,4 +90,136 @@ public class HCALxmlHandler {
     }     
     catch (UserActionException e) {throw e;}
   }
+  public String stripExecXML(String execXMLstring, ParameterSet<FunctionManagerParameter> parameterSet) throws UserActionException{
+    try {
+
+      // Get the list of master snippets from the userXML and use it to find the mastersnippet file.
+
+      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader(execXMLstring));
+      Document execXML = docBuilder.parse(inputSource);
+      execXML.getDocumentElement().normalize();
+
+
+      String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+      String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
+      String newExecXMLstring = "";
+      int NxcContexts = 0;
+      int removedContexts = 0;
+      int removedApplications = 0;
+      for (String maskedApp: maskedAppArray) {
+        String[] maskedAppParts = maskedApp.split("_");
+
+        //Remove masked applications from xc:Context nodes
+        NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        NxcContexts = xcContextNodes.getLength();
+        removedContexts = 0;
+        removedApplications = 0;
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i-removedContexts);
+          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
+          removedApplications = 0;
+          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
+            Node currentApplicationNode = xcApplicationNodes.item(j-removedApplications);
+            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
+            String xcApplicationInstance = xcApplicationNodes.item(j-removedApplications).getAttributes().getNamedItem("instance").getNodeValue();
+            if (xcApplicationClass.equals(maskedAppParts[0]) && xcApplicationInstance.equals(maskedAppParts[1])){
+              currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+              removedApplications+=1;
+            }
+            if (currentContextNode.getElementsByTagName("xc:Application").getLength()==0) {
+              currentContextNode.getParentNode().removeChild(currentContextNode);
+              removedContexts +=1;
+            }
+          }
+        }
+
+        //Remove masked applications' i2o connections from i2o:protocol node
+        NodeList i2oTargetNodes = execXML.getDocumentElement().getElementsByTagName("i2o:target");
+        int Ni2oTargetNodes = i2oTargetNodes.getLength();
+        int removedi2oTargets = 0;
+        for (int i=0; i < Ni2oTargetNodes; i++) {
+          Node i2oTargetNode = i2oTargetNodes.item(i-removedi2oTargets);
+          if (i2oTargetNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && i2oTargetNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
+            i2oTargetNode.getParentNode().removeChild(i2oTargetNode);
+            removedi2oTargets+=1;
+          }
+        }
+        
+        //Remove masked applications' i2o connections from i2o:unicasts node
+        NodeList xcUnicastNodes = execXML.getDocumentElement().getElementsByTagName("xc:Unicast");
+        int NxcUnicastNodes = xcUnicastNodes.getLength();
+        int removedxcUnicasts = 0;
+        for (int i=0; i < NxcUnicastNodes; i++) {
+          Node xcUnicastNode = xcUnicastNodes.item(i-removedxcUnicasts);
+          if (xcUnicastNode.getAttributes().getNamedItem("instance") != null && xcUnicastNode.getAttributes().getNamedItem("class").getNodeValue().equals(maskedAppParts[0]) && xcUnicastNode.getAttributes().getNamedItem("instance").getNodeValue().equals(maskedAppParts[1])){
+            logger.debug("[HCAL " + functionManager.FMname + "]: About to remove xc:Unicast node for maskedapp with class " + maskedAppParts[0] + " and instance " + maskedAppParts[1]);
+            xcUnicastNode.getParentNode().removeChild(xcUnicastNode);
+            removedxcUnicasts+=1;
+          }
+        }
+
+        //Move the lpm application node into the context that holds the pi and ici
+        String  lpm = "tcds::lpm::LPMController";
+        //String  pi = "tcds::pi::PIController";
+        String  ici = "tcds::ici::ICIController";
+        Element lpmApplicationElement = null;
+        Element newLPMnodeContext = null;
+        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        NxcContexts = xcContextNodes.getLength();
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i);
+          NodeList xcApplicationNodes = currentContextNode.getElementsByTagName("xc:Application");
+          for (int j=0; j < xcApplicationNodes.getLength(); j++) {
+            Node currentApplicationNode = xcApplicationNodes.item(j);
+            String xcApplicationClass = currentApplicationNode.getAttributes().getNamedItem("class").getNodeValue();
+            System.out.println("Item " + i + " has class " + xcApplicationClass + " and instance " + currentApplicationNode.getAttributes().getNamedItem("instance").getNodeValue());
+            if (xcApplicationClass.equals(lpm)){
+              lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
+              if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+            }
+            if (xcApplicationClass.equals(ici)){
+              newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
+            }
+          }
+        }
+        if (lpmApplicationElement!=null && functionManager.FMrole.equals("EvmTrig")){
+          if (newLPMnodeContext==null) {
+            logger.error("[HCAL " + functionManager.FMname + "]: Could not find a context in this executive that has a PI");
+          }
+          else {
+            newLPMnodeContext.appendChild(lpmApplicationElement);
+          }
+        }
+        
+        xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
+        NxcContexts = xcContextNodes.getLength();
+        int removedLPMContexts = 0;
+        for (int i=0; i < NxcContexts; i++) {
+          Element currentContextNode = (Element) xcContextNodes.item(i-removedLPMContexts);
+          if ( currentContextNode!=null && currentContextNode.getElementsByTagName("*").getLength()==0) {
+               currentContextNode.getParentNode().removeChild(currentContextNode);
+               removedLPMContexts++;
+           }
+        } 
+
+        DOMSource domSource = new DOMSource(execXML);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+        newExecXMLstring = writer.toString();
+        newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
+      }
+      return newExecXMLstring;
+    }
+    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+      logger.error("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
+      throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
+    }
+  }  
 }
