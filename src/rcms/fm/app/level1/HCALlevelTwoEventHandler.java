@@ -160,7 +160,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
           String oldExecXML = config.getXml();
           try {
-            String newExecXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
+            String intermediateXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
             config.setXml(newExecXML);
             //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
             logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());

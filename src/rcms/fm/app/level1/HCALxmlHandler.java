@@ -222,4 +222,45 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  
+  public String addStateListenerContext(String execXMLstring) throws UserActionException{
+    logger.info("[JohnLog] " + functionManager.FMname + ": adding the RCMStateListener context to the executive xml.");   
+    String newExecXMLstring = "";
+    try {
+      System.out.println(execXMLstring);
+      docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      InputSource inputSource = new InputSource();
+      inputSource.setCharacterStream(new StringReader(execXMLstring));
+      Document execXML = docBuilder.parse(inputSource);
+      execXML.getDocumentElement().normalize();
+      DOMSource domSource = new DOMSource(execXML);
+
+      Element stateListenerContext = execXML.createElement("xc:Context");
+      stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
+      Element stateListenerApp=execXML.createElement("xc:Application");
+      stateListenerApp.setAttribute("class", "RCMSStateListener");
+      stateListenerApp.setAttribute("id", "50");
+      stateListenerApp.setAttribute("instance", "0");
+      stateListenerApp.setAttribute("network", "local");
+      stateListenerApp.setAttribute("path", "/services/replycommandreceiver");
+      stateListenerContext.appendChild(stateListenerApp);
+      if (execXML.getDocumentElement().getTagName().equals("xc:Partition")) {
+        execXML.getDocumentElement().appendChild(stateListenerContext);
+      }
+
+      StringWriter writer = new StringWriter();
+      StreamResult result = new StreamResult(writer);
+      TransformerFactory tf = TransformerFactory.newInstance();
+      Transformer transformer = tf.newTransformer();
+      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+      transformer.transform(domSource, result);
+      newExecXMLstring = writer.toString();
+      newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
+      return newExecXMLstring;
+    }
+    catch (DOMException | IOException | ParserConfigurationException | SAXException | TransformerException e) {
+      logger.error("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
+      throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
+    }
+  }
 }
