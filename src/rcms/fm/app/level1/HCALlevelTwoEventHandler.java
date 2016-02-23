@@ -153,6 +153,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
      
         //logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         logger.info("[HCAL LVL2 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
+        Boolean addedContext = false;
         for( QualifiedResource qr : xdaqExecList) {
           XdaqExecutive exec = (XdaqExecutive)qr;
           //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
@@ -161,7 +162,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           String oldExecXML = config.getXml();
           try {
             String intermediateXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+            String newExecXML = intermediateXML;
+            //TODO
+            if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
+              newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+              addedContext = true;
+              System.out.println("Set the statelistener context.");
+            }
             config.setXml(newExecXML);
             //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
             logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
