@@ -167,9 +167,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // Switch to select primary or secondary TCDS system--should be true until we get a secondary TCDS system
   public boolean UsePrimaryTCDS = true;
 
-  // MonLogger application control switch
-//  Boolean HandleMonLoggers = false;
-
   // Switch for whether a TriggerAdapter is used in the configuration. Default is false, as in global runs
   //public Boolean HandleTriggerAdapter = false;
 
@@ -669,7 +666,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+       // Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
         Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
@@ -2658,7 +2655,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.containerLTCControl     = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("LTCControl"));
     }
 
-//    functionManager.containerMonLogger      = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalMonLogger"));
 
     functionManager.containerEVM   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("EVM"));
     functionManager.containerBU    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("BU"));
@@ -2678,13 +2674,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
       functionManager.asyncSOAP = true;
     }
-
-    // check if MonLogger applications are found
-    // if (HandleMonLoggers) {
-    //  if (!functionManager.containerMonLogger.isEmpty()) {
-    //    logger.warn("[HCAL " + functionManager.FMname + "] MonLogger applications found in this configuration - good!");
-    //  }
-    //}
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
