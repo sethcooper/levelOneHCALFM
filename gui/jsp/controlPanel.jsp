@@ -11,16 +11,6 @@
 <%@ taglib prefix="rcms.globalParameter" uri="rcms.globalParameter" %>
 <%@ taglib prefix="rcms.notification"    uri="rcms.notification"    %>
 
-<!-- Optional Section to set the visibility of available commands at a given state begin -->
-<%
-  /*
-  List visibleCommandList = new ArrayList();
-  visibleCommandList.add("TurnOn");
-  visibleCommandList.add("TurnOff");
-  pageContext.setAttribute(FMPilotConstants.VISIBLE_COMMANDS, visibleCommandList);
-  */
-%>
-
 <%
 FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(FMPilotConstants.FM_PILOT_BEAN));
 %>
@@ -45,6 +35,13 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
+  <script type="text/javascript">
+    var guiInst = new GUI();
+  </script>
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequest.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequestFunctions.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <script type="text/javascript" src="../js/stateNotification.js"></script>
   <script type="text/javascript" src="../js/common.js"></script>
   <script type="text/javascript" src="../js/control.js"></script>
@@ -56,17 +53,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     <rcms.control:buttonsJSRenderer indentation="2"/>
     <rcms.notification:jSRenderer indentation="2"/>
     <rcms.globalParameter:jSRenderer indentation="2"/>
-
-    function drawMyCommandButtons(currentState) {
-        // do nothing
-        // placeholder for custom function
-    }
-
-    function myUpdateParameters(message) {
-        // do nothing
-        // placeholder for custom function
-    }
-
 
   </script>
 
@@ -366,5 +352,13 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 </table>
 
 <!-- Table T1 end -->
+  <script type="text/javascript">
+    guiInst.attach(document);
+
+    // a call to onLoad is needed since it starts the notification system
+    $(document).ready(function() {
+      onLoad();
+    });
+  </script>
 </body>
 </html>

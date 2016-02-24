@@ -156,7 +156,6 @@ function hideinitializebutton() {
 }
 
 function hcalOnLoad() {
-  onLoad();
   activate_relevant_table('AllParamTables');
   onClickCommandParameterCheckBox();
   removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
