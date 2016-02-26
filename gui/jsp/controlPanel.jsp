@@ -105,6 +105,14 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
         <rcms.control:commandHiddenInputRenderer indentation="4"/>
         <rcms.notification:hiddenInputRenderer indentation="4"/>
         <rcms.control:configurationKeyRenderer titleClass="control_label1" label="Configuration Keys:&nbsp;" contentClass="control_label2" indentation="10"/>
+		<input type="hidden" id="globalParameterName1"
+			name="globalParameterName1" value="" />
+		<input type="hidden"
+			id="globalParameterValue1" name="globalParameterValue1" value="" />
+		<input type="hidden" id="globalParameterType1"
+			name="globalParameterType1" value="" />
+		<input type="hidden"
+			id="NO_RESPONSE" name="NO_RESPONSE" value="" />
         <!-- Working area begin -->
         <table border="0" cellpadding="0" cellspacing="10" align="left">
           <!-- First section begin -->
