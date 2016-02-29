@@ -153,6 +153,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
      
         //logger.info("[JohnLog3] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         logger.info("[HCAL LVL2 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
+        //Boolean addedContext = false;
         for( QualifiedResource qr : xdaqExecList) {
           XdaqExecutive exec = (XdaqExecutive)qr;
           //logger.info("[JohnLog3] " + functionManager.FMname + " Found qualified resource: " + qr.getName());
@@ -160,7 +161,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
           String oldExecXML = config.getXml();
           try {
-            String newExecXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
+            String intermediateXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
+            //String newExecXML = intermediateXML;
+            //TODO
+            //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+            //  addedContext = true;
+              System.out.println("Set the statelistener context.");
+            //}
             config.setXml(newExecXML);
             //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
             logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
@@ -1092,12 +1100,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           publishRunInfoSummaryfromXDAQ();
           logger.warn("[HCAL LVL2 B] TestMode! ... RunInfo summary should be published.");
         }
-      }
-
-      if (TestMode.equals("ElogInfoPublish")) {
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! Publishing Elog summary ...");
-        publishElogSummary();
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TestMode! ... Elog summary should be published.");
       }
 
       // offical run number handling
@@ -2345,7 +2347,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      logger.info("[JohnLog] about to call publishRunInfoSummary");
+      //logger.info("[JohnLog] about to call publishRunInfoSummary");
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
