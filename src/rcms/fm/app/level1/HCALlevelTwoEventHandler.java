@@ -83,12 +83,14 @@ import rcms.utilities.fm.task.Task;
 public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
   static RCMSLogger logger = new RCMSLogger(HCALlevelTwoEventHandler.class);
+  public HCALxmlHandler xmlHandler = null;
 
   public HCALlevelTwoEventHandler() throws rcms.fm.fw.EventHandlerException {}
 
   public void init() throws rcms.fm.fw.EventHandlerException {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     qualifiedGroup  = functionManager.getQualifiedGroup();
+    xmlHandler = new HCALxmlHandler(this.functionManager);
     super.init();
       
 
@@ -158,7 +160,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
           String oldExecXML = config.getXml();
           try {
-            String newExecXML = stripExecXML(oldExecXML);
+            String newExecXML = xmlHandler.stripExecXML(oldExecXML, getUserFunctionManager().getParameterSet());
             config.setXml(newExecXML);
             //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
             logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());

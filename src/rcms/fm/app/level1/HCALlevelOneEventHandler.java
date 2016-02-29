@@ -77,6 +77,7 @@ import rcms.fm.fw.service.parameter.ParameterServiceException;
 public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 	static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
+  public HCALxmlHandler xmlHandler = null;
 
 	public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -86,6 +87,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 		functionManager = (HCALFunctionManager) getUserFunctionManager();
 		qualifiedGroup  = functionManager.getQualifiedGroup();
+    xmlHandler = new HCALxmlHandler(this.functionManager);
 
 		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
@@ -117,7 +119,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 					XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
 					String oldExecXML = config.getXml();
 					try {
-						String newExecXML = stripExecXML(oldExecXML);
+						String newExecXML = xmlHandler.stripExecXML(oldExecXML, functionManager.getParameterSet());
 						config.setXml(newExecXML);
 						//logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
 						logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
