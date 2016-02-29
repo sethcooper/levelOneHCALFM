@@ -219,30 +219,33 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.select(new String[] {"RUinstance"});
                 pam.setValue("RUinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("HandleLPM")) {
                 pam.select(new String[] {"HandleLPM"});
                 pam.setValue("HandleLPM", "true");
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
+                //if (pamName.equals("ReportStateToRCMS")) {
+                //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS; try to set ReportStateToRCMS for " + qr.getName() + " to true");
+                //pam.select(new String[] {"ReportStateToRCMS"});
+                //pam.setValue("ReportStateToRCMS", "true");
+                //pam.send();
+                //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS for " + qr.getName() + " to true");
+              //}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -269,13 +272,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
-      // start the HCALSupervisor watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
-        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-        thread2.start();
-      }
+      //// start the HCALSupervisor watchdog thread
+      //System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      //logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      //if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+      //  HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+      //  thread2.start();
+      //}
 
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");

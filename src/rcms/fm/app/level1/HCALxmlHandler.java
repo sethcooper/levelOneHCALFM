@@ -235,6 +235,7 @@ public class HCALxmlHandler {
       DOMSource domSource = new DOMSource(execXML);
 
       Element stateListenerContext = execXML.createElement("xc:Context");
+      //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
       stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
       Element stateListenerApp=execXML.createElement("xc:Application");
       stateListenerApp.setAttribute("class", "RCMSStateListener");

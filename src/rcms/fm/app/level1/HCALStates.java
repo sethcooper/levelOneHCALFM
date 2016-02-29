@@ -59,4 +59,5 @@ public final class HCALStates {
 	public static final State TESTING_TTS = new State("TestingTTS");
 	
 	public static final State COLDRESETTING = new State("ColdResetting");	
+
 }
