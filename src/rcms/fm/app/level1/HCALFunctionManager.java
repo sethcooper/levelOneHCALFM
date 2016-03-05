@@ -108,11 +108,17 @@ public class HCALFunctionManager extends UserFunctionManager {
   // container of all FunctionManagers in the running Group.
   public QualifiedResourceContainer containerFMChildren = null;
   
-  // container with the EvmTrig FunctionManager for local runs
-  public QualifiedResourceContainer containerFMEvmTrig = null;
+  //// container with the EvmTrig FunctionManager for local runs
+  //public QualifiedResourceContainer containerFMEvmTrig = null;
+  //XXX SIC REMOVE
+  //// container with all FunctionManagers except the EvmTrig
+  //public QualifiedResourceContainer containerFMChildrenNoEvmTrig = null;
 
-  // container with all FunctionManagers except the EvmTrig
-  public QualifiedResourceContainer containerFMChildrenNoEvmTrig = null;
+  public QualifiedResourceContainer containerFMChildrenL2Priority1 = null;
+  public QualifiedResourceContainer containerFMChildrenL2Priority2 = null;
+  public QualifiedResourceContainer containerFMChildrenL2Laser = null;
+  public QualifiedResourceContainer containerFMChildrenEvmTrig = null;
+  public QualifiedResourceContainer containerFMChildrenNormal = null;
 
   // used to derive the state from the resources i.e. child FMs
   public StateVectorCalculation svCalc = null;
@@ -491,11 +497,13 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
+			//XXX SIC REMOVE COMMENTED LINES
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.HALTED);
-        sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.HALTED);
-        sv.registerConditionState(containerFMEvmTrig,HCALStates.HALTED);
+        sv.registerConditionState(containerFMChildren,HCALStates.HALTED);
+        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.HALTED);
+        //sv.registerConditionState(containerFMEvmTrig,HCALStates.HALTED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.HALTED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.HALTED);
         sv.registerConditionState(containerStorageManager,HCALStates.HALTED);
@@ -534,9 +542,9 @@ public class HCALFunctionManager extends UserFunctionManager {
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RUNNING);
+        sv.registerConditionState(containerFMChildren,HCALStates.RUNNING);
         //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNING);
         //sv.registerConditionState(containerFMEvmTrig,HCALStates.RUNNING);
-        sv.registerConditionState(containerFMChildren,HCALStates.RUNNING);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
         sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
@@ -550,8 +558,9 @@ public class HCALFunctionManager extends UserFunctionManager {
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RUNNINGDEGRADED);
-        sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNINGDEGRADED);
-        sv.registerConditionState(containerFMEvmTrig,HCALStates.RUNNINGDEGRADED);
+        sv.registerConditionState(containerFMChildren,HCALStates.RUNNINGDEGRADED);
+        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNINGDEGRADED);
+        //sv.registerConditionState(containerFMEvmTrig,HCALStates.RUNNINGDEGRADED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
         sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
@@ -566,9 +575,9 @@ public class HCALFunctionManager extends UserFunctionManager {
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.STOPPING);
+        sv.registerConditionState(containerFMChildren,HCALStates.STOPPING);
         //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.STOPPING);
         //sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
-        sv.registerConditionState(containerFMChildren,HCALStates.STOPPING);
         svCalc.add(sv);
       }
 

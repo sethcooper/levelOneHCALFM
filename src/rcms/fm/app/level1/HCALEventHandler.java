@@ -2599,63 +2599,101 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
     functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-    // get the EvmTrig FM and handle it separately for sane state calculation
-    List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    Iterator fmChItr = allChildFMs.iterator();
-    while (fmChItr.hasNext()) {
-      FunctionManager fmChild = (FunctionManager) fmChItr.next();
-      logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-      // role is set at beginning of init() so it's already set here
-      if (fmChild.getRole().toString().equals("EvmTrig")) {
-        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-        fmChItr.remove();
-      }
-    }
-    functionManager.containerFMChildrenNoEvmTrig = new QualifiedResourceContainer(allChildFMs);
-    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
+    //// get the EvmTrig FM and handle it separately for sane state calculation
+    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+    //Iterator fmChItr = allChildFMs.iterator();
+    //while (fmChItr.hasNext()) {
+    //  FunctionManager fmChild = (FunctionManager) fmChItr.next();
+    //  logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //  // role is set at beginning of init() so it's already set here
+    //  if (fmChild.getRole().toString().equals("EvmTrig")) {
+    //    logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+    //    fmChItr.remove();
+    //  }
+    //}
+    // XXX SIC REMOVE COMMENTED LINES
+    //functionManager.containerFMChildrenNoEvmTrig = new QualifiedResourceContainer(allChildFMs);
+    //functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
 
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
 
-    // see if we have any "special" FMs
+    // XXX SIC REMOVE COMMENTED LINES
+    //// see if we have any "special" FMs
+    //{
+    //  Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+    //  FunctionManager fmChild = null;
+    //  while (it.hasNext()) {
+    //    fmChild = (FunctionManager) it.next();
+
+    //    logger.debug("[HCAL " + functionManager.FMname + "] FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+
+    //    if (fmChild.getName().toString().equals("HCAL_EventBuilder") || fmChild.getName().toString().equals("ECALFM") || fmChild.getName().toString().equals("ESFM") || fmChild.getName().toString().equals("PSFM") ) {
+    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (old naming): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //      SpecialFMsAreControlled = true;
+    //    }
+
+    //    if (fmChild.getName().toString().equals("HCAL_RCTMASTER") || fmChild.getName().toString().equals("HCAL_HCALMASTER") ) {
+    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (this is not the correct spelling!!): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //      SpecialFMsAreControlled = true;
+    //    }
+
+    //    if (fmChild.getName().toString().equals("HCAL_RCTMaster") || fmChild.getName().toString().equals("HCAL_HCALMaster")) {
+    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //      SpecialFMsAreControlled = true;
+    //    }
+
+    //    //if (fmChild.getRole().toString().equals("Level2_F-i-l-t-e-r-F-a-r-m") ) {
+    //    //  //TODO -- Why does this break configuring?!
+    //    //  logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //    //  SpecialFMsAreControlled = true;
+    //    //}
+
+    //    if (fmChild.getName().toString().equals("HCAL_Laser") && fmChild.getRole().toString().equals("Level2_Laser")) {
+    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+    //      SpecialFMsAreControlled = true;
+    //    }
+
+    //  }
+    //}
+
+		List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
+		List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
+		List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
+		List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
+		List<FunctionManager> normalList = new ArrayList<FunctionManager>();
+    // see if we have any "special" FMs; store them in containers
     {
       Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-
-        logger.debug("[HCAL " + functionManager.FMname + "] FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-
-        if (fmChild.getName().toString().equals("HCAL_EventBuilder") || fmChild.getName().toString().equals("ECALFM") || fmChild.getName().toString().equals("ESFM") || fmChild.getName().toString().equals("PSFM") ) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (old naming): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
+				if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
+					l2LaserFMList.add(fmChild);
         }
+				else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
+						fmChild.getRole().toString().equals("Level2_Priority_1")) {
+					l2Priority1List.add(fmChild);
+				}
+				else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
+					l2Priority2List.add(fmChild);
+				}
+				else if (fmChild.getRole().toString().equals("EvmTrig")) {
+					evmTrigList.add(fmChild);
+				}
+				else {
+					normalList.add(fmChild);
+				}
+			}
+		}
+		functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
+		functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
+		functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
+		functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
+		functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
-        if (fmChild.getName().toString().equals("HCAL_RCTMASTER") || fmChild.getName().toString().equals("HCAL_HCALMASTER") ) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (this is not the correct spelling!!): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
-        }
-
-        if (fmChild.getName().toString().equals("HCAL_RCTMaster") || fmChild.getName().toString().equals("HCAL_HCALMaster")) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
-        }
-
-        //if (fmChild.getRole().toString().equals("Level2_F-i-l-t-e-r-F-a-r-m") ) {
-        //  //TODO -- Why does this break configuring?!
-        //  logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-        //  SpecialFMsAreControlled = true;
-        //}
-
-        if (fmChild.getName().toString().equals("HCAL_Laser") && fmChild.getRole().toString().equals("Level2_Laser")) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
-        }
-
-      }
-    }
 
     // fill applications for level two role
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving HCAL XDAQ applications ...")));

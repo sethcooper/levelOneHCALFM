@@ -713,73 +713,69 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			if (!functionManager.containerFMChildren.isEmpty()) {
 				logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
 
-				// include scheduling ToDo
-        TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+				// //XXX SIC REMOVE COMMENTED LINES
+				////if (SpecialFMsAreControlled) {
+				//	{
+				//		Iterator it = fmsToConfigureContainer.getQualifiedResourceList().iterator();
+				//		FunctionManager fmChild = null;
+				//		while (it.hasNext()) {
+				//			fmChild = (FunctionManager) it.next();
+				//			if (fmChild.isActive()) {
+				//				if (fmChild.getRole().toString().equals("Level2_Priority_1") ) {
+				//					//try {
+				//					//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+				//					//	//fmChild.execute(configureInput);
+				//					//}
+				//					//catch (CommandException e) {
+				//					//	String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+				//					//	logger.error(errMessage,e);
+				//					//	functionManager.sendCMSError(errMessage);
+				//					//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+				//					//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+				//					//	if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+				//					//}
+				//					logger.warn("[HCAL LVL1 " + functionManager.FMname + "] loop1: found childFM named "+fmChild.getName().toString()+" with role Level2_Priority_1; make it into a simpletask");
+				//					SimpleTask l2Priority1Task = new SimpleTask(fmChild,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FM");
+				//					configureTaskSeq.addLast(l2Priority1Task);
+				//					it.remove();
+				//				}
+				//			}
+				//		}
+				//	}
 
-        QualifiedResourceContainer fmsToConfigureContainer = functionManager.containerFMChildren;
-				// check if some partitions have to be configured first
-				//if (SpecialFMsAreControlled) {
-					{
-						Iterator it = fmsToConfigureContainer.getQualifiedResourceList().iterator();
-						FunctionManager fmChild = null;
-						while (it.hasNext()) {
-							fmChild = (FunctionManager) it.next();
-							if (fmChild.isActive()) {
-								if (fmChild.getRole().toString().equals("Level2_Priority_1") ) {
-									//try {
-									//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
-									//	//fmChild.execute(configureInput);
-									//}
-									//catch (CommandException e) {
-									//	String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-									//	logger.error(errMessage,e);
-									//	functionManager.sendCMSError(errMessage);
-									//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-									//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-									//	if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-									//}
-									logger.warn("[HCAL LVL1 " + functionManager.FMname + "] loop1: found childFM named "+fmChild.getName().toString()+" with role Level2_Priority_1; make it into a simpletask");
-									SimpleTask l2Priority1Task = new SimpleTask(fmChild,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FM");
-									configureTaskSeq.addLast(l2Priority1Task);
-									it.remove();
-								}
-							}
-						}
-					}
+				//	//while (!waitforFMswithRole("Level2_Priority_1",HCALStates.CONFIGURED.toString())) {
+				//	//	try { Thread.sleep(1000); }
+				//	//	catch (Exception ignored) {}
+				//	//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_1.");
+				//	//}
 
-					//while (!waitforFMswithRole("Level2_Priority_1",HCALStates.CONFIGURED.toString())) {
-					//	try { Thread.sleep(1000); }
-					//	catch (Exception ignored) {}
-					//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] ... waiting for FMs to be in the state "+ HCALStates.CONFIGURED.toString() + "\nAll FMs which have the role: Level2_Priority_1.");
-					//}
-
-					{
-						Iterator it = fmsToConfigureContainer.getQualifiedResourceList().iterator();
-						FunctionManager fmChild = null;
-						while (it.hasNext()) {
-							fmChild = (FunctionManager) it.next();
-							if (fmChild.isActive()) {
-								if ( fmChild.getRole().toString().equals("Level2_Priority_2") ) {
-									//try {
-									//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
-									//	fmChild.execute(configureInput);
-									//}
-									//catch (CommandException e) {
-									//	String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
-									//	logger.error(errMessage,e);
-									//	functionManager.sendCMSError(errMessage);
-									//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-									//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
-									//	if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-									//}
-									logger.warn("[HCAL LVL1 " + functionManager.FMname + "] loop1: found childFM named "+fmChild.getName().toString()+" with role Level2_Priority_2; make it into a simpletask");
-									SimpleTask l2Priority2Task = new SimpleTask(fmChild,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FM");
-									configureTaskSeq.addLast(l2Priority2Task);
-									it.remove();
-								}
-							}
-						}
-					}
+				//	{
+				//		Iterator it = fmsToConfigureContainer.getQualifiedResourceList().iterator();
+				//		FunctionManager fmChild = null;
+				//		while (it.hasNext()) {
+				//			fmChild = (FunctionManager) it.next();
+				//			if (fmChild.isActive()) {
+				//				if ( fmChild.getRole().toString().equals("Level2_Priority_2") ) {
+				//					//try {
+				//					//	logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found priority FM childs - good! fireEvent: " + configureInput);
+				//					//	fmChild.execute(configureInput);
+				//					//}
+				//					//catch (CommandException e) {
+				//					//	String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + configureInput + " failed ...";
+				//					//	logger.error(errMessage,e);
+				//					//	functionManager.sendCMSError(errMessage);
+				//					//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+				//					//	functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - problems ...")));
+				//					//	if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+				//					//}
+				//					logger.warn("[HCAL LVL1 " + functionManager.FMname + "] loop1: found childFM named "+fmChild.getName().toString()+" with role Level2_Priority_2; make it into a simpletask");
+				//					SimpleTask l2Priority2Task = new SimpleTask(fmChild,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FM");
+				//					configureTaskSeq.addLast(l2Priority2Task);
+				//					it.remove();
+				//				}
+				//			}
+				//		}
+				//	}
 
 					//while (!waitforFMswithRole("Level2_Priority_2",HCALStates.CONFIGURED.toString())) {
 					//	try { Thread.sleep(1000); }
@@ -861,9 +857,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 					//}
 					//
 
+					// include scheduling
+					TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
+
+					// some partitions have to be configured first
+					SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
+					configureTaskSeq.addLast(l2Priority1Task);
+					SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
+					configureTaskSeq.addLast(l2Priority2Task);
+
           // now configure the rest in parallel
+          List<QualifiedResource> normalFMsToConfigureList = functionManager.containerFMChildren.getQualifiedResourceList();
+          normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
+          normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
+          QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
 					logger.warn("[HCAL LVL1 " + functionManager.FMname + "] make fmChildrenTask.");
-          SimpleTask fmChildrenTask = new SimpleTask(fmsToConfigureContainer,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+          SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
 					logger.warn("[HCAL LVL1 " + functionManager.FMname + "] addLast.");
 					configureTaskSeq.addLast(fmChildrenTask);
 
@@ -1008,6 +1017,47 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			startInput.setParameters( pSet );
 
 			if (!functionManager.containerFMChildren.isEmpty()) {
+        List<QualifiedResource> normalFMsToStartList = functionManager.containerFMChildren.getQualifiedResourceList();
+				normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
+				normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
+				normalFMsToStartList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
+				normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Laser.getQualifiedResourceList());
+        QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
+        // no reason not to always prioritize FM starts
+				// include scheduling
+				// XXX I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
+				TaskSequence startTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
+        // 1) Level2_Priority_1
+        if(!functionManager.containerFMChildrenL2Priority1.isEmpty()) {
+					SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority1 child FMs");
+					startTaskSeq.addLast(l2Priority1Task);
+				}
+        // 2) Level2_Priority_2
+        if(!functionManager.containerFMChildrenL2Priority2.isEmpty()) {
+					SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
+					startTaskSeq.addLast(l2Priority2Task);
+				}
+        // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
+				if(!normalFMsToStartContainer.isEmpty()) {
+					SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
+					startTaskSeq.addLast(fmChildrenTask);
+				}
+        // 4) EvmTrig
+				if(!functionManager.containerFMChildrenEvmTrig.isEmpty()) {
+					SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+					startTaskSeq.addLast(evmTrigTask);
+				}
+				// 5) L2_Laser
+				if(!functionManager.containerFMChildrenL2Laser.isEmpty()) {
+					SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
+					startTaskSeq.addLast(l2LaserTask);
+				}
+
+				logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+				functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
+
+				// XXX FIXME SIC REMOVE COMMENTED LINES
+			//XXX SIC REMOVE COMMENTED LINES
 			//	logger.info("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + startInput);
 			//	Boolean prioritizeFMstarts = false;
 			//	{
@@ -1219,12 +1269,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			}
 		}
 //XXX FIXME SIC IS THIS NEEDED?
-		else {
-			if (!functionManager.ErrorState) {
-				logger.info("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
-				functionManager.fireEvent(HCALInputs.SETSTART);
-			}
-		}
+		//else {
+		//	if (!functionManager.ErrorState) {
+		//		logger.info("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
+		//		functionManager.fireEvent(HCALInputs.SETSTART);
+		//	}
+		//}
 
 		// set action
 		functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));

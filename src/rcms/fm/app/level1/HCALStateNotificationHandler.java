@@ -133,6 +133,41 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 			  }
 		  }
 
+			// process the notification from the FM when starting
+			if ( fm.getState().equals(HCALStates.STARTING) ) {
+
+				if ( notification.getToState().equals(HCALStates.STARTING.toString()) ) {
+
+					String services = notification.getReason().trim();
+					if ( services == null | services.length() == 0 ) return;
+
+					//String transMsg = String.format( "services ["+fm.getConfiguredServices()+"] done : ["+services+"] in progress");
+					//fm.setTransitionMessage( transMsg );
+					//fm.addConfiguredServices(services);
+					String msg = "HCAL is starting "+services;
+					fm.setAction(msg);
+					logger.info(msg);
+					//XXX FIXME SIC TODO
+					//fm.addMsgToConsole(msg);
+
+					setTimeoutThread(true);
+					return;
+					//XXX SIC FIXME TODO ADD ERROR STATE
+					//} else if ( notification.getToState().equals(HCALStates.XDAQ_CRASHED.toString()) ) {
+					//        String errMsg = "Application Crash detected:\n";
+					//        errMsg += "URI: "+notification.getIdentifier()+"\n";
+					//        errMsg += "Reason: "+notification.getReason();
+					//    fm.sendCMSError(errMsg,logger);
+					//    fm.setAction(" ");
+					//    setTimeoutThread(false);
+					//    fm.forceParameterUpdate();
+					//    fm.fireEvent(HCALInputs.SETERROR);
+					// 
+					//        return;
+					//}
+			  }
+		  }
+
 			if(taskSequence == null) {
 
 				setTimeoutThread(false);
@@ -207,7 +242,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				logger.warn("Transition completed");
 				completeTransition();
 			} else {
-				logger.warn("Executing: "+taskSequence.getDescription());
+				logger.warn("[SethLog] Start executing: "+taskSequence.getDescription());
 				taskSequence.startExecution();
 				//                fm.setAction("Executing: "+_taskSequence.getDescription());
 				//                logger.debug("_taskSequence status after a second startExecution: "+_taskSequence.isCompleted() );
@@ -302,6 +337,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				//XXX SIC FIXME TODO add this
         //fm.forceParameterUpdate();
         setTimeoutThread(false);
+				logger.warn("completeTransition: fire taskSequence completion event "+taskSequence.getCompletionEvent().toString());
         fm.fireEvent(taskSequence.getCompletionEvent());
         taskSequence = null;
  
