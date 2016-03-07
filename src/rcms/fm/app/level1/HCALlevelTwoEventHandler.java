@@ -272,7 +272,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // start the HCALSupervisor watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+      if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("Level2_TTCci"))) {
         HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
         thread2.start();
       }
@@ -342,6 +342,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // ask the HCAL supervisor for the TriggerAdapter name
       //
       
+      logger.warn("[JohnLog] this FM is checking if he should be doing getTriggerAdapter() " + functionManager.FMname + " and his role is " + functionManager.FMrole);
       if (functionManager.FMrole.equals("EvmTrig")) {
         //logger.info("JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");

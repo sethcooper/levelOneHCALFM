@@ -164,6 +164,7 @@ public class HCALxmlHandler {
         String  lpm = "tcds::lpm::LPMController";
         //String  pi = "tcds::pi::PIController";
         String  ici = "tcds::ici::ICIController";
+        String  ttcci = "ttc::TTCciControl";
         Element lpmApplicationElement = null;
         Element newLPMnodeContext = null;
         xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
@@ -178,6 +179,9 @@ public class HCALxmlHandler {
             if (xcApplicationClass.equals(lpm)){
               lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+            }
+            if (!functionManager.FMname.equals("HCALFM_904Int_TTCci") && xcApplicationClass.equals(ttcci)){
+              if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
             if (xcApplicationClass.equals(ici)){
               newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
@@ -235,7 +239,7 @@ public class HCALxmlHandler {
       DOMSource domSource = new DOMSource(execXML);
 
       Element stateListenerContext = execXML.createElement("xc:Context");
-      stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
+      stateListenerContext.setAttribute("url", "http://cms904rc-hcal.cms904:16001/rcms");
       Element stateListenerApp=execXML.createElement("xc:Application");
       stateListenerApp.setAttribute("class", "RCMSStateListener");
       stateListenerApp.setAttribute("id", "50");

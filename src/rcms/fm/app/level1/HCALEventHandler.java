@@ -669,8 +669,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -733,7 +733,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
 
     // Getting the base directory of the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
+    //String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
+
+    String CfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
     if (!CfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
       TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
@@ -1084,7 +1086,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 }
 
                 // compile a proper file name to load the TTCciControl snippet from a file
-                String CVSTTCciControlFileName = CfgCVSBasePath;
+                String CVSTTCciControlFileName ="/nfshome0/hcalcfg/cvs/RevHistory/";
                 CVSTTCciControlFileName += result.group(2);
                 CVSTTCciControlFileName += "/";
                 CVSTTCciControlFileName += result.group(4);
@@ -2227,6 +2229,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     String allMaskedResources = "";
     String ruInstance = "";
     String lpmSupervisor = "";
+    String EvmTrigsApps = "";
     for (QualifiedResource qr : level2list) {
       itsThisLvl2 = false;
       try {
@@ -2259,8 +2262,25 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
               if (somebodysHandlingTA) { 
-                allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant trigger adapter " + level2resource.getName());
+                if (level2resource.getName().contains("FanoutTTCciTA") && !EvmTrigsApps.contains("FanoutTTCciTA")) {
+                  logger.warn("[JohnLog] found a FanoutTTCciTA after somebody else is already handling the TA.");
+                  allMaskedResources += EvmTrigsApps;
+                  qr.getResource().setRole("EvmTrig");
+                  logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
+                  logger.warn("[JohnLog] starting to look for the old EvmTrig to be replaced.");
+                  for (QualifiedResource otherLevel2FM : level2list) {
+                    logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
+                   
+                    if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
+                      otherLevel2FM.getResource().setRole("HCAL");
+                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+                    }
+                  }
+                }
+                else {
+                  allMaskedResources+=level2resource.getName()+";"; 
+                  logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant trigger adapter " + level2resource.getName());
+                }
               }
 
               else {
@@ -2271,6 +2291,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
+                EvmTrigsApps += level2resource.getName()+";";
+                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a FanoutTTCciTA is found: " + EvmTrigsApps);
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
@@ -3919,7 +3941,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
 
     }
-    else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
+    else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
