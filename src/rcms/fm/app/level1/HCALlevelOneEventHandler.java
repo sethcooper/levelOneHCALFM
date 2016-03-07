@@ -860,14 +860,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 					// include scheduling
 					TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
-					// some partitions have to be configured first
+					// configure Level2Priority1 FMs first
 					SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
 					configureTaskSeq.addLast(l2Priority1Task);
+					// then configure L2Priority2 FMs
 					SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
 					configureTaskSeq.addLast(l2Priority2Task);
 
           // now configure the rest in parallel
-          List<QualifiedResource> normalFMsToConfigureList = functionManager.containerFMChildren.getQualifiedResourceList();
+          List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+					List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
+          for(QualifiedResource qr : fmChildrenList)
+						normalFMsToConfigureList.add((FunctionManager)qr);
           normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
           normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
           QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
@@ -1017,7 +1021,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			startInput.setParameters( pSet );
 
 			if (!functionManager.containerFMChildren.isEmpty()) {
-        List<QualifiedResource> normalFMsToStartList = functionManager.containerFMChildren.getQualifiedResourceList();
+        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+				List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
+        for(QualifiedResource qr : fmChildrenList)
+					normalFMsToStartList.add((FunctionManager)qr);
 				normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
 				normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
 				normalFMsToStartList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
@@ -1025,7 +1032,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
         // no reason not to always prioritize FM starts
 				// include scheduling
-				// XXX I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
+				// XXX SIC TODO I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
 				TaskSequence startTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
         // 1) Level2_Priority_1
         if(!functionManager.containerFMChildrenL2Priority1.isEmpty()) {
@@ -1625,13 +1632,16 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				// stop all FMs 
 
 				Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+				logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] ContainerFMChildren has size: " + functionManager.containerFMChildren.getQualifiedResourceList().size());
 				FunctionManager fmChild = null;
 				while (it.hasNext()) {
 					fmChild = (FunctionManager) it.next();
 					if (fmChild.isActive()) {
+								logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] FOUND ACTIVE FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
 						if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
 							try {
-								logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+								//logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
+								logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Will send " + HCALInputs.STOP + " to the FM named: " + fmChild.getResource().getName().toString() + "\nThe role is: " + fmChild.getResource().getRole().toString() + "\nAnd the URI is: " + fmChild.getResource().getURI().toString());
 								fmChild.execute(HCALInputs.STOP);
 							}
 							catch (CommandException e) {
