@@ -165,7 +165,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.FMurl);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
@@ -239,13 +239,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
-                //if (pamName.equals("ReportStateToRCMS")) {
-                //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS; try to set ReportStateToRCMS for " + qr.getName() + " to true");
-                //pam.select(new String[] {"ReportStateToRCMS"});
-                //pam.setValue("ReportStateToRCMS", "true");
-                //pam.send();
-                //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS for " + qr.getName() + " to true");
-              //}
+							//XXX SIC TODO FIXME WHY DOES THIS CRASH?
+							//if (pamName.equals("ReportStateToRCMS")) {
+							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS; try to set ReportStateToRCMS for " + qr.getName() + " to true");
+							//pam.select(new String[] {"ReportStateToRCMS"});
+							//pam.setValue("ReportStateToRCMS", "true");
+							//pam.send();
+							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS for " + qr.getName() + " to true");
             }
           }
           catch (XDAQTimeoutException e) {

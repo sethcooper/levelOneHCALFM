@@ -2614,6 +2614,19 @@ public class HCALEventHandler extends UserEventHandler {
     // XXX SIC REMOVE COMMENTED LINES
     //functionManager.containerFMChildrenNoEvmTrig = new QualifiedResourceContainer(allChildFMs);
     //functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
+    // get masked FMs and remove them from container
+    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+		List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
+    Iterator fmChItr = allChildFMs.iterator();
+    while (fmChItr.hasNext()) {
+      FunctionManager fmChild = (FunctionManager) fmChItr.next();
+			if (!fmChild.isActive()) {
+				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+				// role is set at beginning of init() so it's already set here
+				logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+				fmChItr.remove();
+			}
+    }
 
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
@@ -3531,7 +3544,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     // check if the resource was a FM
     if (checkIfControlledResource(resource)) {
-      if (newState.getToState().equals(HCALStates.ERROR.getStateString())) {
+      if (newState.getToState().equals(HCALStates.ERROR.getStateString()) || newState.getToState().equals(HCALStates.FAILED.getStateString())) {
 
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!";
         logger.error(errMessage);
@@ -3658,7 +3671,7 @@ public class HCALEventHandler extends UserEventHandler {
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
-            else {
+						else {
               String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
               logger.error(errMessage2);
               functionManager.sendCMSError(errMessage2);

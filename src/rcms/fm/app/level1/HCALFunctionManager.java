@@ -3,6 +3,7 @@ package rcms.fm.app.level1;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserFunctionManager;
@@ -516,6 +517,22 @@ public class HCALFunctionManager extends UserFunctionManager {
 
       {
         StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.CONFIGURING);
+        sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
+        //sv.registerConditionState(containerFMEvmTrig,HCALStates.CONFIGURED);
+        //sv.registerConditionState(containerFUResourceBroker,HCALStates.READY);
+        //sv.registerConditionState(containerFUEventProcessor,HCALStates.READY);
+        //sv.registerConditionState(containerStorageManager,HCALStates.READY);
+        sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
+        if (asynchcalSupervisor) {
+          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
+        }
+        svCalc.add(sv);
+      }
+
+
+      {
+        StateVector sv = new StateVector();
         sv.setResultState(HCALStates.CONFIGURED);
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURED);
         //sv.registerConditionState(containerFMEvmTrig,HCALStates.CONFIGURED);
@@ -607,7 +624,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerStorageManager,HCALStates.ERROR);
         sv.registerConditionState(containerlpmController,HCALStates.ERROR);
         if (asynchcalSupervisor) {
-          sv.registerConditionState(containerhcalSupervisor,HCALStates.ERROR);
+          sv.registerConditionState(containerhcalSupervisor,HCALStates.FAILED);
         }
         svCalc.add(sv);
       }

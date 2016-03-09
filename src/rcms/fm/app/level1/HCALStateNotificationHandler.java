@@ -368,7 +368,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             //Thread watchThread = new Thread( new Runnable()
                 {
                     //int milliSecondSleepTime = 1000*fm.getEventHandler().getTimeout();
-                    int milliSecondSleepTime = 1000*60;
+                    int milliSecondSleepTime = 1000*120;
  
                     public void run() {    
                         try {
