@@ -66,6 +66,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public XdaqApplicationContainer containerhcalSupervisor      = null;
   public XdaqApplicationContainer containerlpmController       = null;
+  public XdaqApplicationContainer containerTCDSControllers     = null;
   public XdaqApplicationContainer containerhcalDCCManager      = null;
   public XdaqApplicationContainer containerTriggerAdapter      = null;
   public XdaqApplicationContainer containerTTCciControl        = null;
@@ -498,7 +499,21 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
+			if (!containerFMChildren.isEmpty())
+      {
+        StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.INITIALIZING);
+        sv.registerConditionState(containerFMChildren,HCALStates.INITIALIZING);
+        // not needed as level-2's can ignore calculating INITIALIZING
+        //sv.registerConditionState(containerlpmController,HCALStates.HALTING);
+        svCalc.add(sv);
+      }
+
+
 			//XXX SIC REMOVE COMMENTED LINES
+			//   the level-2's fire SETHALT on themselves at the end of initAction without any state calculations
+			//   but they will calculate this if reset/halt/recoverAction is called
+			//     in that case, the state should be calculated from either the supervisor or the LPM
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.HALTED);

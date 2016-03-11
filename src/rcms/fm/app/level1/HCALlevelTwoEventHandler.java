@@ -192,7 +192,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
+      // we also halt the TCDS applications here
       initXDAQ();
+
       parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
       //for (QualifiedResource qr : xdaqApplicationList) { 
       //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
@@ -354,6 +356,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // go to HALT
       if (!functionManager.ErrorState) {
+				logger.info("[SethLog HCAL LVL2 " + functionManager.FMname + "] Fire the SETHALT since we're done initializing");
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
       // set actions

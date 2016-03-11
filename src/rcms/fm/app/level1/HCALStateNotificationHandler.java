@@ -98,6 +98,47 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 			//            }
 			//    }
 
+			// process the notification from the FM when initializing
+			if ( fm.getState().equals(HCALStates.INITIALIZING) ) {
+
+        // ignore notifications to HALTING (like from TCDS apps)
+				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
+					String msg = "HCAL is initializing ";
+					fm.setAction(msg);
+					logger.info(msg);
+					return;
+			  }
+        // for level2's, we fire the set halt at the end of initAction unless there's an error, so we don't care about any notifications
+        // for the level1, in this case we need to compute the new state
+				else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
+          // if it has children FMs, it's a level-1
+					if(!fm.containerFMChildren.isEmpty()) {
+						logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in INITIALIZING and this is a level-1 FM: call computeNewState()");
+						// calculate the updated state
+						fm.theEventHandler.computeNewState(notification);
+					}
+				}
+		  }
+
+			// process the notification from the FM when halting
+			if ( fm.getState().equals(HCALStates.HALTING) ) {
+
+				// ignore notifications to HALTING (like from TCDS apps)
+				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
+					String msg = "HCAL is halting ";
+					fm.setAction(msg);
+					logger.info(msg);
+					return;
+				}
+				else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
+					logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in HALTING: call computeNewState()");
+					// calculate the updated state
+					fm.theEventHandler.computeNewState(notification);
+				}
+			}
+
+
+
 			// process the notification from the FM when configuring
 			if ( fm.getState().equals(HCALStates.CONFIGURING) ) {
 
@@ -368,7 +409,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             //Thread watchThread = new Thread( new Runnable()
                 {
                     //int milliSecondSleepTime = 1000*fm.getEventHandler().getTimeout();
-                    int milliSecondSleepTime = 1000*120;
+                    int milliSecondSleepTime = 1000*240; // 4 mins timeout
  
                     public void run() {    
                         try {
