@@ -116,6 +116,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 						logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in INITIALIZING and this is a level-1 FM: call computeNewState()");
 						// calculate the updated state
 						fm.theEventHandler.computeNewState(notification);
+						return;
 					}
 				}
 		  }
@@ -134,6 +135,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in HALTING: call computeNewState()");
 					// calculate the updated state
 					fm.theEventHandler.computeNewState(notification);
+					return;
 				}
 			}
 
