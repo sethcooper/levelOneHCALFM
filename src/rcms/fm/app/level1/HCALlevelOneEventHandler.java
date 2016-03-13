@@ -1036,27 +1036,27 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				TaskSequence startTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
         // 1) Level2_Priority_1
         if(!functionManager.containerFMChildrenL2Priority1.isEmpty()) {
-					SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority1 child FMs");
+					SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority1 child FMs");
 					startTaskSeq.addLast(l2Priority1Task);
 				}
         // 2) Level2_Priority_2
         if(!functionManager.containerFMChildrenL2Priority2.isEmpty()) {
-					SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
+					SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
 					startTaskSeq.addLast(l2Priority2Task);
 				}
         // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
 				if(!normalFMsToStartContainer.isEmpty()) {
-					SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
+					SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
 					startTaskSeq.addLast(fmChildrenTask);
 				}
         // 4) EvmTrig
 				if(!functionManager.containerFMChildrenEvmTrig.isEmpty()) {
-					SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+					SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
 					startTaskSeq.addLast(evmTrigTask);
 				}
 				// 5) L2_Laser
 				if(!functionManager.containerFMChildrenL2Laser.isEmpty()) {
-					SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,HCALInputs.START,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
+					SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
 					startTaskSeq.addLast(l2LaserTask);
 				}
 
