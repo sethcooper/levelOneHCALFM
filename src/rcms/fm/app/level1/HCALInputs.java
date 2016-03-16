@@ -24,6 +24,9 @@ public class HCALInputs {
 
 	public static final Input SETSTART = new Input("SetRunning");
 
+	public static final Input SETRUNNINGDEGRADED = new Input("SetRunningDegraded");
+	public static final Input UNSETRUNNINGDEGRADED = new Input("UnsetRunningDegraded");
+
 	public static final Input HALT = new Input("Halt");
 	public static final Input HCALHALT = new Input("Disable");
 	
