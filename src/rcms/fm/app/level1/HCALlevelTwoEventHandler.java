@@ -234,13 +234,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
-							//XXX SIC TODO FIXME WHY DOES THIS CRASH?
-							//if (pamName.equals("ReportStateToRCMS")) {
-							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS; try to set ReportStateToRCMS for " + qr.getName() + " to true");
-							//pam.select(new String[] {"ReportStateToRCMS"});
-							//pam.setValue("ReportStateToRCMS", "true");
-							//pam.send();
-							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS for " + qr.getName() + " to true");
+							////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+							//if (pamName.equals("usePrimaryTCDS")) {
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//  pam.select(new String[] {"usePrimaryTCDS"});
+							//  pam.setValue("usePrimaryTCDS", "false");
+							//  pam.send();
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -800,10 +801,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XDAQParameter pam = null;
           pam =((XdaqApplication)qr).getXDAQParameter();
 
-          pam.select(new String[] {"IsLocalRun", "TriggerKey"});
+          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
           pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
           logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
           pam.setValue("TriggerKey", TpgKey);
+          pam.setValue("ReportStateToRCMS", "true");
+          logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
 
           pam.send();
         }
