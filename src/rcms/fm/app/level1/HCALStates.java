@@ -26,6 +26,10 @@ public final class HCALStates {
 
 	public static final State CONFIGURING = new State("Configuring");
 
+	public static final State PREINIT = new State("Pre-Init");
+
+	public static final State INIT = new State("Init");
+
 	public static final State CONFIGURED = new State("Configured");
 
 	public static final State READY = new State("Ready");
@@ -35,6 +39,8 @@ public final class HCALStates {
 	public static final State RESUMING = new State("Resuming");
 
 	public static final State RUNNING = new State("Running");
+
+	public static final State RUNNINGDEGRADED = new State("RunningDegraded");
 
 	public static final State ACTIVE = new State("Active");
 
@@ -49,6 +55,8 @@ public final class HCALStates {
 	public static final State RESETTING = new State("Resetting");
 
 	public static final State ERROR = new State("Error");
+
+  public static final State FAILED = new State("failed");
 	
 	public static final State PREPARING_TTSTEST_MODE = new State("PreparingTTSTestMode");
 	
@@ -57,4 +65,5 @@ public final class HCALStates {
 	public static final State TESTING_TTS = new State("TestingTTS");
 	
 	public static final State COLDRESETTING = new State("ColdResetting");	
+
 }
