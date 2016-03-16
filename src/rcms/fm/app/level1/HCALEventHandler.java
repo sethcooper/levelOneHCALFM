@@ -2821,12 +2821,9 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
-		logger.warn("[HCAL " + functionManager.FMname + "] about to define condition states (HCALEventHandler)");
     functionManager.defineConditionState();
-		logger.warn("[HCAL " + functionManager.FMname + "] just defined condition states (HCALEventHandler)");
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("")));
-		logger.warn("[HCAL " + functionManager.FMname + "] just ended initXdaq (HCALEventHandler)");
   }
 
   // get all XDAQ executives and kill them
@@ -3563,7 +3560,7 @@ public class HCALEventHandler extends UserEventHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
-        logger.warn("[SethLog HCAL " + functionManager.FMname + "] 3 calcState = " + functionManager.calcState.getStateString() + ", from state (actualState): " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
+        logger.info("[SethLog HCAL " + functionManager.FMname + "] 3 calcState = " + functionManager.calcState.getStateString() + ", from state (actualState): " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
