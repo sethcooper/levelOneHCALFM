@@ -110,11 +110,14 @@ public class HCALFunctionManager extends UserFunctionManager {
   // container of all FunctionManagers in the running Group.
   public QualifiedResourceContainer containerFMChildren = null;
   
-  //// container with the EvmTrig FunctionManager for local runs
-  //public QualifiedResourceContainer containerFMEvmTrig = null;
-  //XXX SIC REMOVE
-  //// container with all FunctionManagers except the EvmTrig
-  //public QualifiedResourceContainer containerFMChildrenNoEvmTrig = null;
+  // container with the EvmTrig FunctionManager for local runs
+  public QualifiedResourceContainer containerFMEvmTrig = null;
+
+  // container with the TCDSLPM FunctionManager for local runs
+  public QualifiedResourceContainer containerFMTCDSLPM = null;
+
+  // container with all FunctionManagers except the EvmTrig and TCDSLPM
+  public QualifiedResourceContainer containerFMChildrenNoEvmTrigNoTCDSLPM = null;
 
   public QualifiedResourceContainer containerFMChildrenL2Priority1 = null;
   public QualifiedResourceContainer containerFMChildrenL2Priority2 = null;
@@ -607,9 +610,10 @@ public class HCALFunctionManager extends UserFunctionManager {
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.STOPPING);
-        sv.registerConditionState(containerFMChildren,HCALStates.STOPPING);
+        sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
+				sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
         //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.STOPPING);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
+        sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
         svCalc.add(sv);
       }
 

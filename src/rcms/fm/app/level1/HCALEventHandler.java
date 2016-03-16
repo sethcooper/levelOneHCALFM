@@ -2598,26 +2598,26 @@ public class HCALEventHandler extends UserEventHandler {
     // fill applications for level one role
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
-    functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-    //// get the EvmTrig FM and handle it separately for sane state calculation
-    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    //Iterator fmChItr = allChildFMs.iterator();
-    //while (fmChItr.hasNext()) {
-    //  FunctionManager fmChild = (FunctionManager) fmChItr.next();
-    //  logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //  // role is set at beginning of init() so it's already set here
-    //  if (fmChild.getRole().toString().equals("EvmTrig")) {
-    //    logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-    //    fmChItr.remove();
-    //  }
-    //}
-    // XXX SIC REMOVE COMMENTED LINES
-    //functionManager.containerFMChildrenNoEvmTrig = new QualifiedResourceContainer(allChildFMs);
-    //functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
+		functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
+		// get the EvmTrig FM and handle it separately for sane state calculation
+		List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+		Iterator fmChItr = childFMs.iterator();
+		while (fmChItr.hasNext()) {
+			FunctionManager fmChild = (FunctionManager) fmChItr.next();
+			//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+			// role is set at beginning of init() so it's already set here
+			if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
+				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+				fmChItr.remove();
+			}
+		}
+		functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
+    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
     // get masked FMs and remove them from container
     //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
 		List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
-    Iterator fmChItr = allChildFMs.iterator();
+    fmChItr = allChildFMs.iterator();
     while (fmChItr.hasNext()) {
       FunctionManager fmChild = (FunctionManager) fmChItr.next();
 			if (!fmChild.isActive()) {
@@ -2837,9 +2837,6 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
 
-    // define the condition state vectors only here since the group must have been qualified before and all containers are filled
-    functionManager.defineConditionState();
-
     // finally, halt all TCDS apps
     try {
       Iterator it = functionManager.containerTCDSControllers.getQualifiedResourceList().iterator();
@@ -2861,8 +2858,13 @@ public class HCALEventHandler extends UserEventHandler {
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
+    // define the condition state vectors only here since the group must have been qualified before and all containers are filled
+		logger.warn("[HCAL " + functionManager.FMname + "] about to define condition states (HCALEventHandler)");
+    functionManager.defineConditionState();
+		logger.warn("[HCAL " + functionManager.FMname + "] just defined condition states (HCALEventHandler)");
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("")));
+		logger.warn("[HCAL " + functionManager.FMname + "] just ended initXdaq (HCALEventHandler)");
   }
 
   // get all XDAQ executives and kill them
@@ -3634,8 +3636,10 @@ public class HCALEventHandler extends UserEventHandler {
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
-								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing so functionManager.fireEvent(HCALInputs.SETHALT)");
-                functionManager.fireEvent(HCALInputs.SETHALT);
+								if (!functionManager.containerFMChildren.isEmpty()) {
+									logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
+									functionManager.fireEvent(HCALInputs.SETHALT);
+								}
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
