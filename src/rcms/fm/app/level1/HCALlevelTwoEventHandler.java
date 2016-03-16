@@ -267,6 +267,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
+			// start the HCALSupervisor watchdog thread
+			System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
+				HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+				thread2.start();
+			} 
+
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] StartingTriggerAdapter watchdog thread ...");
