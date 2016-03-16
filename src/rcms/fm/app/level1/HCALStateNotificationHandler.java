@@ -46,15 +46,15 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 		public void processNotice( Object notice ) throws UserActionException {
 
 			StateNotification notification = (StateNotification)notice;
-			logger.warn("["+fm.FMname+"]: State notification received "+
-					"from: " + notification.getFromState()
-					+" to: " + notification.getToState());
+			//logger.warn("["+fm.FMname+"]: State notification received "+
+			//		"from: " + notification.getFromState()
+			//		+" to: " + notification.getToState());
       //
 			String actualState = fm.getState().getStateString();
-      logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
+      //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
 			if ( fm.getState().equals(HCALStates.ERROR) ) {
-				//XXX SIC FIXME TODO add this
+				//XXX SIC FIXME TODO add this?
 				//fm.forceParameterUpdate();
 				return;
 			}
@@ -105,7 +105,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is initializing ";
 					fm.setAction(msg);
-					logger.info(msg);
+					//logger.info(msg);
 					return;
 			  }
         // for level2's, we fire the set halt at the end of initAction unless there's an error, so we don't care about any notifications
@@ -113,7 +113,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
           // if it has children FMs, it's a level-1
 					if(!fm.containerFMChildren.isEmpty()) {
-						logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in INITIALIZING and this is a level-1 FM: call computeNewState()");
+						//logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in INITIALIZING and this is a level-1 FM: call computeNewState()");
 						// calculate the updated state
 						fm.theEventHandler.computeNewState(notification);
 						return;
@@ -128,11 +128,11 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is halting ";
 					fm.setAction(msg);
-					logger.info(msg);
+					//logger.info(msg);
 					return;
 				}
 				else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
-					logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in HALTING: call computeNewState()");
+					//logger.warn("HCALStateNotificationHandler: got notification to HALTED while FM is in HALTING: call computeNewState()");
 					// calculate the updated state
 					fm.theEventHandler.computeNewState(notification);
 					return;
@@ -154,7 +154,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					//fm.addConfiguredServices(services);
 					String msg = "HCAL is configuring "+services;
 					fm.setAction(msg);
-					logger.info(msg);
+					//logger.info(msg);
 					//XXX FIXME SIC TODO
 					//fm.addMsgToConsole(msg);
 
@@ -189,7 +189,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					//fm.addConfiguredServices(services);
 					String msg = "HCAL is starting "+services;
 					fm.setAction(msg);
-					logger.info(msg);
+					//logger.info(msg);
 					//XXX FIXME SIC TODO
 					//fm.addMsgToConsole(msg);
 
@@ -215,7 +215,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
 				setTimeoutThread(false);
 				String infomsg = "Received a State Notification while taskSequence is null \n";
-				logger.warn(infomsg);
+				//logger.warn(infomsg);
 
 				//if (fm.isGlobal()) {
 				//        //XXX SIC FIXME TODO not sure what to do here
@@ -243,7 +243,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				//    return;
 				//} else {
 				logger.debug("FM is in local mode");
-				logger.warn("taskSequence==null; computeNewState");
+				//logger.warn("taskSequence==null; computeNewState");
 				// calculate the updated state
 				fm.theEventHandler.computeNewState(notification);
 				//logger.debug("HCALFM is in state "+ fm.getState());
@@ -282,14 +282,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
 		try {
 			if( taskSequence.isCompleted() ) {
-				logger.warn("Transition completed");
+				logger.info("Transition completed");
 				completeTransition();
 			} else {
-				logger.warn("[SethLog] Start executing: "+taskSequence.getDescription());
+				//logger.info("[SethLog] Start executing: "+taskSequence.getDescription());
 				taskSequence.startExecution();
 				//                fm.setAction("Executing: "+_taskSequence.getDescription());
 				//                logger.debug("_taskSequence status after a second startExecution: "+_taskSequence.isCompleted() );
-				logger.warn("taskSequence not reported complete");
+				logger.info("taskSequence not reported complete");
 			}
 		} catch (Exception e){
 			taskSequence = null;
@@ -328,7 +328,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         try {
             taskSequence.startExecution();
  
-            logger.warn("started execution of taskSequence");
+            //logger.warn("started execution of taskSequence");
             setTimeoutThread(true);
             try {
                 fm.getParameterSet().get(HCALParameters.ACTION_MSG)
@@ -380,7 +380,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				//XXX SIC FIXME TODO add this
         //fm.forceParameterUpdate();
         setTimeoutThread(false);
-				logger.warn("completeTransition: fire taskSequence completion event "+taskSequence.getCompletionEvent().toString());
+				logger.info("completeTransition: fire taskSequence completion event "+taskSequence.getCompletionEvent().toString());
         fm.fireEvent(taskSequence.getCompletionEvent());
         taskSequence = null;
  

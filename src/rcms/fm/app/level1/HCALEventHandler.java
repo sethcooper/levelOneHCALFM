@@ -2633,45 +2633,7 @@ public class HCALEventHandler extends UserEventHandler {
       logger.debug(debugMessage);
     }
 
-    // XXX SIC REMOVE COMMENTED LINES
-    //// see if we have any "special" FMs
-    //{
-    //  Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-    //  FunctionManager fmChild = null;
-    //  while (it.hasNext()) {
-    //    fmChild = (FunctionManager) it.next();
-
-    //    logger.debug("[HCAL " + functionManager.FMname + "] FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-
-    //    if (fmChild.getName().toString().equals("HCAL_EventBuilder") || fmChild.getName().toString().equals("ECALFM") || fmChild.getName().toString().equals("ESFM") || fmChild.getName().toString().equals("PSFM") ) {
-    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (old naming): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //      SpecialFMsAreControlled = true;
-    //    }
-
-    //    if (fmChild.getName().toString().equals("HCAL_RCTMASTER") || fmChild.getName().toString().equals("HCAL_HCALMASTER") ) {
-    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (this is not the correct spelling!!): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //      SpecialFMsAreControlled = true;
-    //    }
-
-    //    if (fmChild.getName().toString().equals("HCAL_RCTMaster") || fmChild.getName().toString().equals("HCAL_HCALMaster")) {
-    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //      SpecialFMsAreControlled = true;
-    //    }
-
-    //    //if (fmChild.getRole().toString().equals("Level2_F-i-l-t-e-r-F-a-r-m") ) {
-    //    //  //TODO -- Why does this break configuring?!
-    //    //  logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //    //  SpecialFMsAreControlled = true;
-    //    //}
-
-    //    if (fmChild.getName().toString().equals("HCAL_Laser") && fmChild.getRole().toString().equals("Level2_Laser")) {
-    //      logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-    //      SpecialFMsAreControlled = true;
-    //    }
-
-    //  }
-    //}
-
+    // see if we have any "special" FMs
 		List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
 		List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
 		List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
@@ -3550,15 +3512,15 @@ public class HCALEventHandler extends UserEventHandler {
   // toState: target state
   public void computeNewState(StateNotification newState) {
 
-    logger.warn("[SethLog HCAL " + functionManager.FMname + "] 1 BEGIN computeNewState(): calculating new state for FM\n@ URI: "+ functionManager.getURI());
+    //logger.warn("[SethLog HCAL " + functionManager.FMname + "] 1 BEGIN computeNewState(): calculating new state for FM\n@ URI: "+ functionManager.getURI());
 
     if (newState.getToState() == null) {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
-    else {
-      logger.warn("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
-    }
+    //else {
+    //  logger.warn("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+    //}
 
     // search the resource which sent the notification
     QualifiedResource resource = null;
@@ -3637,7 +3599,7 @@ public class HCALEventHandler extends UserEventHandler {
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
 								if (!functionManager.containerFMChildren.isEmpty()) {
-									logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
+									//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
 									functionManager.fireEvent(HCALInputs.SETHALT);
 								}
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
@@ -3646,10 +3608,10 @@ public class HCALEventHandler extends UserEventHandler {
 								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
 								functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
-								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
+								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
 								functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RESETTING.getStateString()))     {
-								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
+								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
 								functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
               else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
@@ -3665,7 +3627,7 @@ public class HCALEventHandler extends UserEventHandler {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()) || actualState.equals(HCALStates.RECOVERING.getStateString()) ||
 									actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
 									actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+ actualState+", but SETCONFIGURE ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+ actualState+", but SETCONFIGURE ...");
                 functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
@@ -3679,16 +3641,16 @@ public class HCALEventHandler extends UserEventHandler {
             }
             else if (toState.equals(HCALStates.RUNNING.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is INITIALIZING, but SETSTART ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is INITIALIZING, but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  {
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RECOVERING, but SETSTART ...");
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RECOVERING, but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-								logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+								//logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
 								functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }

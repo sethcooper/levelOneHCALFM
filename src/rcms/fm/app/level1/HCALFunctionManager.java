@@ -313,16 +313,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     destroyed = false;
 
-    //// SIC TEST
-    //try {
-    //logger.info("[SethLog] HCALFunctionManager createAction: try to get the xdaq parameter");
-    //net.hep.cms.xdaqctl.XDAQParameter param = new net.hep.cms.xdaqctl.XDAQParameter("http://hcalmon.cms:9945","hcalAlarmer",0);
-    //// this does a lazy get. do we need to force the update before getting it?
-    //logger.info("[SethLog] HCALFunctionManager createAction: value of alarmer parameter GlobalStatus is " + param.getValue("GlobalStatus"));
-    //} catch (Exception e) {
-    //logger.info("[SethLog] HCALFunctionManager createAction: caught an Exception when trying to get the parameter: ["+ e.toString() + "]");
-    //}
-    //// SIC TEST
     System.out.println("[HCAL " + FMname + "] createAction executed ...");
     logger.debug("[HCAL " + FMname + "] createAction executed ...");
   }
@@ -461,19 +451,19 @@ public class HCALFunctionManager extends UserFunctionManager {
     //  return this.getState();
     //}
     //else {
-      logger.warn("[HCAL " + FMname + "] getUpdatedState(): Do stateVector calculation for FM with the role: " + FMrole);
+      //logger.warn("[HCAL " + FMname + "] getUpdatedState(): Do stateVector calculation for FM with the role: " + FMrole);
       // SIC TEST
-      Iterator it = containerFMChildren.getQualifiedResourceList().iterator();
-      FunctionManager fmChild = null;
-      while (it.hasNext()) {
-        fmChild = (FunctionManager) it.next();
-        logger.warn("[HCAL " + FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole() + " and state: " + fmChild.getState().getStateString());
-      }
+      //Iterator it = containerFMChildren.getQualifiedResourceList().iterator();
+      //FunctionManager fmChild = null;
+      //while (it.hasNext()) {
+      //  fmChild = (FunctionManager) it.next();
+      //  logger.warn("[HCAL " + FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole() + " and state: " + fmChild.getState().getStateString());
+      //}
       // SIC TEST
       calcState = svCalc.getState();
     //}
 
-    logger.warn("[HCAL " + FMname + "] getUpdatedState(): the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
+    //logger.warn("[HCAL " + FMname + "] getUpdatedState(): the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
 
     logger.debug("[HCAL " + FMname + "] ... getting the updated state done.");
 
@@ -513,7 +503,6 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
 
 
-			//XXX SIC REMOVE COMMENTED LINES
 			//   the level-2's fire SETHALT on themselves at the end of initAction without any state calculations
 			//   but they will calculate this if reset/halt/recoverAction is called
 			//     in that case, the state should be calculated from either the supervisor or the LPM
@@ -521,8 +510,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.HALTED);
         sv.registerConditionState(containerFMChildren,HCALStates.HALTED);
-        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.HALTED);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.HALTED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.HALTED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.HALTED);
         sv.registerConditionState(containerStorageManager,HCALStates.HALTED);
@@ -537,10 +524,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.CONFIGURING);
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.CONFIGURED);
-        //sv.registerConditionState(containerFUResourceBroker,HCALStates.READY);
-        //sv.registerConditionState(containerFUEventProcessor,HCALStates.READY);
-        //sv.registerConditionState(containerStorageManager,HCALStates.READY);
         sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
         if (asynchcalSupervisor) {
           sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
@@ -553,7 +536,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.CONFIGURED);
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURED);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.CONFIGURED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.READY);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.READY);
         sv.registerConditionState(containerStorageManager,HCALStates.READY);
@@ -569,8 +551,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RESUMING);
         sv.registerConditionState(containerFMChildren,HCALStates.RESUMING);
-        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RESUMING);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.RESUMING);
         svCalc.add(sv);
       }
 
@@ -578,8 +558,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RUNNING);
         sv.registerConditionState(containerFMChildren,HCALStates.RUNNING);
-        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNING);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.RUNNING);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
         sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
@@ -594,8 +572,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RUNNINGDEGRADED);
         sv.registerConditionState(containerFMChildren,HCALStates.RUNNINGDEGRADED);
-        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNINGDEGRADED);
-        //sv.registerConditionState(containerFMEvmTrig,HCALStates.RUNNINGDEGRADED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
         sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
@@ -612,7 +588,6 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.setResultState(HCALStates.STOPPING);
         sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
 				sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
-        //sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.STOPPING);
         sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
         svCalc.add(sv);
       }
