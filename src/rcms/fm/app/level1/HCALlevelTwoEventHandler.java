@@ -98,14 +98,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void initAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing initAction");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Executing initAction");
 
@@ -165,7 +158,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.FMurl);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
@@ -192,7 +185,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
+      // we also halt the TCDS applications here
       initXDAQ();
+
       parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
       //for (QualifiedResource qr : xdaqApplicationList) { 
       //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
@@ -219,30 +214,34 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.select(new String[] {"RUinstance"});
                 pam.setValue("RUinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("HandleLPM")) {
                 pam.select(new String[] {"HandleLPM"});
                 pam.setValue("HandleLPM", "true");
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
+							////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+							//if (pamName.equals("usePrimaryTCDS")) {
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//  pam.select(new String[] {"usePrimaryTCDS"});
+							//  pam.setValue("usePrimaryTCDS", "false");
+							//  pam.send();
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -269,13 +268,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
-      // start the HCALSupervisor watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("Level2_TTCci"))) {
-        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-        thread2.start();
-      }
+			// start the HCALSupervisor watchdog thread
+			System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
+				HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+				thread2.start();
+			} 
 
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
@@ -352,6 +351,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // go to HALT
       if (!functionManager.ErrorState) {
+				logger.info("[SethLog HCAL LVL2 " + functionManager.FMname + "] Fire the SETHALT since we're done initializing");
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
       // set actions
@@ -366,14 +366,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void resetAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing resetAction");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Executing resetAction");
 
@@ -414,13 +407,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     if (UseResetForRecover) {
       resetAction(obj); return;
     }
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing recoverAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing recoverAction");
 
@@ -474,14 +461,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void configureAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing configureAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing configureAction");
 
@@ -821,10 +801,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XDAQParameter pam = null;
           pam =((XdaqApplication)qr).getXDAQParameter();
 
-          pam.select(new String[] {"IsLocalRun", "TriggerKey"});
+          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
           pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
           logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
           pam.setValue("TriggerKey", TpgKey);
+          pam.setValue("ReportStateToRCMS", "true");
+          logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
 
           pam.send();
         }
@@ -976,13 +958,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // leave intermediate state directly only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-        if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-          functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-        }
-      }
-
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configureAction executed ... - we're close ...")));
@@ -992,14 +967,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void startAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing startAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing startAction");
 
@@ -1526,6 +1494,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
         if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
           functionManager.fireEvent( HCALInputs.SETSTART );
         }
       }
@@ -1542,14 +1511,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void runningAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing runningAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing runningAction");
 
@@ -1611,14 +1573,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void pauseAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing pauseAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing pauseAction");
 
@@ -1677,14 +1632,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void resumeAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing resumeAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing resumeAction");
 
@@ -1744,14 +1692,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void haltAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing haltAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing haltAction");
 
@@ -2075,14 +2016,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void coldResetAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing coldResetAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing coldResetAction");
 
@@ -2361,14 +2295,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void preparingTTSTestModeAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing preparingTestModeAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing preparingTestModeAction");
 
@@ -2564,14 +2491,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void testingTTSAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing testingTTSAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing testingTTSAction");
 
