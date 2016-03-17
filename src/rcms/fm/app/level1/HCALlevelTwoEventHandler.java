@@ -51,6 +51,11 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
@@ -796,6 +801,51 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+          //TODO do here
+          Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
+					XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
+          List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
+          if (taResource.getName().contains("DummyTriggerAdapter")) { 
+						for (XdaqApplicationResource taSibling : taSiblingsList) {
+							logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+							if (taSibling.getName().contains("DTCReadout")) { 
+								try {
+									XDAQParameter pam = null;
+									XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
+									pam =taSiblingApp.getXDAQParameter();
+
+									pam.select(new String[] {"PollingReadout"});
+									pam.setValue("PollingReadout", "true");
+									pam.send();
+								}
+								catch (XDAQTimeoutException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+								catch (XDAQException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+							}
+						}
+          }
+        }
+      }
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
         try {
           XDAQParameter pam = null;
@@ -1068,13 +1118,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // offical run number handling
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
+        //  //TODO do here
+        //  // determine run number and run sequence number and overwrite what was set before
+        //  try {
+				//		Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+				//		Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
+				//		List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
+				//		for (Resource taSibling : taSiblingsList) {
+				//			logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+				//		}
+        //  }
+				//  catch (DBConnectorException ex) {
+				//  	logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
+				//  }
+            
 
-          // determine run number and run sequence number and overwrite what was set before
           if (OfficialRunNumbers) {
-
             RunNumberData rnd = getOfficialRunNumber();
 
             functionManager.RunNumber    = rnd.getRunNumber();

@@ -672,8 +672,8 @@ public class HCALEventHandler extends UserEventHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -2239,6 +2239,7 @@ public class HCALEventHandler extends UserEventHandler {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
+        // TODO see here
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
         if (MaskedFMs.length() > 0) {
           logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
@@ -2265,8 +2266,8 @@ public class HCALEventHandler extends UserEventHandler {
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
               if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("FanoutTTCciTA") && !EvmTrigsApps.contains("FanoutTTCciTA")) {
-                  logger.warn("[JohnLog] found a FanoutTTCciTA after somebody else is already handling the TA.");
+                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
                   logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
@@ -2295,7 +2296,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
                 EvmTrigsApps += level2resource.getName()+";";
-                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a FanoutTTCciTA is found: " + EvmTrigsApps);
+                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
