@@ -689,10 +689,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
 				// configure Level2Priority1 FMs first
-				SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
+				SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
 				configureTaskSeq.addLast(l2Priority1Task);
 				// then configure L2Priority2 FMs
-				SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
+				SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
 				configureTaskSeq.addLast(l2Priority2Task);
 
 				// now configure the rest in parallel
@@ -703,7 +703,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
 				normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
 				QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
-				SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+				SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
 				configureTaskSeq.addLast(fmChildrenTask);
 
 				logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
