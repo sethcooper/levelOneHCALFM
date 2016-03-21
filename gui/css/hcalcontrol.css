@@ -216,3 +216,13 @@ ul {
   -webkit-columns: 3;
   -moz-columns: 3;
 }
+
+/* Specific Hardcoded Stuff */
+#globalParameterCheckBox13,
+#globalParameterCheckBox11,
+#globalParameterCheckBox36{
+	visibility: hidden;
+}
+#masked_resourses_td{
+	display: none;
+}

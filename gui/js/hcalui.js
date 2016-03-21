@@ -37,9 +37,8 @@ $(document).ready(function() {
   var initcolor= $('#currentState').text();
   $('#currentState').attr("class", "hcal_control_"+initcolor);
   $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-});
 
-$(document).ready(function() {
+
   setInterval(function() {
     var currentState = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_"+currentState);
@@ -53,6 +52,11 @@ $(document).ready(function() {
     }
     $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
   }, 750);
+
+
+    $('#dropdowndiv').on('change', 'select', function(){
+        $('#masked_resourses_td').show();
+    });
 });
 
 function setProgress(progress) {
@@ -95,11 +99,11 @@ function makedropdown(availableRunConfigs) {
   }
   dropdownoption = dropdownoption+"</select>";
   $('#dropdowndiv').html(dropdownoption);
-  var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20)
+  var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
   var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
-  var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20)
+  var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
   var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-  var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20)
+  var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
   var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
   var onchanges="onClickGlobalParameterCheckBox("+ cfgSnippetArgs + "); onClickGlobalParameterCheckBox("+ masterSnippetArgs + "); onClickGlobalParameterCheckBox("+ maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
   $('#dropdown').attr("onchange", onchanges);
