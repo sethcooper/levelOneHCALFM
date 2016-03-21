@@ -265,7 +265,7 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   public void init() throws rcms.fm.fw.EventHandlerException {
-   logger.info("[HCAL " + functionManager.FMname + "]:  Executed init()");
+   logger.info("[HCAL " + functionManager.FMname + "]:  Executing HCALEventHandler::init()");
    xmlHandler = new HCALxmlHandler(this.functionManager);
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
@@ -672,8 +672,8 @@ public class HCALEventHandler extends UserEventHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -2830,7 +2830,9 @@ public class HCALEventHandler extends UserEventHandler {
 				tcdsApp = (XdaqApplication) it.next();
 				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
         //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
-				tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
+        // SIC TODO XXX FIXME Why doesn't this work?
+				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
+				tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
 			}
     }
     catch (Exception e) {
@@ -2944,23 +2946,26 @@ public class HCALEventHandler extends UserEventHandler {
   protected void getSessionId() {
     String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
     String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    int sessionId = 0;
+    logSessionConnector = functionManager.logSessionConnector;
+    int tempSessionId = 0;
 
-    logger.debug("[HCAL " + functionManager.FMname + "] Log session connector: " + logSessionConnector );
+    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
 
     if (logSessionConnector != null) {
       try {
-        sessionId = logSessionConnector.createSession( user, description );
-        logger.debug("[HCAL " + functionManager.FMname + "] New session Id obtained =" + sessionId );
+        tempSessionId = logSessionConnector.createSession( user, description );
+        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
       }
       catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
+        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
       }
     }
     else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");
+      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
     }
 
+    // and put it into the instance variable
+    sessionId = tempSessionId;
     // put the session ID into parameter set
     functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
   }
@@ -3465,9 +3470,9 @@ public class HCALEventHandler extends UserEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
-    //else {
-    //  logger.warn("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
-    //}
+    else {
+      logger.info("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+    }
 
     // search the resource which sent the notification
     QualifiedResource resource = null;

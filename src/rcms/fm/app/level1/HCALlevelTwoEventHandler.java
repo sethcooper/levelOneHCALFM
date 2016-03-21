@@ -193,12 +193,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // we also halt the TCDS applications here
       initXDAQ();
 
-      parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-      //for (QualifiedResource qr : xdaqApplicationList) { 
-      //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
-      //    if (qr.isActive())functionManager.FMrole="EvmTrig";
-      //  }
-      //}
       String ruInstance = "";
       if (parameterSet.get(HCALParameters.RU_INSTANCE) != null) {
         ruInstance = ((StringT)parameterSet.get(HCALParameters.RU_INSTANCE).getValue()).getString();
@@ -288,8 +282,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       thread3.start();
 
 
-      // check parameter set
-      if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
+      // check run type passed from Level-1
+			if(((StringT)parameterSet.get(HCALParameters.HCAL_RUN_TYPE).getValue()).getString().equals("local")) {
 
         RunType = "local";
 
