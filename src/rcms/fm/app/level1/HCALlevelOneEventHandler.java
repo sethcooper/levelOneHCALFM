@@ -95,7 +95,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
-		logger.debug("[HCAL LVL1] init() called: functionManager = " + functionManager );
+		logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
 	}
 
 	public void initAction(Object obj) throws UserActionException {
@@ -213,6 +213,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 			// prepare run number to be passed to level 2
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
+			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
 			pSet.put(new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(Sid)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
