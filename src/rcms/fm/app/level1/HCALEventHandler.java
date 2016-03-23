@@ -666,8 +666,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-       // Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -721,202 +721,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     catch (DOMException | ParserConfigurationException | SAXException | IOException  | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
-    String TmpCfgScript = "";
-
-    // Check for a definition of the CfgScript for the LV1
-    if (!FullCfgScript.equals("not set")) {
-      TmpCfgScript += FullCfgScript;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1CfgScript:\n" + FullCfgScript);
-    }
-
-    // Getting the base directory of the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the CfgScript or have a CVSCfgScript section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // Add the local CfgScript if found
-    String LocalCfgScript = GetUserXMLElement("CfgScript");
-    if (!LocalCfgScript.equals("")) {
-
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local CfgScript defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // Parse the lines found in the CVSCfgScript area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based CfgScript section in userXML found.\nHere is it:\n" + LocalCfgScript);
-
-      Boolean foundZSSnippet = false;
-      Boolean foundSpecialZSSnippet = false;
-      Boolean foundVdMSnippet = false;
-
-      {
-        String CVSCfgScriptLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCfgScript));
-
-        try {
-          while ((CVSCfgScriptLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSCfgScriptLineToParse.length() > 0) && (!CVSCfgScriptLineToParse.startsWith("#")) ) {
-              Scanner s = new Scanner(CVSCfgScriptLineToParse);
-
-              // The syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use the exact whitespaces as in this example!! (courtesy of arno)
-
-              // TODO startstop-here
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // Check whether the lines could be parsed correctly, "in principle though ..." (ibid.)
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSCfgScript line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getCfgScript()! Parsing of CfgScript failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSCfgScript is: " + LocalCfgScript;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // Make a proper file name for the CfgScript being loaded
-                String CVSCfgScriptFileName = CfgCVSBasePath;
-                CVSCfgScriptFileName += result.group(2);
-                CVSCfgScriptFileName += "/";
-                CVSCfgScriptFileName += result.group(4);
-
-                String LocalCfgScriptFromFile = "";
-                {
-                  // Detect the zero supression snippet tag
-                  String smallCVSCfgScriptFileName = result.group(2);
-                  smallCVSCfgScriptFileName += "/";
-                  smallCVSCfgScriptFileName += result.group(4);
-
-                  // Get the CfgScript snippet and add it to the used TmpCfgScript
-                  logger.debug("[HCAL " + functionManager.FMname + "] Loading a CfgScript snippet from a from file named: " + CVSCfgScriptFileName);
-
-                  // CFG snippet blocking mechanism by means of the given RUN_KEY // TODO translate this
-                  // TODO Add comments that are intelligible to humans
-                  {
-                    Boolean SnippetNotBlocked = true;
-
-                    // zero supression
-                    if (!functionManager.useZS && (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + ZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // special zero suppression
-                    if (!functionManager.useSpecialZS && (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + SpecialZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // VdM scan options
-                    if (!functionManager.useVdMSnippet && (smallCVSCfgScriptFileName.equals(VdMSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special VdM scan CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + VdMSnippetName +"\n";
-                    }
-
-                    if (SnippetNotBlocked) { LocalCfgScriptFromFile = readTextFile(CVSCfgScriptFileName); }
-                  }
-
-                  // sanity checks if there are CFG snippet name ambiguities
-                  if (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName)) {
-                    foundZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName)) {
-                    foundSpecialZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(VdMSnippetName)) {
-                    foundVdMSnippet = true;
-                  }
-
-                }
-
-                if (!LocalCfgScriptFromFile.equals("")) {
-
-                  TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpCfgScript += LocalCfgScriptFromFile;
-                  TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSCfgScriptFileName + " a definition of a CfgScript - good!\nIt looks like this:\n" + LocalCfgScriptFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] CfgScript from CVS based file named: " + CVSCfgScriptFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              // TODO startstop-here
-              else {
-                TmpCfgScript += CVSCfgScriptLineToParse + "\n";
-              }
-            }
-
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getCfgScript()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local CfgScript\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Found definition of a CfgScript is this FM userXML.\nIt looks like this:\n" + LocalCfgScript);
-
-      // sanity checks if there are CFG snippet name ambiguities
-      if (!RunType.equals("local")) {
-        if (functionManager.useZS && (!foundZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a zero supression HCAL Cfg snippet!\nThe name looked for was: " + ZeroSuppressionSnippetName);
-        }
-        if (functionManager.useSpecialZS && (!foundSpecialZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special zero supression HCAL Cfg snippet!\nThe name looked for was: " + SpecialZeroSuppressionSnippetName);
-        }
-        if (functionManager.useVdMSnippet && (!foundVdMSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special VdM scan snippet!\nThe name looked for was: " + VdMSnippetName);
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No CfgScript found in userXML of this FM.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullCfgScript = TmpCfgScript;
-
+    FullCfgScript=configString;
     logger.debug("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
 
-    FullCfgScript=configString;
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
   }
 
@@ -930,12 +737,19 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     if (!FullTTCciControlSequence.equals("not set")) {
       TmpTTCciControl += FullTTCciControlSequence;
       logger.info("[HCAL " + functionManager.FMname + "] Using LVL1TTCciControl:\n" + FullTTCciControlSequence);
+      logger.info("[Martin Log: HCAL " + functionManager.FMname + "] Using LVL1TTCciControl:\n" + FullTTCciControlSequence);
     }
+		System.out.println("Martin Log: Input FullTTCciControlSequence from LV1");
+		System.out.println(FullTTCciControlSequence);
 
     // getting the basedir of where to find the files containing the configuration snippets
     String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
+		System.out.println("Martin Log: Input CfgCVSBasePath ");
+		System.out.println(CfgCVSBasePath);
+
     if (!CfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
       TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
     }
     else {
@@ -944,10 +758,13 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     // add TTCciControls from a CVS maintained file - if defined
     String LocalCVSTTCciControl = GetUserXMLElement("CVSTTCciControl");
+		System.out.println("Martin Log: Printing LocalCVSTTCciControl");
+		System.out.println(LocalCVSTTCciControl);
     if (!LocalCVSTTCciControl.equals("")) {
 
       // parsing the lines found in the CVSTTCciControl area, etc.
       logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
 
       {
         String CVSTTCciControlLineToParse;
@@ -1032,12 +849,15 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     // add local TTCciControl - if available
     String LocalTTCciControl = GetUserXMLElement("TTCciControl");
+		System.out.println("Martin Log: Input LocalTTCciControl");
+		System.out.println( LocalTTCciControl);
     if (!LocalTTCciControl.equals("")) {
 
       TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local TTCciControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
 
       // parsing the lines found in the CVSTTCciControl area, etc.
       logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] LocalCVSTTCciControl=.\nHere is it:\n" + LocalCVSTTCciControl);
 
       {
         String CVSTTCciControlLineToParse;
@@ -1130,7 +950,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     FullTTCciControlSequence = TmpTTCciControl;
 
+		System.out.println( "Martin Log: FullTTCciControlSequence" );
+		System.out.println( FullTTCciControlSequence );
     logger.debug("[HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
   }
