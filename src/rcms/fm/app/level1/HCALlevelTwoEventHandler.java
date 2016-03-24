@@ -51,6 +51,11 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
@@ -98,14 +103,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void initAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing initAction");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Executing initAction");
 
@@ -165,7 +163,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML);
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.FMurl);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
@@ -192,13 +190,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
+      // we also halt the TCDS applications here
       initXDAQ();
-      parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-      //for (QualifiedResource qr : xdaqApplicationList) { 
-      //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
-      //    if (qr.isActive())functionManager.FMrole="EvmTrig";
-      //  }
-      //}
+
       String ruInstance = "";
       if (parameterSet.get(HCALParameters.RU_INSTANCE) != null) {
         ruInstance = ((StringT)parameterSet.get(HCALParameters.RU_INSTANCE).getValue()).getString();
@@ -219,30 +213,34 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.select(new String[] {"RUinstance"});
                 pam.setValue("RUinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
               }
               if (pamName.equals("HandleLPM")) {
                 pam.select(new String[] {"HandleLPM"});
                 pam.setValue("HandleLPM", "true");
                 pam.send();
-                //logger.info("[JohnLog4] " + functionManager.FMname + ": Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
+							////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+							//if (pamName.equals("usePrimaryTCDS")) {
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//  pam.select(new String[] {"usePrimaryTCDS"});
+							//  pam.setValue("usePrimaryTCDS", "false");
+							//  pam.send();
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -269,13 +267,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
-      // start the HCALSupervisor watchdog thread
-      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
-        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-        thread2.start();
-      }
+			// start the HCALSupervisor watchdog thread
+			System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+			if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
+				HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+				thread2.start();
+			} 
 
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
@@ -284,8 +282,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       thread3.start();
 
 
-      // check parameter set
-      if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
+      // check run type passed from Level-1
+			if(((StringT)parameterSet.get(HCALParameters.HCAL_RUN_TYPE).getValue()).getString().equals("local")) {
 
         RunType = "local";
 
@@ -342,6 +340,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // ask the HCAL supervisor for the TriggerAdapter name
       //
       
+      logger.warn("[JohnLog] this FM is checking if he should be doing getTriggerAdapter() " + functionManager.FMname + " and his role is " + functionManager.FMrole);
       if (functionManager.FMrole.equals("EvmTrig")) {
         //logger.info("JohnLog3] [HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] Going to ask the HCAL supervisor fo the TriggerAdapter name, now...");
@@ -351,6 +350,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // go to HALT
       if (!functionManager.ErrorState) {
+				logger.info("[SethLog HCAL LVL2 " + functionManager.FMname + "] Fire the SETHALT since we're done initializing");
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
       // set actions
@@ -365,14 +365,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void resetAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing resetAction");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Executing resetAction");
 
@@ -413,13 +406,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     if (UseResetForRecover) {
       resetAction(obj); return;
     }
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing recoverAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing recoverAction");
 
@@ -473,14 +460,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void configureAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing configureAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing configureAction");
 
@@ -814,16 +794,101 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
       }
+      // configure PeerTransportUTCPs
+      if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+        String peerTransportUTCPstateName = "";
+        for (QualifiedResource qr : functionManager.containerPeerTransportUTCP.getApplications() ) {
+          try {
+            XDAQParameter pam = null;
+            pam = ((XdaqApplication)qr).getXDAQParameter();
+            pam.select(new String[] {"stateName"});
+            pam.get();
+            peerTransportUTCPstateName =  pam.getValue("stateName");
+            logger.info("[HCAL " + functionManager.FMname + "] Got the PeerTransportUTCP's stateName--it is: " + peerTransportUTCPstateName);
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+        }
+        try {
+          if (peerTransportUTCPstateName.equals("Halted")) {
+            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring PeerTransportUTCPs ...");
+            functionManager.containerPeerTransportUTCP.execute(HCALInputs.CONFIGURE);
+          }
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring PeerTransportUTCPs failed ...";
+          logger.error(errMessage,e);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        }
+      }
 
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+          //TODO do here
+          Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
+					XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
+          List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
+          if (taResource.getName().contains("DummyTriggerAdapter")) { 
+						for (XdaqApplicationResource taSibling : taSiblingsList) {
+							logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+							if (taSibling.getName().contains("DTCReadout")) { 
+								try {
+									XDAQParameter pam = null;
+									XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
+									pam =taSiblingApp.getXDAQParameter();
+
+									pam.select(new String[] {"PollingReadout"});
+									pam.setValue("PollingReadout", "true");
+									pam.send();
+								}
+								catch (XDAQTimeoutException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+								catch (XDAQException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+							}
+						}
+          }
+        }
+      }
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
         try {
           XDAQParameter pam = null;
           pam =((XdaqApplication)qr).getXDAQParameter();
 
-          pam.select(new String[] {"IsLocalRun", "TriggerKey"});
+          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
           pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
           logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
           pam.setValue("TriggerKey", TpgKey);
+          pam.setValue("ReportStateToRCMS", "true");
+          logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
 
           pam.send();
         }
@@ -974,14 +1039,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void startAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing startAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing startAction");
 
@@ -1082,13 +1140,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // offical run number handling
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
+        //  //TODO do here
+        //  // determine run number and run sequence number and overwrite what was set before
+        //  try {
+				//		Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+				//		Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
+				//		List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
+				//		for (Resource taSibling : taSiblingsList) {
+				//			logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+				//		}
+        //  }
+				//  catch (DBConnectorException ex) {
+				//  	logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
+				//  }
+            
 
-          // determine run number and run sequence number and overwrite what was set before
           if (OfficialRunNumbers) {
-
             RunNumberData rnd = getOfficialRunNumber();
 
             functionManager.RunNumber    = rnd.getRunNumber();
@@ -1150,7 +1219,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // start the PeerTransportATCPs
+        // start the PeerTransportATCPs and PeerTransportUTCPs
         if (!functionManager.ATCPsWereStartedOnce) {
 
           // make sure that the ATCP transports were only started only once
@@ -1163,6 +1232,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportATCP failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] starting PeerTransportUTCP ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HCALSTART);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportUTCP failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
@@ -1492,6 +1576,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
         if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
           functionManager.fireEvent( HCALInputs.SETSTART );
         }
       }
@@ -1508,14 +1593,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void runningAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing runningAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing runningAction");
 
@@ -1577,14 +1655,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void pauseAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing pauseAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing pauseAction");
 
@@ -1643,14 +1714,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void resumeAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing resumeAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing resumeAction");
 
@@ -1710,14 +1774,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void haltAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing haltAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing haltAction");
 
@@ -1872,6 +1929,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
+        //FIXME: why is this commented out?
         // stop the PeerTransportATCPs
         /*
            if (!functionManager.containerPeerTransportATCP.isEmpty()) {
@@ -2024,14 +2082,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void coldResetAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing coldResetAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing coldResetAction");
 
@@ -2231,7 +2282,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // stop the PeerTransportATCPs
+        // stop the PeerTransportATCPs and PeerTransportUTCPs
         if (functionManager.StopATCP) {
           if (!functionManager.containerPeerTransportATCP.isEmpty()) {
             try {
@@ -2240,6 +2291,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportATCPs failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping PeerTransportUTCPs ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HALT);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportUTCPs failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
@@ -2293,14 +2359,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void preparingTTSTestModeAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing preparingTestModeAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing preparingTestModeAction");
 
@@ -2496,14 +2555,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void testingTTSAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing testingTTSAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing testingTTSAction");
 
