@@ -265,7 +265,7 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   public void init() throws rcms.fm.fw.EventHandlerException {
-   logger.info("[HCAL " + functionManager.FMname + "]:  Executed init()");
+   logger.info("[HCAL " + functionManager.FMname + "]:  Executing HCALEventHandler::init()");
    xmlHandler = new HCALxmlHandler(this.functionManager);
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
@@ -2239,6 +2239,7 @@ public class HCALEventHandler extends UserEventHandler {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
+        // TODO see here
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
         if (MaskedFMs.length() > 0) {
           logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
@@ -2265,8 +2266,8 @@ public class HCALEventHandler extends UserEventHandler {
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
               if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("FanoutTTCciTA") && !EvmTrigsApps.contains("FanoutTTCciTA")) {
-                  logger.warn("[JohnLog] found a FanoutTTCciTA after somebody else is already handling the TA.");
+                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
                   logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
@@ -2298,7 +2299,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
                 EvmTrigsApps += level2resource.getName()+";";
-                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a FanoutTTCciTA is found: " + EvmTrigsApps);
+                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
@@ -2743,7 +2744,10 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
 
+    functionManager.containerPeerTransportUTCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportUTCP"));
+
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
+
 
     // find out if this FM controlls applications which talk asynchronous SOAP
     if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
@@ -2759,6 +2763,9 @@ public class HCALEventHandler extends UserEventHandler {
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
+    }
+    if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found PeerTransportUTCP applications - will handle them ...");
     }
 
     // find out if HCAL supervisor is ready for async SOAP communication
@@ -2838,7 +2845,9 @@ public class HCALEventHandler extends UserEventHandler {
 				tcdsApp = (XdaqApplication) it.next();
 				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
         //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
-				tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
+        // SIC TODO XXX FIXME Why doesn't this work?
+				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
+				tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
 			}
     }
     catch (Exception e) {
@@ -2952,23 +2961,26 @@ public class HCALEventHandler extends UserEventHandler {
   protected void getSessionId() {
     String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
     String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    int sessionId = 0;
+    logSessionConnector = functionManager.logSessionConnector;
+    int tempSessionId = 0;
 
-    logger.debug("[HCAL " + functionManager.FMname + "] Log session connector: " + logSessionConnector );
+    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
 
     if (logSessionConnector != null) {
       try {
-        sessionId = logSessionConnector.createSession( user, description );
-        logger.debug("[HCAL " + functionManager.FMname + "] New session Id obtained =" + sessionId );
+        tempSessionId = logSessionConnector.createSession( user, description );
+        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
       }
       catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
+        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
       }
     }
     else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");
+      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
     }
 
+    // and put it into the instance variable
+    sessionId = tempSessionId;
     // put the session ID into parameter set
     functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
   }
@@ -3473,9 +3485,9 @@ public class HCALEventHandler extends UserEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
-    //else {
-    //  logger.warn("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
-    //}
+    else {
+      logger.info("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+    }
 
     // search the resource which sent the notification
     QualifiedResource resource = null;
