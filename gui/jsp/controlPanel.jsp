@@ -256,7 +256,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                               </tr>
                               <tr>
                                 <!--Area for masking checkboxes-->
-                                <td class="label_center_black" colspan="3">
+                                <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
                                     <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
                                     <br>
