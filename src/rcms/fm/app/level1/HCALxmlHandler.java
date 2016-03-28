@@ -276,4 +276,45 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
     }
   }
+
+  public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
+    try{
+        // Get ControlSequences from mastersnippet
+        String tmpCtrlSequence ="";
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+        masterSnippet.getDocumentElement().normalize();
+        DOMSource domSource = new DOMSource(masterSnippet);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+
+        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+        NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
+        logger.info("[HCAL " + functionManager.FMname + "]: The " + CtrlSequenceTagName + " has this in it:");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
+        String TTCciControlDoc = CtrlSequence.item(0).getTextContent();
+        logger.info(TTCciControlDoc);
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
+
+        for(int iFile=0; iFile< CtrlSequence.getLength() ; iFile++){
+           Node iNode = CtrlSequence.item(iFile);
+           Element iElement = (Element) iNode;
+           if (iElement.getTagName()=="include"){
+               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
+               tmpCtrlSequence += readTextFile(fname);
+           }
+        }
+    }
+    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
+    }
+    String FullCtrlSequence = tmpCtrlSequence;
+    return FullCtrlSequence;
+  }
 }

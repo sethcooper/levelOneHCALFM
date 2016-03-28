@@ -237,6 +237,9 @@ public class HCALEventHandler extends UserEventHandler {
   protected String SpecialZeroSuppressionSnippetName="/HTR/SpecialZeroSuppression.cfg/pro";
   protected String VdMSnippetName="/LUMI/VdM.cfg/pro";
 
+  // CfgCVSBasePath = Base path to read CVS Cfgs
+  public String CfgCVSBasePath ="";
+
   // XMAS related stuff
   protected String WSE_FILTER = "empty";
 
@@ -498,6 +501,22 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
+    // Get the CfgCVSBasePath in the userXML
+    {
+      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      String theCfgCVSBasePath = "";
+      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theCfgCVSBasePath.equals("")) {
+        CfgCVSBasePath = theCfgCVSBasePath;
+      } else{
+        CfgCVSBasePath = DefaultCfgCVSBasePath;
+      }
+      logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+     
+      
+    }
+
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
       String theZeroSuppressionSnippetName = "";
@@ -670,7 +689,7 @@ public class HCALEventHandler extends UserEventHandler {
           }
         } 
         //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -734,9 +753,57 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getTTCciControl() {
+    String tmpTTCciControlSequence="";
+    try{
+        // Load the master snippet from the found file and parse it.
+        String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+        logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
 
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
+          }
+        } 
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+        masterSnippet.getDocumentElement().normalize();
+        DOMSource domSource = new DOMSource(masterSnippet);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+
+        NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+        logger.info("[HCAL " + functionManager.FMname + "]: The TTCcoControl has this in it:");
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
+        String TTCciControlDoc = TTCciControl.item(0).getTextContent();
+        logger.info(TTCciControlDoc);
+        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
+
+        for(int iFile=0; iFile< TTCciControl.getLength() ; iFile++){
+           Node iNode = TTCciControl.item(iFile);
+           Element iElement = (Element) iNode;
+           if (iElement.getTagName()=="include"){
+               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
+               tmpTTCciControlSequence += readTextFile(fname);
+           }
+        }
+    }
+    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
+    }
+    FullTTCciControlSequence = tmpTTCciControlSequence;
     logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
-
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
   }
 
@@ -753,13 +820,13 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    if (!theCfgCVSBasePath.equals("")) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
+      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
     }
     else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LTCControl section or have a CVSLTCControl section. So please check the userXML of this FM if you experience problems ..."); }
+      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No theCfgCVSBasePath found! This is bad in case you have includes in the LTCControl section or have a CVSLTCControl section. So please check the userXML of this FM if you experience problems ..."); }
     }
 
     // add LTCControls from a CVS maintained file - if defined
@@ -811,7 +878,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
 
               // compile a proper file name to load the LTCControl snippet from a file
-              String CVSLTCControlFileName = CfgCVSBasePath;
+              String CVSLTCControlFileName = theCfgCVSBasePath;
               CVSLTCControlFileName += result.group(2);
               CVSLTCControlFileName += "/";
               CVSLTCControlFileName += result.group(4);
@@ -901,7 +968,7 @@ public class HCALEventHandler extends UserEventHandler {
                 }
 
                 // compile a proper file name to load the LTCControl snippet from a file
-                String CVSLTCControlFileName = CfgCVSBasePath;
+                String CVSLTCControlFileName = theCfgCVSBasePath;
                 CVSLTCControlFileName += result.group(2);
                 CVSLTCControlFileName += "/";
                 CVSLTCControlFileName += result.group(4);
@@ -968,13 +1035,13 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    if (!theCfgCVSBasePath.equals("")) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
+      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
     }
     else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the TCDSControl section or have a CVSTCDSControl section. So please check the userXML of this FM if you experience problems ..."); }
+      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No theCfgCVSBasePath found! This is bad in case you have includes in the TCDSControl section or have a CVSTCDSControl section. So please check the userXML of this FM if you experience problems ..."); }
     }
 
     // add TCDSControls from a CVS maintained file - if defined
@@ -1026,7 +1093,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
 
               // compile a proper file name to load the TCDSControl snippet from a file
-              String CVSTCDSControlFileName = CfgCVSBasePath;
+              String CVSTCDSControlFileName = theCfgCVSBasePath;
               CVSTCDSControlFileName += result.group(2);
               CVSTCDSControlFileName += "/";
               CVSTCDSControlFileName += result.group(4);
@@ -1116,7 +1183,7 @@ public class HCALEventHandler extends UserEventHandler {
                 }
 
                 // compile a proper file name to load the TCDSControl snippet from a file
-                String CVSTCDSControlFileName = CfgCVSBasePath;
+                String CVSTCDSControlFileName = theCfgCVSBasePath;
                 CVSTCDSControlFileName += result.group(2);
                 CVSTCDSControlFileName += "/";
                 CVSTCDSControlFileName += result.group(4);
@@ -1183,13 +1250,13 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    if (!theCfgCVSBasePath.equals("")) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
+      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
     }
     else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LPMControl section or have a CVSLPMControl section. So please check the userXML of this FM if you experience problems ..."); }
+      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No theCfgCVSBasePath found! This is bad in case you have includes in the LPMControl section or have a CVSLPMControl section. So please check the userXML of this FM if you experience problems ..."); }
     }
 
     // add LPMControls from a CVS maintained file - if defined
@@ -1241,7 +1308,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
 
               // compile a proper file name to load the LPMControl snippet from a file
-              String CVSLPMControlFileName = CfgCVSBasePath;
+              String CVSLPMControlFileName = theCfgCVSBasePath;
               CVSLPMControlFileName += result.group(2);
               CVSLPMControlFileName += "/";
               CVSLPMControlFileName += result.group(4);
@@ -1331,7 +1398,7 @@ public class HCALEventHandler extends UserEventHandler {
                 }
 
                 // compile a proper file name to load the LPMControl snippet from a file
-                String CVSLPMControlFileName = CfgCVSBasePath;
+                String CVSLPMControlFileName = theCfgCVSBasePath;
                 CVSLPMControlFileName += result.group(2);
                 CVSLPMControlFileName += "/";
                 CVSLPMControlFileName += result.group(4);
@@ -1398,13 +1465,13 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    if (!theCfgCVSBasePath.equals("")) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
+      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
     }
     else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the PIControl section or have a CVSPIControl section. So please check the userXML of this FM if you experience problems ..."); }
+      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No theCfgCVSBasePath found! This is bad in case you have includes in the PIControl section or have a CVSPIControl section. So please check the userXML of this FM if you experience problems ..."); }
     }
 
     // add PIControls from a CVS maintained file - if defined
@@ -1456,7 +1523,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
 
               // compile a proper file name to load the PIControl snippet from a file
-              String CVSPIControlFileName = CfgCVSBasePath;
+              String CVSPIControlFileName = theCfgCVSBasePath;
               CVSPIControlFileName += result.group(2);
               CVSPIControlFileName += "/";
               CVSPIControlFileName += result.group(4);
@@ -1546,7 +1613,7 @@ public class HCALEventHandler extends UserEventHandler {
                 }
 
                 // compile a proper file name to load the PIControl snippet from a file
-                String CVSPIControlFileName = CfgCVSBasePath;
+                String CVSPIControlFileName = theCfgCVSBasePath;
                 CVSPIControlFileName += result.group(2);
                 CVSPIControlFileName += "/";
                 CVSPIControlFileName += result.group(4);
