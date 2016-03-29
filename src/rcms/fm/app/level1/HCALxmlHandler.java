@@ -306,8 +306,8 @@ public class HCALxmlHandler {
         NodeList childlist = el.getElementsByTagName("include"); 
         for(int iFile=0; iFile< childlist.getLength() ; iFile++){
            Element iElement = (Element) childlist.item(iFile);
-           String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
-		       logger.info("Martin log [HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+           String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
+		       logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
            tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
         }
     }
