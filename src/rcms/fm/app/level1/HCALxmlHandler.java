@@ -7,6 +7,9 @@ import java.util.Scanner;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,7 +20,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -278,9 +280,9 @@ public class HCALxmlHandler {
   }
 
   public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
+    String tmpCtrlSequence ="";
     try{
         // Get ControlSequences from mastersnippet
-        String tmpCtrlSequence ="";
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
@@ -307,7 +309,7 @@ public class HCALxmlHandler {
            Element iElement = (Element) iNode;
            if (iElement.getTagName()=="include"){
                String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
-               tmpCtrlSequence += readTextFile(fname);
+               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
            }
         }
     }
@@ -317,4 +319,8 @@ public class HCALxmlHandler {
     String FullCtrlSequence = tmpCtrlSequence;
     return FullCtrlSequence;
   }
+  static String readFile(String path, Charset encoding) throws IOException {
+      byte[] encoded = Files.readAllBytes(Paths.get(path));
+      return new String(encoded, encoding);
+   }  
 }

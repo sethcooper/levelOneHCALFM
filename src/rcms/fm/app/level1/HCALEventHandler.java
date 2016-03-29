@@ -503,7 +503,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Get the CfgCVSBasePath in the userXML
     {
-      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
       String theCfgCVSBasePath = "";
       try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
@@ -512,7 +513,8 @@ public class HCALEventHandler extends UserEventHandler {
       } else{
         CfgCVSBasePath = DefaultCfgCVSBasePath;
       }
-      logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
      
       
     }
@@ -820,7 +822,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    String theCfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
     if (!theCfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
       TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
@@ -1035,7 +1037,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    String theCfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
     if (!theCfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
       //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
@@ -1250,7 +1252,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    String theCfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
     if (!theCfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
       //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
@@ -1465,7 +1467,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // getting the basedir of where to find the files containing the configuration snippets
-    String theCfgCVSBasePath = GetUserXMLElement("theCfgCVSBasePath");
+    String theCfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
     if (!theCfgCVSBasePath.equals("")) {
       logger.info("[HCAL " + functionManager.FMname + "] Found theCfgCVSBasePath, which points to: " + theCfgCVSBasePath);
       //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### theCfgCVSBasePath=" + theCfgCVSBasePath + "\n\n";
