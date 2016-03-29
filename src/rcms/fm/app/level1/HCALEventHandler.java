@@ -502,22 +502,22 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // Get the CfgCVSBasePath in the userXML
-    {
-      //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-      String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
-      String theCfgCVSBasePath = "";
-      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theCfgCVSBasePath.equals("")) {
-        CfgCVSBasePath = theCfgCVSBasePath;
-      } else{
-        CfgCVSBasePath = DefaultCfgCVSBasePath;
-      }
-      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-     
-      
-    }
+    //{
+    //  //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+    //  String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+    //  String theCfgCVSBasePath = "";
+    //  try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
+    //  catch (UserActionException e) { logger.warn(e.getMessage()); }
+    //  if (!theCfgCVSBasePath.equals("")) {
+    //    CfgCVSBasePath = theCfgCVSBasePath;
+    //  } else{
+    //    CfgCVSBasePath = DefaultCfgCVSBasePath;
+    //  }
+    //  //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+    //  logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+    // 
+    //  
+    //}
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
@@ -690,8 +690,8 @@ public class HCALEventHandler extends UserEventHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -1895,6 +1895,7 @@ public class HCALEventHandler extends UserEventHandler {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
     boolean itsThisLvl2 = false;
+    boolean itsAdummy = false;
     String allMaskedResources = "";
     String ruInstance = "";
     String lpmSupervisor = "";
@@ -1931,9 +1932,11 @@ public class HCALEventHandler extends UserEventHandler {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                  logger.warn("[JohnLog] found a DummyTriggerAdapter after somebody else is already handling the TA.");
+              if (somebodysHandlingTA && !itsAdummy) { 
+                if (level2resource.getName().contains("DummyTriggerAdapter") ) {
+                  itsThisLvl2=true;
+                  itsAdummy=true;
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
                   logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
@@ -1944,7 +1947,6 @@ public class HCALEventHandler extends UserEventHandler {
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
                        otherLevel2FM.getResource().setRole("HCAL");
                        logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-		       itsThisLvl2=true;
                        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                        logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
@@ -1961,6 +1963,9 @@ public class HCALEventHandler extends UserEventHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
+                if (qr.getName().contains("DummyTriggerAdapter")){
+                  itsAdummy = true;
+                }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
@@ -1973,8 +1978,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
+      	      else {
+             	  EvmTrigsApps += level2resource.getName()+";";
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
@@ -1982,10 +1987,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
-	      else if(somebodysHandlingTA && itsThisLvl2){
-		EvmTrigsApps += level2resource.getName()+";";
-              }
-              else {
+       	      else {
+            		EvmTrigsApps += level2resource.getName()+";";
                 ruInstance=level2resource.getName();
                 logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
@@ -1993,6 +1996,10 @@ public class HCALEventHandler extends UserEventHandler {
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
+              }
+              else if (somebodysHandlingTA && itsThisLvl2) {
+                logger.info("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
+                lpmSupervisor=level2resource.getName();
               }
               else {
                 logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
