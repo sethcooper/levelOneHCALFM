@@ -502,22 +502,22 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // Get the CfgCVSBasePath in the userXML
-    //{
-    //  //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-    //  String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
-    //  String theCfgCVSBasePath = "";
-    //  try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
-    //  catch (UserActionException e) { logger.warn(e.getMessage()); }
-    //  if (!theCfgCVSBasePath.equals("")) {
-    //    CfgCVSBasePath = theCfgCVSBasePath;
-    //  } else{
-    //    CfgCVSBasePath = DefaultCfgCVSBasePath;
-    //  }
-    //  //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-    //  logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-    // 
-    //  
-    //}
+    {
+      //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+      String theCfgCVSBasePath = "";
+      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theCfgCVSBasePath.equals("")) {
+        CfgCVSBasePath = theCfgCVSBasePath;
+      } else{
+        CfgCVSBasePath = DefaultCfgCVSBasePath;
+      }
+      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+     
+      
+    }
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
     {
@@ -690,8 +690,8 @@ public class HCALEventHandler extends UserEventHandler {
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
         } 
-        Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        //Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
+        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -756,11 +756,11 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getTTCciControl() {
     String tmpTTCciControlSequence="";
-    try{
+    //try{
         // Load the master snippet from the found file and parse it.
         String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
         logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
-
+      try{
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         if (selectedRun == "not set" ) {
           logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
@@ -772,38 +772,42 @@ public class HCALEventHandler extends UserEventHandler {
             selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
-        } 
-        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
-
-        masterSnippet.getDocumentElement().normalize();
-        DOMSource domSource = new DOMSource(masterSnippet);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-
-        NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
-        logger.info("[HCAL " + functionManager.FMname + "]: The TTCcoControl has this in it:");
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        String TTCciControlDoc = TTCciControl.item(0).getTextContent();
-        logger.info(TTCciControlDoc);
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-
-        for(int iFile=0; iFile< TTCciControl.getLength() ; iFile++){
-           Node iNode = TTCciControl.item(iFile);
-           Element iElement = (Element) iNode;
-           if (iElement.getTagName()=="include"){
-               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
-               tmpTTCciControlSequence += readTextFile(fname);
-           }
         }
-    }
-    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
-    }
+          String TagName = "TTCciControl";
+          tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+       }
+       catch (  ParserConfigurationException |  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
+       }
+        
+      //  Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+      //  masterSnippet.getDocumentElement().normalize();
+      //  DOMSource domSource = new DOMSource(masterSnippet);
+      //  StringWriter writer = new StringWriter();
+      //  StreamResult result = new StreamResult(writer);
+      //  TransformerFactory tf = TransformerFactory.newInstance();
+      //  Transformer transformer = tf.newTransformer();
+      //  transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      //  transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+      //  transformer.transform(domSource, result);
+
+      //  NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+      //  logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + TTCciControl.getLength()+" TTCciControl nodes ");
+
+      //  Element  el = (Element) TTCciControl.item(0);
+      //  NodeList childlist = el.getElementsByTagName("include");
+      //  logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + childlist.getLength()+" cfg to read");
+      //  for(int i =0;i< childlist.getLength();i++){
+      //      Element iElement = (Element) childlist.item(i);
+      //      String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
+		  //      logger.info("Martin log [HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+      //      tmpTTCciControlSequence += readTextFile(fname); 
+      //  }
+      //}
+      //catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+      //    logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
+      //}
     FullTTCciControlSequence = tmpTTCciControlSequence;
     logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));

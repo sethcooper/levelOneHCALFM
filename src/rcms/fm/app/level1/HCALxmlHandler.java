@@ -298,19 +298,17 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        logger.info("[HCAL " + functionManager.FMname + "]: The " + CtrlSequenceTagName + " has this in it:");
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        String TTCciControlDoc = CtrlSequence.item(0).getTextContent();
-        logger.info(TTCciControlDoc);
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-
-        for(int iFile=0; iFile< CtrlSequence.getLength() ; iFile++){
-           Node iNode = CtrlSequence.item(iFile);
-           Element iElement = (Element) iNode;
-           if (iElement.getTagName()=="include"){
-               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
-               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
-           }
+        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + CtrlSequence.getLength()+ " "+ CtrlSequenceTagName+ " nodes ");
+        if (CtrlSequence.getLength()>1){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
+        }
+        Element el = (Element) CtrlSequence.item(0);
+        NodeList childlist = el.getElementsByTagName("include"); 
+        for(int iFile=0; iFile< childlist.getLength() ; iFile++){
+           Element iElement = (Element) childlist.item(iFile);
+           String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/pro";
+		       logger.info("Martin log [HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+           tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
         }
     }
     catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
