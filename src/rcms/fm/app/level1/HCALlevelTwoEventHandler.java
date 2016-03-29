@@ -471,6 +471,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configuring")));
 
+      //if (!functionManager.containerTTCciControl.isEmpty()) {
+      //  TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
+      //  ttcciwatchthread.run();
+      //}
+     
       String LVL1CfgScript            = "not set";
       String LVL1TTCciControlSequence = "not set";
       String LVL1LTCControlSequence   = "not set";
@@ -1023,13 +1028,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
 
-      // leave intermediate state directly only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-        if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-          functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-        }
-      }
-
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configureAction executed ... - we're close ...")));
@@ -1571,7 +1569,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
-
 
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
