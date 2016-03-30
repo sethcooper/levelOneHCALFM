@@ -1748,22 +1748,22 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
 
-    // finally, halt LPM
-		XdaqApplication lpmApp = null;
+    // finally, halt all TCDS apps
     try {
-      Iterator it = functionManager.containerlpmController.getQualifiedResourceList().iterator();
+      Iterator it = functionManager.containerTCDSControllers.getQualifiedResourceList().iterator();
+      XdaqApplication tcdsApp = null;
       while (it.hasNext()) {
-				lpmApp = (XdaqApplication) it.next();
-				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance());
+				tcdsApp = (XdaqApplication) it.next();
+				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
         //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
         // SIC TODO XXX FIXME Why doesn't this work?
 				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
-				lpmApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
+				tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
 			}
     }
     catch (Exception e) {
       // failed to halt
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to HALT TCDS application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to HALT TCDS applications";
       logger.error(errMessage,e);
       functionManager.sendCMSError(errMessage);
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
