@@ -629,7 +629,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+//        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set. This is OK only ifa TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -736,7 +737,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      getTTCciControl();
+      //getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();
@@ -2415,7 +2416,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+      //  logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.This is OOK only if a TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -2434,7 +2436,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       getCfgScript();
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      getTTCciControl();
+      //getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();

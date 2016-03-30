@@ -760,22 +760,10 @@ public class HCALEventHandler extends UserEventHandler {
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "TTCciControl";
         tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch ( ParserConfigurationException |  UserActionException e) {
+    catch (  UserActionException e) {
           logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
     }
     FullTTCciControlSequence = tmpTTCciControlSequence;
