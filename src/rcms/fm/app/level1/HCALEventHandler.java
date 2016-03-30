@@ -503,8 +503,8 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Get the CfgCVSBasePath in the userXML
     {
-      //String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
-      String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      //String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
       String theCfgCVSBasePath = "";
       try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
@@ -1166,10 +1166,9 @@ public class HCALEventHandler extends UserEventHandler {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA && !itsAdummy) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") ) {
-                  itsThisLvl2=true;
-                  itsAdummy=true;
+              if (somebodysHandlingTA ) { 
+                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
+                 // itsAdummy=true;
                   logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
@@ -1181,6 +1180,7 @@ public class HCALEventHandler extends UserEventHandler {
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
                        otherLevel2FM.getResource().setRole("HCAL");
                        logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+                       itsThisLvl2=true;
                        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                        logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
@@ -1197,9 +1197,9 @@ public class HCALEventHandler extends UserEventHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
-                if (qr.getName().contains("DummyTriggerAdapter")){
-                  itsAdummy = true;
-                }
+               // if (qr.getName().contains("DummyTriggerAdapter")){
+               //   itsAdummy = true;
+              //  }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");

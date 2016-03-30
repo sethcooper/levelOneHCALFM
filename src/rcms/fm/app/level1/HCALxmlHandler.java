@@ -301,15 +301,21 @@ public class HCALxmlHandler {
         logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + CtrlSequence.getLength()+ " "+ CtrlSequenceTagName+ " nodes ");
         if (CtrlSequence.getLength()>1){
             logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
-        }
-        Element el = (Element) CtrlSequence.item(0);
-        NodeList childlist = el.getElementsByTagName("include"); 
-        for(int iFile=0; iFile< childlist.getLength() ; iFile++){
-           Element iElement = (Element) childlist.item(iFile);
-           String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
-		       logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
-           tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
-        }
+        }else if (CtrlSequence.getLength()==0){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ CtrlSequenceTagName+ " in mastersnippet. Empty string will be returned. ");
+            return tmpCtrlSequence;
+        }else if (CtrlSequence.getLength()==1){
+           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ CtrlSequenceTagName+ " in mastersnippet. Going to parse it. ");
+
+           Element el = (Element) CtrlSequence.item(0);
+           NodeList childlist = el.getElementsByTagName("include"); 
+           for(int iFile=0; iFile< childlist.getLength() ; iFile++){
+               Element iElement = (Element) childlist.item(iFile);
+               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
+		           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
+           }
+				}
     }
     catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
