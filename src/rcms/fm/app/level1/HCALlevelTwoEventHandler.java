@@ -579,7 +579,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 CfgScript.\nThis is OK if each LVL2 (i.e.also this one) has such a CfgScript defined itself.");
+          logger.error("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a LVL1 CfgScript! Check if the LV1 is passing to it.");
         }
 
         // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
@@ -587,7 +587,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1TTCciControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
         }
 
         // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
@@ -595,33 +595,33 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1LTCControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LTCCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
         }
         // get the HCAL TCDSControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_TCDSCONTROL) != null) {
           LVL1TCDSControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TCDSCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TCDS control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TCDS is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TCDS control sequence.This is OK only if a TCDS is not used in this config.");
         }
         // get the HCAL LPMControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_LPMCONTROL) != null) {
           LVL1LPMControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LPMCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LPM control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LPM is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LPM control sequence. This is OK only if a LPM is not used in this config.");
         }
         // get the HCAL PIControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_PICONTROL) != null) {
           LVL1PIControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_PICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a PI is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence. This is OK only if a PI is not used in this config.");
         }
       }
 
       if (LVL1CfgScript.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1CfgScript is not set.\nThis is OK if this LVL2 has such a CfgScript defined itself.");
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] The LVL1CfgScript is not set. Check if the LV1 is passing to it.");
       }
       else {
         FullCfgScript = LVL1CfgScript;
@@ -629,8 +629,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-//        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set. This is OK only ifa TTCci is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -638,7 +637,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LTCControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LTC control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LTC control sequence is not set. This is OK only if a LTC is not used in this config.");
       }
       else {
         FullLTCControlSequence = LVL1LTCControlSequence;
@@ -646,7 +645,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TCDSControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TCDS control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TCDS is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TCDS control sequence is not set. This is OK only if a TCDS is not used in this config.");
       }
       else {
         FullTCDSControlSequence = LVL1TCDSControlSequence;
@@ -654,7 +653,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LPMControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LPM control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LPM is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LPM control sequence is not set. This is OK only if a LPM is not used in this config.");
       }
       else {
         FullLPMControlSequence = LVL1LPMControlSequence;
@@ -662,7 +661,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1PIControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 PI control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a PI is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 PI control sequence is not set. This is OK only if a PI is not used in this config.");
       }
       else {
         FullPIControlSequence = LVL1PIControlSequence;
@@ -740,16 +739,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
-      getLTCControl();
+      //getLTCControl();
 
       // compile TCDS control sequence incorporating the local definitions found in the UserXML
-      getTCDSControl();
+      //getTCDSControl();
 
       // compile LPM control sequence incorporating the local definitions found in the UserXML
-      getLPMControl();
+      //getLPMControl();
 
       // compile LPM control sequence incorporating the local definitions found in the UserXML
-      getPIControl();
+      //getPIControl();
 
 
       // get the FedEnableMask found in the UserXML
@@ -2383,7 +2382,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 CfgScript.\nThis is OK if each LVL2 (i.e.also this one) has such a CfgScript defined itself.");
+          logger.error("[HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgScript! Check if LVL1 is passing it to LV2");
         }
 
         // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
@@ -2391,7 +2390,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1TTCciControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
         }
 
         // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
@@ -2399,7 +2398,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1LTCControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LTCCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
         }
 
         // set the function manager parameters
@@ -2407,7 +2406,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1CfgScript.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set.\nThis is OK if this LVL2 has such a CfgScript defined itself.");
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set in the LVL1! Check if LVL1 is passing it to LV2");
       }
       else {
         FullCfgScript = LVL1CfgScript;
@@ -2415,8 +2414,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-      //  logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.This is OOK only if a TTCci is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -2424,21 +2422,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LTCControlSequence.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 LTC control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 LTC control sequence is not set.\nThis is OK only if a LTC is not used in this config.");
       }
       else {
         FullLTCControlSequence = LVL1LTCControlSequence;
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 LTC control sequence was received.\nHere it is:\n" + FullLTCControlSequence);
       }
-
-      // compile CfgScript incorporating the local definitions found in the UserXML
-      getCfgScript();
-
-      // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
-
-      // compile LTC control sequence incorporating the local definitions found in the UserXML
-      getLTCControl();
 
       // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
       sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence,FedEnableMask,UsePrimaryTCDS);
@@ -2537,7 +2526,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
       }
 
       // leave intermediate state
