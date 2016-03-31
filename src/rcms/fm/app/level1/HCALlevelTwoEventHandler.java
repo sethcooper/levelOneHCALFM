@@ -709,9 +709,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] No special VdM scan snippets, etc. enabled for this FM.\nThe RUN_KEY given is: " + RunKey);
       }
 
-      // compile CfgScript incorporating the local definitions found in the UserXML
-      getCfgScript();
-
       if (TpgKey!=null && TpgKey!="NULL") {
 
         FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
@@ -734,22 +731,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.error("[HCAL LVL2 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
         }
       }
-
-      // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
-
-      // compile LTC control sequence incorporating the local definitions found in the UserXML
-      //getLTCControl();
-
-      // compile TCDS control sequence incorporating the local definitions found in the UserXML
-      //getTCDSControl();
-
-      // compile LPM control sequence incorporating the local definitions found in the UserXML
-      //getLPMControl();
-
-      // compile LPM control sequence incorporating the local definitions found in the UserXML
-      //getPIControl();
-
 
       // get the FedEnableMask found in the UserXML
       if (functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK) != null && ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString() == "") {
