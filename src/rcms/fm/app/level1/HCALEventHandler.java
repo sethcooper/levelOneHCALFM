@@ -736,7 +736,8 @@ public class HCALEventHandler extends UserEventHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
         logger.debug(xmlString);
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        configString = xmlString;
+        //configString = xmlString;
+        configString = ConfigDoc;
       }
       catch (TransformerException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
@@ -992,8 +993,9 @@ public class HCALEventHandler extends UserEventHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
-              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
-              pam.setValue("ConfigurationDoc",ConfigDoc);
+              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
+              //pam.setValue("ConfigurationDoc",ConfigDoc);
+              pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
               pam.setValue("hardwareConfigurationStringTCDS", FullTCDSControlSequence);
