@@ -7,6 +7,9 @@ import java.util.Scanner;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,7 +20,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -227,14 +229,10 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  
-  public String addStateListenerContext(String execXMLstring, String fmURLString) throws UserActionException{
+  public String addStateListenerContext(String execXMLstring, String rcmsStateListenerURL) throws UserActionException{
     logger.info("[JohnLog] " + functionManager.FMname + ": adding the RCMStateListener context to the executive xml.");   
     String newExecXMLstring = "";
     try {
-			URL fmURL = new URL(fmURLString);
-			String rcmsStateListenerHost = fmURL.getHost();
-			int rcmsStateListenerPort = fmURL.getPort()+1;
-			String rcmsStateListenerProtocol = fmURL.getProtocol();
 
       System.out.println(execXMLstring);
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -248,7 +246,7 @@ public class HCALxmlHandler {
       //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
       //stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
 			//logger.info("[SethLog] " + functionManager.FMname + ": adding the RCMStateListener with url: " + rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms" );
-      stateListenerContext.setAttribute("url", rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms");
+      stateListenerContext.setAttribute("url", rcmsStateListenerURL);
       Element stateListenerApp=execXML.createElement("xc:Application");
       stateListenerApp.setAttribute("class", "RCMSStateListener");
       stateListenerApp.setAttribute("id", "50");
@@ -276,4 +274,53 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while trying to add the RCMSStateListener context to the executive xml: " + e.getMessage());
     }
   }
+
+  public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
+    String tmpCtrlSequence ="";
+    try{
+        // Get ControlSequences from mastersnippet
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+        masterSnippet.getDocumentElement().normalize();
+        DOMSource domSource = new DOMSource(masterSnippet);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+
+        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+        NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
+        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to parse the mastersnippet from: "+ CfgCVSBasePath + selectedRun + "/pro");
+        if (CtrlSequence.getLength()>1){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
+        }else if (CtrlSequence.getLength()==0){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ CtrlSequenceTagName+ " in mastersnippet. Empty string will be returned. ");
+            return tmpCtrlSequence;
+        }else if (CtrlSequence.getLength()==1){
+           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ CtrlSequenceTagName+ " in mastersnippet. Going to parse it. ");
+
+           Element el = (Element) CtrlSequence.item(0);
+           NodeList childlist = el.getElementsByTagName("include"); 
+           for(int iFile=0; iFile< childlist.getLength() ; iFile++){
+               Element iElement = (Element) childlist.item(iFile);
+               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
+		           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
+           }
+				}
+    }
+    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
+    }
+    String FullCtrlSequence = tmpCtrlSequence;
+    return FullCtrlSequence;
+  }
+  static String readFile(String path, Charset encoding) throws IOException {
+      byte[] encoded = Files.readAllBytes(Paths.get(path));
+      return new String(encoded, encoding);
+   }  
 }
