@@ -872,7 +872,7 @@ public class HCALEventHandler extends UserEventHandler {
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse FedEnableMask from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
         String TagName = "FedEnableMask";
-        FedEnableMask = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+        FedEnableMask = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
           logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
