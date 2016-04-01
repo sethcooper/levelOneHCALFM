@@ -780,4 +780,26 @@ public class HCALFunctionManager extends UserFunctionManager {
 		return "";
 	}
 
+	/**----------------------------------------------------------------------
+	 * go to the error state, setting messages and so forth, with exception
+	 */
+	public void goToError(String errMessage, Exception e) {
+		logger.error(errMessage,e);
+		sendCMSError(errMessage);
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+		if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+	}
+
+	/**----------------------------------------------------------------------
+	 * go to the error state, setting messages and so forth, without exception
+	 */
+	public void goToError(String errMessage) {
+		logger.error(errMessage);
+		sendCMSError(errMessage);
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+		if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+	}
+
 }
