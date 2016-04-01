@@ -845,14 +845,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           XDAQParameter pam = null;
           pam =((XdaqApplication)qr).getXDAQParameter();
 
-          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS","HaltLPM"});
+          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
           pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
           logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
           pam.setValue("TriggerKey", TpgKey);
           pam.setValue("ReportStateToRCMS", "true");
           logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
-          pam.setValue("HaltLPM", "false");
-          logger.info("[HCAL " + functionManager.FMname + "] Set HaltLPM to: false.");
           pam.send();
         }
         catch (XDAQTimeoutException e) {
