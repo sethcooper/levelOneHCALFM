@@ -50,34 +50,30 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
-$(document).ready(function () {
-    var initcolor = $('#currentState').text();
-    $('#currentState').attr("class", "hcal_control_" + initcolor);
-    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-    $('#commandParameterCheckBox').on("click", function(){
-        onClickCommandParameterCheckBox();
-        toggle_visibility('Blork');
-    });
-//});
-//
-//$(document).ready(function () {
-    setInterval(function () {
-        var currentState = $('#currentState').text();
-        $('#currentState').attr("class", "hcal_control_" + currentState);
-        if (currentState == "Initial") {
-            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').show();
-        }
-        else {
-            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
-        }
-        //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-        $('#commandParameterCheckBox').on("click", function(){
-            onClickCommandParameterCheckBox();
-            toggle_visibility('Blork');
-        });
-    }, 750);
+$(document).ready(function() {
+  var initcolor= $('#currentState').text();
+  $('#currentState').attr("class", "hcal_control_"+initcolor);
+  $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+
+
+  setInterval(function() {
+    var currentState = $('#currentState').text();
+    $('#currentState').attr("class", "hcal_control_"+currentState);
+    if (currentState == "Initial") {
+      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+    }
+    else {
+      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+    }
+    $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+  }, 750);
+
+
+  $('#dropdowndiv').on('change', 'select', function(){
+    $('#masked_resourses_td').show();
+  });
 });
 
 function setProgress(progress) {
@@ -110,24 +106,24 @@ function clickboxes() {
 }
 
 function makedropdown(availableRunConfigs) {
-    availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-    var array = availableRunConfigs.split(';');
-    var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
+  availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
+  var array = availableRunConfigs.split(';');
+  var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-    for (var i = 0, l = array.length; i < l; i++) {
-        var option = array[i].split(':');
-        dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
-    }
-    dropdownoption = dropdownoption + "</select>";
-    $('#dropdowndiv').html(dropdownoption);
-    var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20)
-    var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
-    var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20)
-    var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-    var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20)
-    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
-    $('#dropdown').attr("onchange", onchanges);
+  for ( var i = 0, l = array.length; i < l; i++ ) {
+    var option = array[i].split(':');
+    dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
+  }
+  dropdownoption = dropdownoption+"</select>";
+  $('#dropdowndiv').html(dropdownoption);
+  var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
+  var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
+  var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
+  var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
+  var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
+  var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
+  var onchanges="onClickGlobalParameterCheckBox("+ cfgSnippetArgs + "); onClickGlobalParameterCheckBox("+ masterSnippetArgs + "); onClickGlobalParameterCheckBox("+ maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
+  $('#dropdown').attr("onchange", onchanges);
 }
 
 function fillMask() {
