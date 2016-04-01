@@ -229,14 +229,10 @@ public class HCALxmlHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "]: Got an error while parsing an XDAQ executive's configurationXML: " + e.getMessage());
     }
   }  
-  public String addStateListenerContext(String execXMLstring, String fmURLString) throws UserActionException{
+  public String addStateListenerContext(String execXMLstring, String rcmsStateListenerURL) throws UserActionException{
     logger.info("[JohnLog] " + functionManager.FMname + ": adding the RCMStateListener context to the executive xml.");   
     String newExecXMLstring = "";
     try {
-			URL fmURL = new URL(fmURLString);
-			String rcmsStateListenerHost = fmURL.getHost();
-			int rcmsStateListenerPort = fmURL.getPort()+1;
-			String rcmsStateListenerProtocol = fmURL.getProtocol();
 
       System.out.println(execXMLstring);
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -250,7 +246,7 @@ public class HCALxmlHandler {
       //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
       //stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
 			//logger.info("[SethLog] " + functionManager.FMname + ": adding the RCMStateListener with url: " + rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms" );
-      stateListenerContext.setAttribute("url", rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms");
+      stateListenerContext.setAttribute("url", rcmsStateListenerURL);
       Element stateListenerApp=execXML.createElement("xc:Application");
       stateListenerApp.setAttribute("class", "RCMSStateListener");
       stateListenerApp.setAttribute("id", "50");
@@ -298,7 +294,7 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found " + CtrlSequence.getLength()+ " "+ CtrlSequenceTagName+ " nodes ");
+        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to parse the mastersnippet from: "+ CfgCVSBasePath + selectedRun + "/pro");
         if (CtrlSequence.getLength()>1){
             logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
         }else if (CtrlSequence.getLength()==0){

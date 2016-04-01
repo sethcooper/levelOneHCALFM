@@ -163,7 +163,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.FMurl);
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.rcmsStateListenerURL);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
@@ -190,7 +190,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
-      // we also halt the TCDS applications here
+      // we also halt the LPM applications inside here
       initXDAQ();
 
       String ruInstance = "";
@@ -386,6 +386,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       destroyXDAQ();
 
       // init all XDAQ executives
+      // also halt all LPM applications inside here
       initXDAQ();
 
       // go to Halted
@@ -444,6 +445,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
+			// halt LPM
+			functionManager.haltLPMControllers();
 
       // leave intermediate state directly only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
@@ -737,7 +740,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
+      getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();
@@ -1945,6 +1948,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
            }
            }
            */
+        // halt LPM
+        functionManager.haltLPMControllers();
+
         // stop the StorageManagers
         if (!functionManager.containerStorageManager.isEmpty()) {
           try {
@@ -2435,7 +2441,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       getCfgScript();
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
+      getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();

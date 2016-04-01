@@ -42,6 +42,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.type.StringT;
@@ -217,6 +219,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 
 	public HCALStateNotificationHandler theStateNotificationHandler = null;
 
+  public String rcmsStateListenerURL = "";
+
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
 
@@ -280,6 +284,22 @@ public class HCALFunctionManager extends UserFunctionManager {
     DateFormat dateFormatter = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
     dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));;
     utcFMtimeofstart = dateFormatter.format(FMtimeofstart);
+
+    // set statelistener URL
+    try {
+			URL fmURL = new URL(FMurl);
+			String rcmsStateListenerHost = fmURL.getHost();
+			int rcmsStateListenerPort = fmURL.getPort()+1;
+			String rcmsStateListenerProtocol = fmURL.getProtocol();
+			rcmsStateListenerURL = rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms";
+		} catch (MalformedURLException e) {
+			String errMessage = "[HCAL " + FMname + "] Error! MalformedURLException in createAction" + e.getMessage();
+			logger.error(errMessage,e);
+			sendCMSError(errMessage);
+			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+			if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+		}
 
     FMpartition = FMname.substring(5);
 
@@ -778,6 +798,32 @@ public class HCALFunctionManager extends UserFunctionManager {
 		}
 
 		return "";
+	}
+
+	/**----------------------------------------------------------------------
+	 * halt the LPM controller 
+	 */
+	public void haltLPMControllers() {
+		if (!containerlpmController.isEmpty()) {
+			XdaqApplication lpmApp = null;
+			try {
+				logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
+				Iterator it = containerlpmController.getQualifiedResourceList().iterator();
+				while (it.hasNext()) {
+					lpmApp = (XdaqApplication) it.next();
+          //XXX FIXME use real session ID here eventually
+					lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
+				}
+			}
+			catch (Exception e) {
+				String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
+				logger.error(errMessage,e);
+				sendCMSError(errMessage);
+				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+				if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+			}
+		}
 	}
 
 }
