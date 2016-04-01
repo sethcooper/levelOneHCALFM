@@ -298,7 +298,7 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to parse the mastersnippet from: " CfgCVSBasePath + selectedRun + "/pro");
+        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to parse the mastersnippet from: "+ CfgCVSBasePath + selectedRun + "/pro");
         if (CtrlSequence.getLength()>1){
             logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
         }else if (CtrlSequence.getLength()==0){
