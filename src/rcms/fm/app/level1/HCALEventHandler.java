@@ -18,7 +18,6 @@ import java.lang.Double;
 import java.util.Iterator;
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.text.DecimalFormat;
@@ -1748,27 +1747,7 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // finally, halt all LPM apps
-		XdaqApplication lpmApp = null;
-    try {
-      Iterator it = functionManager.containerLPMController.getQualifiedResourceList().iterator();
-      while (it.hasNext()) {
-				lpmApp = (XdaqApplication) it.next();
-				logger.warn("[HCAL " + functionManager.FMname + "] HALT lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance());
-        //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
-        // SIC TODO XXX FIXME Why doesn't this work?
-				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
-				lpmApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
-			}
-    }
-    catch (Exception e) {
-      // failed to halt
-			String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
-      logger.error(errMessage,e);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-    }
+    functionManager.haltLPMControllers();
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
