@@ -771,11 +771,11 @@ public class HCALEventHandler extends UserEventHandler {
             selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
             logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
           }
-
+        }
         String TagName = "TTCciControl";
         tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch (  UserActionException e) {
+    catch (  ParserConfigurationException | UserActionException e) {
           logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
     }
     FullTTCciControlSequence = tmpTTCciControlSequence;
