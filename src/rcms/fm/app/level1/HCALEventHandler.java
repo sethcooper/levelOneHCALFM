@@ -852,30 +852,51 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
+  //protected void getFedEnableMask(){
+  //  String FedEnableMask = GetUserXMLElement("FedEnableMask");
+  //  if (!FedEnableMask.equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+  //  }
+  //  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+  //  //more logging stuff here...?
+  //}
+
+  // New getFEDEnableMask function, which looks for FEDEnableMask in mastersnippet
+  // This is used in local only
   protected void getFedEnableMask(){
-    String FedEnableMask = GetUserXMLElement("FedEnableMask");
-    if (!FedEnableMask.equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+    String FedEnableMask="";
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse FedEnableMask from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+        String TagName = "FedEnableMask";
+        FedEnableMask = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
+    }
+    if (!FedEnableMask.equals("")){
+       logger.info("[Martin log HCAL " + functionManager.FMname + "] The FEDEnableMask which was successfully compiled for this FM.\nIt looks like this:\n" + FedEnableMask);
+    }else{
+       logger.info("[Martin log HCAL " + functionManager.FMname + "] No FedEnableMask found in mastersnippet.\n");
     }
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
-    //more logging stuff here...?
   }
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
-  protected void getUsePrimaryTCDS(){
-    boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
-    if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
-    }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
-    }
-    functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
-    // more logging stuff here...?
-  }
+  //protected void getUsePrimaryTCDS(){
+  //  boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
+  //  if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
+  //  }
+  //  functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
+  //  // more logging stuff here...?
+  //}
 
   // configuring all created HCAL applications by means of sending the HCAL CfgScript to the HCAL supervisor
   protected void sendRunTypeConfiguration(String CfgScript, String TTCciControlSequence, String LTCControlSequence, String TCDSControlSequence, String LPMControlSequence, String PIControlSequence, String FedEnableMask, boolean UsePrimaryTCDS) {
