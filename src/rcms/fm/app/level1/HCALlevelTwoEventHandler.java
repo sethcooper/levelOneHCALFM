@@ -737,7 +737,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
+      getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();
@@ -2435,7 +2435,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       getCfgScript();
 
       // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      //getTTCciControl();
+      getTTCciControl();
 
       // compile LTC control sequence incorporating the local definitions found in the UserXML
       getLTCControl();
