@@ -476,6 +476,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //  ttcciwatchthread.run();
       //}
      
+      String CfgCVSBasePath           = "not set";
       String LVL1CfgScript            = "not set";
       String LVL1TTCciControlSequence = "not set";
       String LVL1LTCControlSequence   = "not set";
@@ -574,6 +575,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
         }
 
+        // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
+        if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
+          CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+        }
+        else {
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
+        }
+
         // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_CFGSCRIPT) != null) {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
@@ -618,6 +627,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         else {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence. This is OK only if a PI is not used in this config.");
         }
+      }
+
+      if (CfgCVSBasePath.equals("not set")) {
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
+      }
+      else {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
       }
 
       if (LVL1CfgScript.equals("not set")) {
@@ -2359,6 +2375,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (parameterSet.size()!=0)  {
 
         // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
+        if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
+          CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+        }
+        else {
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
+        }
+
+
+        // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_CFGSCRIPT) != null) {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
         }
@@ -2385,6 +2410,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // set the function manager parameters
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
       }
+
+      if (CfgCVSBasePath.equals("not set")) {
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
+      }
+      else {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
+      }
+
 
       if (LVL1CfgScript.equals("not set")) {
         logger.error("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set in the LVL1! Check if LVL1 is passing it to LV2");

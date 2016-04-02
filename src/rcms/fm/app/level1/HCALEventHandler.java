@@ -514,8 +514,9 @@ public class HCALEventHandler extends UserEventHandler {
         CfgCVSBasePath = DefaultCfgCVSBasePath;
       }
       //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-     
+      //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
+      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
       
     }
 
