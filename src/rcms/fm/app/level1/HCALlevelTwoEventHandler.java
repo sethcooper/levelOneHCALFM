@@ -561,14 +561,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(SupervisorError)));
         }
 
-        // get the FED list from the configure command
+        // get the FED list from the configure command in global run
         if (parameterSet.get(HCALParameters.FED_ENABLE_MASK) != null) {
           FedEnableMask = ((StringT)parameterSet.get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CONFIGURED_WITH_FED_ENABLE_MASK,new StringT(FedEnableMask)));
           functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
 
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction().");
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction(). Here it is:\n "+ FedEnableMask);
         }
         else {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
@@ -732,9 +732,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // get the FedEnableMask found in the UserXML
+      // get the FedEnableMask from LV1
       if (functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK) != null && ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString() == "") {
-        getFedEnableMask();
+        //getFedEnableMask();
         FedEnableMask = ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK to be sent to the hcalSupervisor is: " + FedEnableMask);
       }
