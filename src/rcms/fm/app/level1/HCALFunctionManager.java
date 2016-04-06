@@ -258,10 +258,10 @@ public class HCALFunctionManager extends UserFunctionManager {
 		addEventHandler(theStateNotificationHandler);
 
     // get log session connector
-    logSessionConnector = getLogSessionConnector();
+    //logSessionConnector = getLogSessionConnector();
 
     // get session ID
-    getSessionId();
+    //getSessionId();
   }
 
   public void createAction(ParameterSet<CommandParameter> cps) throws UserActionException {
