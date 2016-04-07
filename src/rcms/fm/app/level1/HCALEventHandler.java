@@ -18,7 +18,6 @@ import java.lang.Double;
 import java.util.Iterator;
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.text.DecimalFormat;
@@ -761,6 +760,18 @@ public class HCALEventHandler extends UserEventHandler {
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[HCAL " + functionManager.FMname + "]: This FM is going to parse TTCciControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        if (selectedRun == "not set" ) {
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
+          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
+          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
+          if (selectedRun == "not set") {
+            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
+          }
+        }
         String TagName = "TTCciControl";
         tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
@@ -1706,29 +1717,8 @@ public class HCALEventHandler extends UserEventHandler {
       functionManager.asyncSOAP = false;
     }
 
-
-    // finally, halt all TCDS apps
-    try {
-      Iterator it = functionManager.containerTCDSControllers.getQualifiedResourceList().iterator();
-      XdaqApplication tcdsApp = null;
-      while (it.hasNext()) {
-				tcdsApp = (XdaqApplication) it.next();
-				logger.warn("[HCAL " + functionManager.FMname + "] HALT TCDS application: " + tcdsApp.getName() + " class: " + tcdsApp.getClass() + " instance: " + tcdsApp.getInstance());
-        //SIC TODO FIXME: use real session ID (and possibly RCMS URL) here
-        // SIC TODO XXX FIXME Why doesn't this work?
-				//tcdsApp.execute(HCALInputs.HALT,"test","http://dev.null:10000");
-				tcdsApp.execute(HCALInputs.HALT,"test","http://cmsrc-hcal.cms:16001/rcms");
-			}
-    }
-    catch (Exception e) {
-      // failed to halt
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to HALT TCDS applications";
-      logger.error(errMessage,e);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-    }
+    // finally, halt all LPM apps
+    functionManager.haltLPMControllers();
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
@@ -3707,10 +3697,12 @@ public class HCALEventHandler extends UserEventHandler {
 
         Date now = Calendar.getInstance().getTime();
 
-        // poll HCAL supervisor status in the "Configured" and "Running" state every 20 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
-        if (icount%20==0) {
-          if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) || functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())
-                || functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
+        // poll HCAL supervisor status in the Configuring/Configured/Running/RunningDegraded states every 5 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
+        if (icount%5==0) {
+          if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) ||
+               functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) ||
+               functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+               functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
             if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
               {
@@ -3720,6 +3712,7 @@ public class HCALEventHandler extends UserEventHandler {
 
               XDAQParameter pam = null;
               String status   = "undefined";
+              String stateName   = "undefined";
               String progress = "undefined";
               String taname   = "undefined";
 
@@ -3728,60 +3721,37 @@ public class HCALEventHandler extends UserEventHandler {
 
                 try {
                   pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress"});
+                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "stateName"});
                   pam.get();
 
                   status = pam.getValue("PartitionState");
+                  stateName = pam.getValue("stateName");
 
-                  if (status==null) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState to see if it is alive or not resulted in a NULL pointer - this is bad!";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                  if (status==null || stateName==null) {
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
+                    functionManager.goToError(errMessage);
                   }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
-
                 }
                 catch (XDAQTimeoutException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is dead.\nCheck the corresponding jobcontrol status ...\nHere is the exception: " +e;
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                  functionManager.goToError(errMessage);
                 }
                 catch (XDAQException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is in a bad condition.\nCheck the corresponding jobcontrol status, etc. ...\nHere is the exception: " +e;
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                  functionManager.goToError(errMessage);
                 }
 
-                if (status.equals("Failed") || status.equals("Faulty") || status.equals("Error")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + ".\nPlease check log messages which were sent earlier than this one for more details ... (E7)";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                if (status.equals("Failed") || status.equals("Faulty") || status.equals("Error") || stateName.equalsIgnoreCase("failed")) {
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports partitionState: " + status + " and stateName: " + stateName + ".\nPlease check log messages which were sent earlier than this one for more details ... (E7)";
+                  functionManager.goToError(errMessage);
                 }
-
               }
             }
             else {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: HCALSupervisorWatchThread()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+              functionManager.goToError(errMessage);
             }
           }
         }
@@ -3846,11 +3816,7 @@ public class HCALEventHandler extends UserEventHandler {
                     status = pam.getValue("stateName");
                     if (status==null) {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
-                      logger.error(errMessage);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+											functionManager.goToError(errMessage);
                     }
 
                     String NextEventNumberString = pam.getValue("NextEventNumber");
@@ -3866,12 +3832,7 @@ public class HCALEventHandler extends UserEventHandler {
                     }
                     else {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the NextEventNumber when Running resulted in a NULL pointer - this is bad!";
-                      logger.error(errMessage);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+											functionManager.goToError(errMessage);
                     }
 
                     logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
@@ -3881,31 +3842,18 @@ public class HCALEventHandler extends UserEventHandler {
                   }
                   catch (XDAQTimeoutException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                    functionManager.goToError(errMessage,e);
 
                   }
                   catch (XDAQException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                    functionManager.goToError(errMessage,e);
                   }
                 }
 
-                if (status.equals("Failed")) {
+                if (status.equalsIgnoreCase("Failed")) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E9)";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+									functionManager.goToError(errMessage);
                 }
 
                 if (status.equals("Ready")) {
@@ -3924,11 +3872,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: TriggerAdapterWatchThread()";
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+								functionManager.goToError(errMessage);
               }
             }
           }
