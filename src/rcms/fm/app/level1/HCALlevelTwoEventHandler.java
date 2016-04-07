@@ -581,6 +581,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
           CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
         }
         else {
           logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
