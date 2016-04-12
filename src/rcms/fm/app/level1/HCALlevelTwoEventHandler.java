@@ -288,7 +288,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         RunType = "local";
 
         // request a session ID
-        getSessionId();
+        //getSessionId();
+        // Get SID from LV1:
+        if (parameterSet.get(HCALParameters.SID) != null) {
+          Sid = ((IntegerT)parameterSet.get(HCALParameters.SID).getValue()).getInteger();
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+        }
+        else {
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
+          logger.warn(warnMessage);
+        }
+
 
         GlobalConfKey = "not used";
 
@@ -307,7 +318,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
         }
         else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID ...";
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
           logger.warn(warnMessage);
         }
 

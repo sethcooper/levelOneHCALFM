@@ -41,8 +41,6 @@ public class HCALlevelOneFunctionManager extends HCALFunctionManager {
 	public void init() throws StateMachineDefinitionException,rcms.fm.fw.EventHandlerException {
 
 		super.init();
-    // get log session connector
-    logSessionConnector = getLogSessionConnector();
 
     // get session ID
     getSessionId();

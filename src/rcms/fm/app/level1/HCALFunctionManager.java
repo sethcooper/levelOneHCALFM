@@ -258,7 +258,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 		addEventHandler(theStateNotificationHandler);
 
     // get log session connector
-    //logSessionConnector = getLogSessionConnector();
+    logSessionConnector = getLogSessionConnector();
 
     // get session ID
     //getSessionId();
