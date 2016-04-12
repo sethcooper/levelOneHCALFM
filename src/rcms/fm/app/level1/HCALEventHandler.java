@@ -280,22 +280,17 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String doRunInfoPublish =  "";
       try{
-        if(!xmlHandler.getHCALuserXML().equals(null) && !xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").equals(null) && xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").getLength() == 1 ) { 
-          
-          doRunInfoPublish = xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").item(0).getTextContent();
-        }
+          doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish")
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
       }
-      if (doRunInfoPublish.equals("true_butwithnoRunInfoFromXDAQ")) {
-        logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
-        RunInfoPublish = true;
-      }
       if (doRunInfoPublish.equals("true")) {
         logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
         RunInfoPublish = true;
-        RunInfoPublishfromXDAQ = true;
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUNINFOPUBLISH,new StringT(RunInfoPublish)));
+      }else{
+        logger.warn("[Martin Log HCAL base] Invalid text Content in RunInfoPublish tag of the userXML");
       }
     }
 
@@ -303,9 +298,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useOfficialRunNumbers = "";
       try {
-        if ( !xmlHandler.getHCALuserXML().equals(null) && !xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").equals(null) && xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").getLength() == 1  ) {
-         useOfficialRunNumbers = xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").item(0).getTextContent();
-        } 
+         useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers")
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());

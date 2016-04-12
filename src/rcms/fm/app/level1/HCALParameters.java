@@ -81,6 +81,7 @@ public class HCALParameters {
 	// HCAL specific paramters
 	public static final String HCAL_CFGCVSBASEPATH    = "HCAL_CFGCVSBASEPATH";
 	public static final String HCAL_CFGSCRIPT    = "HCAL_CFGSCRIPT";
+	public static final String HCAL_RUNINFOPUBLISH    = "HCAL_RUNINFOPUBLISH";
 	public static final String HCAL_TTCCICONTROL = "HCAL_TTCCICONTROL";
 	public static final String HCAL_LTCCONTROL = "HCAL_LTCCONTROL";
 	public static final String HCAL_TCDSCONTROL = "HCAL_TCDSCONTROL";

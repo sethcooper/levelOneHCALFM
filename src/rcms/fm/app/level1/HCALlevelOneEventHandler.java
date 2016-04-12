@@ -211,10 +211,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			functionManager.RunType = RunType;
 			logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
+      // Get the value of runinfopublish
+			String RunInfoPublish = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_RUNINFOPUBLISH).getValue()).getString();
+
 			// prepare run number to be passed to level 2
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
 			pSet.put(new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(Sid)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUNINFOPUBLISH, new StringT(RunInfoPublish)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
 			String RunConfigSelected = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
