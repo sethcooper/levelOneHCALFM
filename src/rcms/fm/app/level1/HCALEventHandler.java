@@ -513,8 +513,9 @@ public class HCALEventHandler extends UserEventHandler {
         CfgCVSBasePath = DefaultCfgCVSBasePath;
       }
       //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-      logger.info("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
-     
+      //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
+      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
       
     }
 
@@ -735,7 +736,8 @@ public class HCALEventHandler extends UserEventHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
         logger.debug(xmlString);
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        configString = xmlString;
+        //configString = xmlString;
+        configString = ConfigDoc;
       }
       catch (TransformerException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
@@ -755,27 +757,14 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getTTCciControl() {
     String tmpTTCciControlSequence="";
-    // Load the master snippet from the found file and parse it.
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    logger.info("[HCAL " + functionManager.FMname + "]: This FM is going to parse TTCciControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "TTCciControl";
         tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch (  ParserConfigurationException | UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml: " + e.getMessage());
+    catch (  UserActionException e) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml in getTTCciControl: " + e.getMessage());
     }
     FullTTCciControlSequence = tmpTTCciControlSequence;
     logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
@@ -787,30 +776,17 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getLTCControl() {
     String tmpLTCControlSequence="";
-    // Load the master snippet from the found file and parse it.
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LTCControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "LTCControl";
         tmpLTCControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch ( ParserConfigurationException |  UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml: " + e.getMessage());
+    catch ( UserActionException e) {
+          logger.error("[Martin logHCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml in getLTCControl: " + e.getMessage());
     }
     FullLTCControlSequence = tmpLTCControlSequence;
-    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(FullLTCControlSequence)));
   }
@@ -820,30 +796,17 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getTCDSControl() {
     String tmpTCDSControlSequence="";
-    // Load the master snippet from the found file and parse it.
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse TCDSControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "TCDSControl";
         tmpTCDSControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch ( ParserConfigurationException |  UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml: " + e.getMessage());
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml in getTCDSControl(): " + e.getMessage());
     }
     FullTCDSControlSequence = tmpTCDSControlSequence;
-    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
 
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTCDSControlSequence)));
   }
@@ -853,30 +816,17 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getLPMControl() {
     String tmpLPMControlSequence="";
-    // Load the master snippet from the found file and parse it.
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LPMControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "LPMControl";
         tmpLPMControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch ( ParserConfigurationException |  UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml: " + e.getMessage());
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml in getLPMControl(): " + e.getMessage());
     }
     FullLPMControlSequence = tmpLPMControlSequence;
-    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
 
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
   }
@@ -885,60 +835,68 @@ public class HCALEventHandler extends UserEventHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getPIControl() {
-   String tmpPIControlSequence="";
-    // Load the master snippet from the found file and parse it.
+    String tmpPIControlSequence="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);    
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse PIControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        }
         String TagName = "PIControl";
         tmpPIControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-    catch ( ParserConfigurationException |  UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml: " + e.getMessage());
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml in getPIControl(): " + e.getMessage());
     }
     FullPIControlSequence = tmpPIControlSequence;
-    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
+  //protected void getFedEnableMask(){
+  //  String FedEnableMask = GetUserXMLElement("FedEnableMask");
+  //  if (!FedEnableMask.equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+  //  }
+  //  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+  //  //more logging stuff here...?
+  //}
+
+  // New getFEDEnableMask function, which looks for FEDEnableMask in mastersnippet
+  // This is used in local only
   protected void getFedEnableMask(){
-    String FedEnableMask = GetUserXMLElement("FedEnableMask");
-    if (!FedEnableMask.equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+    String FedEnableMask="";
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse FedEnableMask from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+        String TagName = "FedEnableMask";
+        FedEnableMask = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
     }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
+    }
+    if (!FedEnableMask.equals("")){
+       logger.info("[Martin log HCAL " + functionManager.FMname + "] The FEDEnableMask which was successfully compiled for this FM.\nIt looks like this:\n" + FedEnableMask);
+    }else{
+       logger.info("[Martin log HCAL " + functionManager.FMname + "] No FedEnableMask found in mastersnippet.\n");
     }
     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
-    //more logging stuff here...?
   }
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
-  protected void getUsePrimaryTCDS(){
-    boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
-    if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
-    }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
-    }
-    functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
-    // more logging stuff here...?
-  }
+  //protected void getUsePrimaryTCDS(){
+  //  boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
+  //  if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
+  //  }
+  //  functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
+  //  // more logging stuff here...?
+  //}
 
   // configuring all created HCAL applications by means of sending the HCAL CfgScript to the HCAL supervisor
   protected void sendRunTypeConfiguration(String CfgScript, String TTCciControlSequence, String LTCControlSequence, String TCDSControlSequence, String LPMControlSequence, String PIControlSequence, String FedEnableMask, boolean UsePrimaryTCDS) {
@@ -1056,8 +1014,9 @@ public class HCALEventHandler extends UserEventHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
-              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
-              pam.setValue("ConfigurationDoc",ConfigDoc);
+              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
+              //pam.setValue("ConfigurationDoc",ConfigDoc);
+              pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
               pam.setValue("hardwareConfigurationStringTCDS", FullTCDSControlSequence);

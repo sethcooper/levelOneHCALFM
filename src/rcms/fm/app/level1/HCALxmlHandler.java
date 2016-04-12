@@ -294,7 +294,6 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to parse the mastersnippet from: "+ CfgCVSBasePath + selectedRun + "/pro");
         if (CtrlSequence.getLength()>1){
             logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
         }else if (CtrlSequence.getLength()==0){
@@ -319,6 +318,41 @@ public class HCALxmlHandler {
     String FullCtrlSequence = tmpCtrlSequence;
     return FullCtrlSequence;
   }
+  public String getHCALMasterSnippetTag(String selectedRun, String CfgCVSBasePath, String TagName) throws UserActionException{
+    String TagContent ="";
+    try{
+        // Get ControlSequences from mastersnippet
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+
+        masterSnippet.getDocumentElement().normalize();
+        DOMSource domSource = new DOMSource(masterSnippet);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(domSource, result);
+
+        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
+        NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
+        if (TagNodeList.getLength()>1){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ TagName+ " in mastersnippet. Only the first one will be used ");
+        }else if (TagNodeList.getLength()==0){
+            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
+            return TagContent;
+        }else if (TagNodeList.getLength()==1){
+           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. "); 
+           TagContent = TagNodeList.item(0).getTextContent();
+				}
+    }
+    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
+    }
+    return TagContent;
+  }
+
   static String readFile(String path, Charset encoding) throws IOException {
       byte[] encoded = Files.readAllBytes(Paths.get(path));
       return new String(encoded, encoding);

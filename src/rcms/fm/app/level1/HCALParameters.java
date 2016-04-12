@@ -79,6 +79,7 @@ public class HCALParameters {
 	public static final String TTS_TEST_SEQUENCE_REPEAT = "TTS_TEST_SEQUENCE_REPEAT";
 
 	// HCAL specific paramters
+	public static final String HCAL_CFGCVSBASEPATH    = "HCAL_CFGCVSBASEPATH";
 	public static final String HCAL_CFGSCRIPT    = "HCAL_CFGSCRIPT";
 	public static final String HCAL_TTCCICONTROL = "HCAL_TTCCICONTROL";
 	public static final String HCAL_LTCCONTROL = "HCAL_LTCCONTROL";
@@ -176,6 +177,12 @@ public class HCALParameters {
 		 * HCAL CfgScript
 		 */
 		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGSCRIPT, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+
+		/**
+		 * HCAL CfgCVSBasePath
+		 */
+		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+
 
 		/**
 		 * HCAL TTCci control sequence
