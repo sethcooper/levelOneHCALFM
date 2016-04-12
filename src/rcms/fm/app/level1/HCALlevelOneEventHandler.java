@@ -659,12 +659,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			getPIControl();
 
 			// prepare run mode to be passed to level 2
+			String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
 			pSet.put(new CommandParameter<IntegerT>(HCALParameters.RUN_NUMBER, new IntegerT(functionManager.RunNumber)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_KEY, new StringT(RunKey)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.TPG_KEY, new StringT(TpgKey)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.FED_ENABLE_MASK, new StringT(FedEnableMask)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH, new StringT(CfgCVSBasePath)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT, new StringT(FullCfgScript)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL, new StringT(FullTTCciControlSequence)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_LTCCONTROL, new StringT(FullLTCControlSequence)));
