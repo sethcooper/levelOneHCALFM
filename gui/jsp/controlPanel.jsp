@@ -48,7 +48,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <script type="text/javascript" src="../js/globalParameters.js"></script>
 
   <!-- Custom javascript section begin -->
-  <script type="ja">
+  <script>
     <rcms.control:onLoadJSRenderer reloadOnStateChange="false" commandButtonCssClass="button1" commandParameterCheckBoxTitle="&nbsp;Show Command Parameter Section" commandParameterCssClass="label_left_black" indentation="2"/>
     <rcms.control:buttonsJSRenderer indentation="2"/>
     <rcms.notification:jSRenderer indentation="2"/>
