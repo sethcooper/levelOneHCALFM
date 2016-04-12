@@ -1,21 +1,18 @@
 function turn_off_visibility(tbid) {
-    $(tbid).css("display", "none");
-    //document.getElementById(tbid).style.display = "none";
+    document.getElementById(tbid).style.display = "none";
 }
 
 function turn_on_visibility(tbid) {
-    $(tbid).css("display", "table");
-    //document.getElementById(tbid).style.display = "table";
+    document.getElementById(tbid).style.display = "table";
 }
 
 function toggle_visibility(tbid) {
-    $(tbid).toggle();
-    //if (document.getElementById(tbid).style.display != "table") {
-    //    document.getElementById(tbid).style.display = "table";
-    //}
-    //else {
-    //    document.getElementById(tbid).style.display = "none";
-    //}
+    if (document.getElementById(tbid).style.display != "table") {
+        document.getElementById(tbid).style.display = "table";
+    }
+    else {
+        document.getElementById(tbid).style.display = "none";
+    }
 }
 
 
@@ -24,21 +21,15 @@ function copyContents(element, tgt) {
 }
 
 function makecheckbox(checkbox, parameter) {
-    var parameter_name = document.getElementById(parameter).getAttribute("name").substring(20);
-    var templ = '<input id=\"globalParameterCheckBox' + parameter_name + '\" type=\"checkbox\" onclick=\"onClickGlobalParameterCheckBox(\'' + parameter_name + '\', \'' + parameter + '\')\">'
-    $(checkbox).html(templ);
+    document.getElementById(checkbox).innerHTML = '<input id=\"globalParameterCheckBox' + document.getElementById(parameter).getAttribute("name").substring(20) + '\" type=\"checkbox\" onclick=\"onClickGlobalParameterCheckBox(\'' + document.getElementById(parameter).getAttribute("name").substring(20) + '\', \'' + parameter + '\')\">';
 }
 
 function removeduplicatecheckbox(parameter) {
-    var parameter_name = document.getElementById(parameter).getAttribute("name").substring(20);
-    var child =  document.getElementById("globalParameterCheckBox" + parameter_name);
-    document.getElementById("globalParameterCheckBox" + parameter_name).parentNode.removeChild(child);
-
+    document.getElementById("globalParameterCheckBox" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.removeChild(document.getElementById("globalParameterCheckBox" + document.getElementById(parameter).getAttribute("name").substring(20)));
 }
 
 function hideduplicatefield(parameter) {
-    var parameter_name = document.getElementById(parameter).getAttribute("name").substring(20);
-    document.getElementById("globalParameterName" + parameter_name).parentNode.style.display = "none";
+    document.getElementById("globalParameterName" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display = "none";
 }
 
 function showsupervisorerror() {
@@ -50,35 +41,38 @@ function showsupervisorerror() {
 }
 
 // The scripts below use jQuery.
-$(document).ready(function() {
-  var initcolor= $('#currentState').text();
-  $('#currentState').attr("class", "hcal_control_"+initcolor);
-  $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-
-
-  setInterval(function() {
-    var currentState = $('#currentState').text();
-    $('#currentState').attr("class", "hcal_control_"+currentState);
-    if (currentState == "Initial") {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
-    }
-    else {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
-    }
+$(document).ready(function () {
+    var initcolor = $('#currentState').text();
+    $('#currentState').attr("class", "hcal_control_" + initcolor);
     $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-  }, 750);
 
 
-  $('#dropdowndiv').on('change', 'select', function(){
-    $('#masked_resourses_td').show();
-  });
+    setInterval(function () {
+        var currentState = $('#currentState').text();
+        $('#currentState').attr("class", "hcal_control_" + currentState);
+        if (currentState == "Initial") {
+            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+            $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+        }
+        else {
+            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+            $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+        }
+        $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+    }, 750);
+
+
+    $('#dropdowndiv').on('change', 'select', function () {
+        $('#masked_resourses_td').show();
+    });
 });
 
 function setProgress(progress) {
-    var progressBarWidth = progress * $(".container").width() / 100;
-    $(".progressbar").width(progressBarWidth).html(progress + "% &nbsp; &nbsp;");
+    var numberOfEvents = $("#NUMBER_OF_EVENTS").val(),
+        containerWidth = $(".container").width();
+    var progressPercent = progress * containerWidth / numberOfEvents;
+    var progressBarWidth = progressPercent * (containerWidth / 100);
+    $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {
@@ -106,24 +100,24 @@ function clickboxes() {
 }
 
 function makedropdown(availableRunConfigs) {
-  availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-  var array = availableRunConfigs.split(';');
-  var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
+    availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
+    var array = availableRunConfigs.split(';');
+    var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-  for ( var i = 0, l = array.length; i < l; i++ ) {
-    var option = array[i].split(':');
-    dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
-  }
-  dropdownoption = dropdownoption+"</select>";
-  $('#dropdowndiv').html(dropdownoption);
-  var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
-  var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
-  var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
-  var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-  var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
-  var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-  var onchanges="onClickGlobalParameterCheckBox("+ cfgSnippetArgs + "); onClickGlobalParameterCheckBox("+ masterSnippetArgs + "); onClickGlobalParameterCheckBox("+ maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
-  $('#dropdown').attr("onchange", onchanges);
+    for (var i = 0, l = array.length; i < l; i++) {
+        var option = array[i].split(':');
+        dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
+    }
+    dropdownoption = dropdownoption + "</select>";
+    $('#dropdowndiv').html(dropdownoption);
+    var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
+    var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
+    var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
+    var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
+    var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
+    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
+    $('#dropdown').attr("onchange", onchanges);
 }
 
 function fillMask() {
@@ -165,7 +159,7 @@ function hidecheckboxes() {
 }
 
 function hideinitializebutton() {
-    var button = $('#commandSection :input');
+    var button = $('#commandSection :input')
     button.each(function () {
         if ($('#CFGSNIPPET_KEY_SELECTED').val() == "not set") {
             button.hide();

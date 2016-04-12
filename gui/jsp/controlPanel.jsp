@@ -40,15 +40,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     var guiInst = new GUI();
   </script>
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequest.js" />
-  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequestFunctions.js" />
-  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
+  <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequestFunctions.js" />--%>
+  <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />--%>
   <script type="text/javascript" src="../js/stateNotification.js"></script>
   <script type="text/javascript" src="../js/common.js"></script>
   <script type="text/javascript" src="../js/control.js"></script>
   <script type="text/javascript" src="../js/globalParameters.js"></script>
 
   <!-- Custom javascript section begin -->
-  <script>
+  <script type="ja">
     <rcms.control:onLoadJSRenderer reloadOnStateChange="false" commandButtonCssClass="button1" commandParameterCheckBoxTitle="&nbsp;Show Command Parameter Section" commandParameterCssClass="label_left_black" indentation="2"/>
     <rcms.control:buttonsJSRenderer indentation="2"/>
     <rcms.notification:jSRenderer indentation="2"/>
@@ -62,25 +62,19 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
       var eloginfo = document.getElementById("elogInfo");
       eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
     }
-  </script>
 
-  <script>
-    $(document).ready(function() {
-       setProgress(Math.round(${pars.HCAL_EVENTSTAKEN}/${pars.NUMBER_OF_EVENTS} * 1000)/10);
-    });
-  </script>
-
-  <script>
     function activate_relevant_table(tbid) {
       if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
       else {turn_off_visibility(tbid);}
     }
   </script>
+
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <!-- Custom javascript section end -->
 
 </head>
 
-<body onLoad='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
 
 
 <!-- Table T1 begin -->
@@ -100,7 +94,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     <!-- Custom dynamic content begin -->
     <td height="259" valign="top" colspan="2">
       <!-- Form begin -->
-      <form id="FMPilotForm" method="POST" action="FMPilotServlet">
+      <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>
         <rcms.control:commandHiddenInputRenderer indentation="4"/>
         <rcms.notification:hiddenInputRenderer indentation="4"/>
