@@ -211,6 +211,8 @@ public class HCALEventHandler extends UserEventHandler {
   public boolean AllButHCALSuperVisorIsOK = false;
   private List<Thread> TriggerAdapterWatchThreadList = new ArrayList<Thread>();
   public boolean stopTriggerAdapterWatchThread = false;
+  private List<Thread> AlarmerWatchThreadList = new ArrayList<Thread>();
+  public boolean stopAlarmerWatchThread = false;
   public boolean NotifiedControlledFMs = false;
 
   // Switch which indicates whether "special" function managers are controlled, e.g. HCAL_Master or RCT_Master
@@ -614,6 +616,7 @@ public class HCALEventHandler extends UserEventHandler {
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
+		stopAlarmerWatchThread = true;
 
     // Destroy the FM
     super.destroy();
@@ -849,6 +852,22 @@ public class HCALEventHandler extends UserEventHandler {
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
+  }
+
+  // get the alarmer URL from userXML
+  protected void getAlarmerUrl() {
+    String tmpAlarmerURL="";
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Seth log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+        String TagName = "AlarmerURL";
+        tmpAlarmerURL = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+    }
+    catch ( UserActionException e) {
+          logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
+    }
+    functionManager.alarmerURL = tmpAlarmerURL;
+    logger.info("[Seth log HCAL " + functionManager.FMname + "] The alarmerURL looks like this:\n" + functionManager.alarmerURL);
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
@@ -3876,6 +3895,59 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
 
+  // thread which checks the alarmer state
+  protected class AlarmerWatchThread extends Thread {
+
+    public AlarmerWatchThread() {
+      AlarmerWatchThreadList.add(this);
+    }
+
+    public void run() {
+
+      stopAlarmerWatchThread = false;
+
+			// poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
+      while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
+
+        // delay between polls
+        try { Thread.sleep(30000); }
+        catch (Exception ignored) { return; }
+
+        Date now = Calendar.getInstance().getTime();
+
+				if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+							functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+					// ask for the status of the HCAL alarmer
+					try {
+						//XDAQParameter pam = new XDAQParameter("http://hcalmon.cms:9945","hcalAlarmer",0);
+						XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+						// this does a lazy get. do we need to force the update before getting it?
+						logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
+            pam.select(new String[] {"GlobalStatus"});
+            pam.get();
+            String status = pam.getValue("GlobalStatus");
+
+						if (status!="OK") {
+              // go to degraded state
+							logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
+							functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+						}
+					}
+					catch (Exception e) {
+						String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...Going to RUNNINGDEGRADED state";
+						logger.error(errMessage);
+						functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+					}
+				}
+			}
+
+			// stop the HCAL supervisor watchdog thread
+			//System.out.println("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+			//logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+			AlarmerWatchThreadList.remove(this);
+
+		}
+	}
 
 }
  
