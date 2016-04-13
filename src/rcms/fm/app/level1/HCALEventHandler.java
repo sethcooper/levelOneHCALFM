@@ -280,7 +280,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String doRunInfoPublish =  "";
       try{
-          doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish")
+          doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -298,7 +298,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useOfficialRunNumbers = "";
       try {
-         useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers")
+         useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
