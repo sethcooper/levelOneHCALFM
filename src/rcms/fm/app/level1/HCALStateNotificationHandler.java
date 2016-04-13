@@ -101,11 +101,20 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 			// process the notification from the FM when initializing
 			if ( fm.getState().equals(HCALStates.INITIALIZING) ) {
 
-        // ignore notifications to HALTING (like from TCDS apps)
+        // ignore notifications to INITIALIZING but set timeout
+				if ( notification.getToState().equals(HCALStates.INITIALIZING.toString()) ) {
+					String msg = "HCAL is initializing ";
+					fm.setAction(msg);
+					setTimeoutThread(true);
+					return;
+				}
+
+        // ignore notifications to HALTING (from TCDS apps) but reset timeout
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is initializing ";
 					fm.setAction(msg);
 					//logger.info(msg);
+					setTimeoutThread(true);
 					return;
 			  }
         // for level2's, we fire the set halt at the end of initAction unless there's an error, so we don't care about any notifications
@@ -124,11 +133,12 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 			// process the notification from the FM when halting
 			if ( fm.getState().equals(HCALStates.HALTING) ) {
 
-				// ignore notifications to HALTING (like from TCDS apps)
+				// ignore notifications to HALTING (like from TCDS apps) but set timeout
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is halting ";
 					fm.setAction(msg);
 					//logger.info(msg);
+					setTimeoutThread(true);
 					return;
 				}
 				else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {

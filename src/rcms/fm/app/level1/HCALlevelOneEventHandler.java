@@ -95,7 +95,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
-		logger.debug("[HCAL LVL1] init() called: functionManager = " + functionManager );
+		logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
 	}
 
 	public void initAction(Object obj) throws UserActionException {
@@ -170,6 +170,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 				// request a session ID
 				getSessionId();
+      	// get the Sid from the init command
+				if (functionManager.getParameterSet().get(HCALParameters.SID) != null) {
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
+					Sid = ((IntegerT)functionManager.getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
+					//functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
+					//functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
+				}
+				else {
+					String warnMessage = "[Martin log HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
+					logger.warn(warnMessage);
+				}
+
 
 				GlobalConfKey = "not used";
 
@@ -211,9 +224,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			functionManager.RunType = RunType;
 			logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
+      // Get the value of runinfopublish
+      Boolean RunInfoPublish = false;
+      if ( functionManager.getParameterSet().get(HCALParameters.HCAL_RUNINFOPUBLISH) != null){
+			     RunInfoPublish = ((BooleanT)functionManager.getParameterSet().get(HCALParameters.HCAL_RUNINFOPUBLISH).getValue()).getBoolean();
+           logger.info("[Martin log HCAL LVL1 "+ functionManager.FMname + "] Going to pass RunInfoPublish value of : " + RunInfoPublish+" to LV2");
+      } else{
+           logger.warn("[Martin log HCAL LVL1 "+ functionManager.FMname + "] RunInfoPublish is null");
+      }
 			// prepare run number to be passed to level 2
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
+			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
 			pSet.put(new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(Sid)));
+			pSet.put(new CommandParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH, new BooleanT(RunInfoPublish)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
 			String RunConfigSelected = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
@@ -658,12 +681,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			getPIControl();
 
 			// prepare run mode to be passed to level 2
+			String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
 			pSet.put(new CommandParameter<IntegerT>(HCALParameters.RUN_NUMBER, new IntegerT(functionManager.RunNumber)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_KEY, new StringT(RunKey)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.TPG_KEY, new StringT(TpgKey)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.FED_ENABLE_MASK, new StringT(FedEnableMask)));
+			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH, new StringT(CfgCVSBasePath)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT, new StringT(FullCfgScript)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL, new StringT(FullTTCciControlSequence)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_LTCCONTROL, new StringT(FullLTCControlSequence)));
@@ -689,10 +714,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
 				// configure Level2Priority1 FMs first
-				SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
+				SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
 				configureTaskSeq.addLast(l2Priority1Task);
 				// then configure L2Priority2 FMs
-				SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
+				SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
 				configureTaskSeq.addLast(l2Priority2Task);
 
 				// now configure the rest in parallel
@@ -703,7 +728,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 				normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
 				normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
 				QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
-				SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,HCALInputs.CONFIGURE,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+				SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
 				configureTaskSeq.addLast(fmChildrenTask);
 
 				logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");

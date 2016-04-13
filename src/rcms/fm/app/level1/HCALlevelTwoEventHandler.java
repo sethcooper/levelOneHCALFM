@@ -51,6 +51,11 @@ import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.resourceservice.db.Group;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
+import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
@@ -158,7 +163,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
-            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.FMurl);
+            String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.rcmsStateListenerURL);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
@@ -185,15 +190,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // initialize all XDAQ executives
-      // we also halt the TCDS applications here
+      // we also halt the LPM applications inside here
       initXDAQ();
 
-      parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-      //for (QualifiedResource qr : xdaqApplicationList) { 
-      //  if (qr.getName().contains("TriggerAdapter") || qr.getName().contains("FanoutTTCciTA")) {
-      //    if (qr.isActive())functionManager.FMrole="EvmTrig";
-      //  }
-      //}
       String ruInstance = "";
       if (parameterSet.get(HCALParameters.RU_INSTANCE) != null) {
         ruInstance = ((StringT)parameterSet.get(HCALParameters.RU_INSTANCE).getValue()).getString();
@@ -234,13 +233,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
-							//XXX SIC TODO FIXME WHY DOES THIS CRASH?
-							//if (pamName.equals("ReportStateToRCMS")) {
-							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS; try to set ReportStateToRCMS for " + qr.getName() + " to true");
-							//pam.select(new String[] {"ReportStateToRCMS"});
-							//pam.setValue("ReportStateToRCMS", "true");
-							//pam.send();
-							//logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS for " + qr.getName() + " to true");
+							////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+							//if (pamName.equals("usePrimaryTCDS")) {
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//  pam.select(new String[] {"usePrimaryTCDS"});
+							//  pam.setValue("usePrimaryTCDS", "false");
+							//  pam.send();
+							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+							//}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -282,13 +282,26 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       thread3.start();
 
 
-      // check parameter set
-      if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
+      // check run type passed from Level-1
+			if(((StringT)parameterSet.get(HCALParameters.HCAL_RUN_TYPE).getValue()).getString().equals("local")) {
 
         RunType = "local";
 
         // request a session ID
-        getSessionId();
+        //getSessionId();
+        // Get SID from LV1:
+        if (parameterSet.get(HCALParameters.SID) != null) {
+          Sid = ((IntegerT)parameterSet.get(HCALParameters.SID).getValue()).getInteger();
+          sessionId = Sid;
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "] Received the following SID from LV1 :"+ Sid) ;
+        }
+        else {
+          String warnMessage = "[Martin log HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
+          logger.warn(warnMessage);
+        }
+
 
         GlobalConfKey = "not used";
 
@@ -307,7 +320,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
         }
         else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID ...";
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
           logger.warn(warnMessage);
         }
 
@@ -321,6 +334,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a GlobalConfKey ...";
           logger.warn(warnMessage);
         }
+      }
+
+      if (parameterSet.get(HCALParameters.HCAL_RUNINFOPUBLISH) != null) {
+        Boolean RunInfoPublish = ((BooleanT)parameterSet.get(HCALParameters.HCAL_RUNINFOPUBLISH).getValue()).getBoolean();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received RunInfoPublish of value: " + RunInfoPublish + " from LV1");
+      }
+      else {
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive RunInfoPublish from LV1.";
+        logger.warn(warnMessage);
       }
 
       if (parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED) != null) {
@@ -386,6 +409,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       destroyXDAQ();
 
       // init all XDAQ executives
+      // also halt all LPM applications inside here
       initXDAQ();
 
       // go to Halted
@@ -444,6 +468,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
+			// halt LPM
+			functionManager.haltLPMControllers();
 
       // leave intermediate state directly only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
@@ -471,6 +497,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configuring")));
 
+      //if (!functionManager.containerTTCciControl.isEmpty()) {
+      //  TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
+      //  ttcciwatchthread.run();
+      //}
+     
+      String CfgCVSBasePath           = "not set";
       String LVL1CfgScript            = "not set";
       String LVL1TTCciControlSequence = "not set";
       String LVL1LTCControlSequence   = "not set";
@@ -556,17 +588,26 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(SupervisorError)));
         }
 
-        // get the FED list from the configure command
+        // get the FED list from the configure command in global run
         if (parameterSet.get(HCALParameters.FED_ENABLE_MASK) != null) {
           FedEnableMask = ((StringT)parameterSet.get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
           functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CONFIGURED_WITH_FED_ENABLE_MASK,new StringT(FedEnableMask)));
           functionManager.HCALFedList = getEnabledHCALFeds(FedEnableMask);
 
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction().");
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] ... did receive a FED list during the configureAction(). Here it is:\n "+ FedEnableMask);
         }
         else {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
+        }
+
+        // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
+        if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
+          CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
+        }
+        else {
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
         }
 
         // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
@@ -574,7 +615,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 CfgScript.\nThis is OK if each LVL2 (i.e.also this one) has such a CfgScript defined itself.");
+          logger.error("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a LVL1 CfgScript! Check if the LV1 is passing to it.");
         }
 
         // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
@@ -582,7 +623,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1TTCciControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
         }
 
         // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
@@ -590,33 +631,40 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1LTCControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LTCCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
         }
         // get the HCAL TCDSControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_TCDSCONTROL) != null) {
           LVL1TCDSControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TCDSCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TCDS control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TCDS is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TCDS control sequence.This is OK only if a TCDS is not used in this config.");
         }
         // get the HCAL LPMControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_LPMCONTROL) != null) {
           LVL1LPMControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LPMCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LPM control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LPM is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LPM control sequence. This is OK only if a LPM is not used in this config.");
         }
         // get the HCAL PIControl from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_PICONTROL) != null) {
           LVL1PIControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_PICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a PI is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence. This is OK only if a PI is not used in this config.");
         }
       }
 
+      if (CfgCVSBasePath.equals("not set")) {
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
+      }
+      else {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
+      }
+
       if (LVL1CfgScript.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1CfgScript is not set.\nThis is OK if this LVL2 has such a CfgScript defined itself.");
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] The LVL1CfgScript is not set. Check if the LV1 is passing to it.");
       }
       else {
         FullCfgScript = LVL1CfgScript;
@@ -624,7 +672,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -632,7 +680,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LTCControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LTC control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LTC control sequence is not set. This is OK only if a LTC is not used in this config.");
       }
       else {
         FullLTCControlSequence = LVL1LTCControlSequence;
@@ -640,7 +688,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TCDSControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TCDS control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TCDS is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TCDS control sequence is not set. This is OK only if a TCDS is not used in this config.");
       }
       else {
         FullTCDSControlSequence = LVL1TCDSControlSequence;
@@ -648,7 +696,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LPMControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LPM control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LPM is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LPM control sequence is not set. This is OK only if a LPM is not used in this config.");
       }
       else {
         FullLPMControlSequence = LVL1LPMControlSequence;
@@ -656,7 +704,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1PIControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 PI control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a PI is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 PI control sequence is not set. This is OK only if a PI is not used in this config.");
       }
       else {
         FullPIControlSequence = LVL1PIControlSequence;
@@ -704,9 +752,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] No special VdM scan snippets, etc. enabled for this FM.\nThe RUN_KEY given is: " + RunKey);
       }
 
-      // compile CfgScript incorporating the local definitions found in the UserXML
-      getCfgScript();
-
       if (TpgKey!=null && TpgKey!="NULL") {
 
         FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
@@ -730,25 +775,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      getTTCciControl();
-
-      // compile LTC control sequence incorporating the local definitions found in the UserXML
-      getLTCControl();
-
-      // compile TCDS control sequence incorporating the local definitions found in the UserXML
-      getTCDSControl();
-
-      // compile LPM control sequence incorporating the local definitions found in the UserXML
-      getLPMControl();
-
-      // compile LPM control sequence incorporating the local definitions found in the UserXML
-      getPIControl();
-
-
-      // get the FedEnableMask found in the UserXML
+      // get the FedEnableMask from LV1
       if (functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK) != null && ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString() == "") {
-        getFedEnableMask();
+        //getFedEnableMask();
         FedEnableMask = ((StringT)functionManager.getParameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK to be sent to the hcalSupervisor is: " + FedEnableMask);
       }
@@ -794,16 +823,101 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
       }
+      // configure PeerTransportUTCPs
+      if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+        String peerTransportUTCPstateName = "";
+        for (QualifiedResource qr : functionManager.containerPeerTransportUTCP.getApplications() ) {
+          try {
+            XDAQParameter pam = null;
+            pam = ((XdaqApplication)qr).getXDAQParameter();
+            pam.select(new String[] {"stateName"});
+            pam.get();
+            peerTransportUTCPstateName =  pam.getValue("stateName");
+            logger.info("[HCAL " + functionManager.FMname + "] Got the PeerTransportUTCP's stateName--it is: " + peerTransportUTCPstateName);
+          }
+          catch (XDAQTimeoutException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+          catch (XDAQException e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: while getting the PeerTransportUTCP stateName...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+          }
+        }
+        try {
+          if (peerTransportUTCPstateName.equals("Halted")) {
+            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring PeerTransportUTCPs ...");
+            functionManager.containerPeerTransportUTCP.execute(HCALInputs.CONFIGURE);
+          }
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring PeerTransportUTCPs failed ...";
+          logger.error(errMessage,e);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        }
+      }
 
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+          //TODO do here
+          Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
+					XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
+          List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
+          logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
+          if (taResource.getName().contains("DummyTriggerAdapter")) { 
+						for (XdaqApplicationResource taSibling : taSiblingsList) {
+							logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+							if (taSibling.getName().contains("DTCReadout")) { 
+								try {
+									XDAQParameter pam = null;
+									XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
+									pam =taSiblingApp.getXDAQParameter();
+
+									pam.select(new String[] {"PollingReadout"});
+									pam.setValue("PollingReadout", "true");
+									pam.send();
+								}
+								catch (XDAQTimeoutException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+								catch (XDAQException e) {
+									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+									logger.error(errMessage,e);
+									functionManager.sendCMSError(errMessage);
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+								}
+							}
+						}
+          }
+        }
+      }
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
         try {
           XDAQParameter pam = null;
           pam =((XdaqApplication)qr).getXDAQParameter();
 
-          pam.select(new String[] {"IsLocalRun", "TriggerKey"});
+          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
           pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
           logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
           pam.setValue("TriggerKey", TpgKey);
+          pam.setValue("ReportStateToRCMS", "true");
+          logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
 
           pam.send();
         }
@@ -938,23 +1052,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
 
-      // configuring the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Configuring the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.CONFIGURE);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       // set actions
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(functionManager.getState().getStateString())));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("configureAction executed ... - we're close ...")));
@@ -1065,13 +1162,24 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // offical run number handling
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
+        //  //TODO do here
+        //  // determine run number and run sequence number and overwrite what was set before
+        //  try {
+				//		Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+				//		Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
+				//		List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
+				//		for (Resource taSibling : taSiblingsList) {
+				//			logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+				//		}
+        //  }
+				//  catch (DBConnectorException ex) {
+				//  	logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
+				//  }
+            
 
-          // determine run number and run sequence number and overwrite what was set before
           if (OfficialRunNumbers) {
-
             RunNumberData rnd = getOfficialRunNumber();
 
             functionManager.RunNumber    = rnd.getRunNumber();
@@ -1133,7 +1241,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // start the PeerTransportATCPs
+        // start the PeerTransportATCPs and PeerTransportUTCPs
         if (!functionManager.ATCPsWereStartedOnce) {
 
           // make sure that the ATCP transports were only started only once
@@ -1146,6 +1254,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportATCP failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] starting PeerTransportUTCP ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HCALSTART);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportUTCP failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
@@ -1471,23 +1594,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
 
-      // starting the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting i.e. sending Enable to the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALSTART);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       if (!HCALSupervisorAsyncEnable) {
         // leave intermediate state only when not talking to asynchronous applications
         if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
@@ -1700,23 +1806,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("halting")));
 
-      // halting the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Halting the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALHALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       // stop i.e. halt the triggering immediately and not waiting for the trigger adapter to report that it is stopped
       if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
@@ -1861,6 +1950,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
+        //FIXME: why is this commented out?
         // stop the PeerTransportATCPs
         /*
            if (!functionManager.containerPeerTransportATCP.isEmpty()) {
@@ -1878,6 +1968,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
            }
            }
            */
+        // halt LPM
+        functionManager.haltLPMControllers();
+
         // stop the StorageManagers
         if (!functionManager.containerStorageManager.isEmpty()) {
           try {
@@ -2066,23 +2159,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("stopping")));
 
-      // stopping the MonLogger application
-      if (HandleMonLoggers) {
-        try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Stopping the MonLogger applications ...");
-
-          functionManager.containerMonLogger.execute(HCALInputs.HCALHALT);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping the MonLogger failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
       // stop the triggering
       if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
@@ -2230,7 +2306,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // stop the PeerTransportATCPs
+        // stop the PeerTransportATCPs and PeerTransportUTCPs
         if (functionManager.StopATCP) {
           if (!functionManager.containerPeerTransportATCP.isEmpty()) {
             try {
@@ -2239,6 +2315,21 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportATCPs failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
+          }
+          // utcps
+          if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping PeerTransportUTCPs ...");
+              functionManager.containerPeerTransportUTCP.execute(HCALInputs.HALT);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportUTCPs failed ...";
               logger.error(errMessage,e);
               functionManager.sendCMSError(errMessage);
               functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
@@ -2314,11 +2405,20 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (parameterSet.size()!=0)  {
 
         // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
+        if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
+          CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+        }
+        else {
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
+        }
+
+
+        // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_CFGSCRIPT) != null) {
           LVL1CfgScript = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 CfgScript.\nThis is OK if each LVL2 (i.e.also this one) has such a CfgScript defined itself.");
+          logger.error("[HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgScript! Check if LVL1 is passing it to LV2");
         }
 
         // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
@@ -2326,7 +2426,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1TTCciControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
         }
 
         // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
@@ -2334,15 +2434,23 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LVL1LTCControlSequence = ((StringT)parameterSet.get(HCALParameters.HCAL_LTCCONTROL).getValue()).getString();
         }
         else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
         }
 
         // set the function manager parameters
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
       }
 
+      if (CfgCVSBasePath.equals("not set")) {
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
+      }
+      else {
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
+      }
+
+
       if (LVL1CfgScript.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set.\nThis is OK if this LVL2 has such a CfgScript defined itself.");
+        logger.error("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1CfgScript is not set in the LVL1! Check if LVL1 is passing it to LV2");
       }
       else {
         FullCfgScript = LVL1CfgScript;
@@ -2350,7 +2458,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a TTCci is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
       }
       else {
         FullTTCciControlSequence = LVL1TTCciControlSequence;
@@ -2358,21 +2466,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       if (LVL1LTCControlSequence.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 LTC control sequence is not set.\nThis is OK if either each LVL2 (i.e.also this one) has such a sequence defined itself or a LTC is not used in this config.");
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Warning! The LVL1 LTC control sequence is not set.\nThis is OK only if a LTC is not used in this config.");
       }
       else {
         FullLTCControlSequence = LVL1LTCControlSequence;
         logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 LTC control sequence was received.\nHere it is:\n" + FullLTCControlSequence);
       }
-
-      // compile CfgScript incorporating the local definitions found in the UserXML
-      getCfgScript();
-
-      // compile TTCci control sequence incorporating the local definitions found in the UserXML
-      getTTCciControl();
-
-      // compile LTC control sequence incorporating the local definitions found in the UserXML
-      getLTCControl();
 
       // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
       sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence,FedEnableMask,UsePrimaryTCDS);
@@ -2471,7 +2570,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
       }
 
       // leave intermediate state
