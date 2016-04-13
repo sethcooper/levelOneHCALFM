@@ -296,7 +296,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
         }
         else {
-          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
+          String warnMessage = "[Martin log HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";
           logger.warn(warnMessage);
         }
 
@@ -332,6 +332,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive a GlobalConfKey ...";
           logger.warn(warnMessage);
         }
+      }
+
+      if (parameterSet.get(HCALParameters.HCAL_RUNINFOPUBLISH) != null) {
+        Boolean RunInfoPublish = ((BooleanT)parameterSet.get(HCALParameters.HCAL_RUNINFOPUBLISH).getValue()).getBoolean();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
+        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received RunInfoPublish of value: " + RunInfoPublish + " from LV1");
+      }
+      else {
+        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive RunInfoPublish from LV1.";
+        logger.warn(warnMessage);
       }
 
       if (parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED) != null) {

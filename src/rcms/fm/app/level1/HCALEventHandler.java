@@ -288,7 +288,7 @@ public class HCALEventHandler extends UserEventHandler {
       if (doRunInfoPublish.equals("true")) {
         logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
         RunInfoPublish = true;
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUNINFOPUBLISH,new StringT(RunInfoPublish)));
+        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
       }else{
         logger.warn("[Martin Log HCAL base] Invalid text Content in RunInfoPublish tag of the userXML");
       }
@@ -303,16 +303,10 @@ public class HCALEventHandler extends UserEventHandler {
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
       }
-      if (useOfficialRunNumbers.equals("true_butwithnoRunInfoFromXDAQ")) {
-        logger.warn("[HCAL base] using offical run numbers for this session: " + sessionId.toString() + " (publishing to RunInfo is therefore switched on too)");
-        OfficialRunNumbers = true;
-        RunInfoPublish = true;
-      }
       if (useOfficialRunNumbers.equals("true")) {
         logger.warn("[HCAL base] using offical run numbers for this session: " + sessionId.toString() + " (publishing to RunInfo and the info from the RunInfo XDAQ application is therefore switched on too)");
         OfficialRunNumbers = true;
         RunInfoPublish = true;
-        RunInfoPublishfromXDAQ = true;
       }
     }
 
