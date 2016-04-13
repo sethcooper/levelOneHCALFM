@@ -1,195 +1,206 @@
-function turn_off_visibility(tbid) {document.getElementById(tbid).style.display="none";}
+function turn_off_visibility(tbid) {
+    document.getElementById(tbid).style.display = "none";
+}
 
-function turn_on_visibility(tbid) {document.getElementById(tbid).style.display="table";}
+function turn_on_visibility(tbid) {
+    document.getElementById(tbid).style.display = "table";
+}
 
 function toggle_visibility(tbid) {
-  if(document.getElementById(tbid).style.display != "table") {document.getElementById(tbid).style.display = "table";}
-  else {document.getElementById(tbid).style.display="none";}
+    if (document.getElementById(tbid).style.display != "table") {
+        document.getElementById(tbid).style.display = "table";
+    }
+    else {
+        document.getElementById(tbid).style.display = "none";
+    }
 }
 
 
 function copyContents(element, tgt) {
-  tgt.appendChild(element);
+    tgt.appendChild(element);
 }
 
 function makecheckbox(checkbox, parameter) {
-  document.getElementById(checkbox).innerHTML = '<input id=\"globalParameterCheckBox' + document.getElementById(parameter).getAttribute("name").substring(20) + '\" type=\"checkbox\" onclick=\"onClickGlobalParameterCheckBox(\'' + document.getElementById(parameter).getAttribute("name").substring(20) + '\', \'' + parameter + '\')\">';
+    document.getElementById(checkbox).innerHTML = '<input id=\"globalParameterCheckBox' + document.getElementById(parameter).getAttribute("name").substring(20) + '\" type=\"checkbox\" onclick=\"onClickGlobalParameterCheckBox(\'' + document.getElementById(parameter).getAttribute("name").substring(20) + '\', \'' + parameter + '\')\">';
 }
 
 function removeduplicatecheckbox(parameter) {
-  document.getElementById("globalParameterCheckBox"+document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.removeChild(document.getElementById("globalParameterCheckBox"+document.getElementById(parameter).getAttribute("name").substring(20)));
+    document.getElementById("globalParameterCheckBox" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.removeChild(document.getElementById("globalParameterCheckBox" + document.getElementById(parameter).getAttribute("name").substring(20)));
 }
 
 function hideduplicatefield(parameter) {
-  document.getElementById("globalParameterName"+document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display="none";
+    document.getElementById("globalParameterName" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display = "none";
 }
 
 function showsupervisorerror() {
-  var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
-  if (errMessage!="not set" && errMessage!="") {
-    document.getElementById("supervisorRow").style.display="";
-    document.getElementById("supervisorError").innerHTML = errMessage;
-  }
+    var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
+    if (errMessage != "not set" && errMessage != "") {
+        document.getElementById("supervisorRow").style.display = "";
+        document.getElementById("supervisorError").innerHTML = errMessage;
+    }
 }
 
 // The scripts below use jQuery.
-$(document).ready(function() {
-  var initcolor= $('#currentState').text();
-  $('#currentState').attr("class", "hcal_control_"+initcolor);
-  $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-
-
-  setInterval(function() {
-    var currentState = $('#currentState').text();
-    $('#currentState').attr("class", "hcal_control_"+currentState);
-    if (currentState == "Initial") {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').show();
-    }
-    else {
-      $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-      $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
-    }
+$(document).ready(function () {
+    var initcolor = $('#currentState').text();
+    $('#currentState').attr("class", "hcal_control_" + initcolor);
     $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-  }, 750);
 
 
-    $('#dropdowndiv').on('change', 'select', function(){
+    setInterval(function () {
+        var currentState = $('#currentState').text();
+        $('#currentState').attr("class", "hcal_control_" + currentState);
+        if (currentState == "Initial") {
+            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+            $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+        }
+        else {
+            $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+            $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+        }
+        $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+    }, 750);
+
+
+    $('#dropdowndiv').on('change', 'select', function () {
         $('#masked_resourses_td').show();
     });
 });
 
 function setProgress(progress) {
-   var progressBarWidth =progress*$(".container").width()/ 100;
-   $(".progressbar").width(progressBarWidth).html(progress + "% &nbsp; &nbsp;");
+    var numberOfEvents = $("#NUMBER_OF_EVENTS").val(),
+        containerWidth = $(".container").width();
+    var progressPercent = progress * containerWidth / numberOfEvents;
+    var progressBarWidth = progressPercent * (containerWidth / 100);
+    $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {
-  $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
-  $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
-  //$('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
+    $('#CFGSNIPPET_KEY_SELECTED').val($('#dropdown option:selected').text());
+    $('#RUN_CONFIG_SELECTED').val($('#dropdown option:selected').val());
+    //$('#MASKED_RESOURCES').val($('#dropdown option:selected').attr("maskedresources"));
 }
 
 function checkCheckboxes() {
-  $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
-  $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
-  $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
+    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
+    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
+    $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
 }
 
 function undisable(paramNumber) {
-  var parameterInputBoxID = "#globalParameterName".concat(paramNumber);
-  $(parameterInputBoxID).removeAttr("disabled");
+    var parameterInputBoxID = "#globalParameterName".concat(paramNumber);
+    $(parameterInputBoxID).removeAttr("disabled");
 }
 function clickboxes() {
-  if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
-    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
-    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
-    $('#newMASKED_RESOURCEScheckbox :checkbox').click();
-  }
+    if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
+        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
+        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
+        $('#newMASKED_RESOURCEScheckbox :checkbox').click();
+    }
 }
 
 function makedropdown(availableRunConfigs) {
-  availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
-  var array = availableRunConfigs.split(';');
-  var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
+    availableRunConfigs = availableRunConfigs.substring(0, availableRunConfigs.length - 1);
+    var array = availableRunConfigs.split(';');
+    var dropdownoption = "<select id='dropdown' > <option value='not set' maskedresources=''> --SELECT-- </option>";
 
-  for ( var i = 0, l = array.length; i < l; i++ ) {
-    var option = array[i].split(':');
-    dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
-  }
-  dropdownoption = dropdownoption+"</select>";
-  $('#dropdowndiv').html(dropdownoption);
-  var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
-  var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
-  var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
-  var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-  var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
-  var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-  var onchanges="onClickGlobalParameterCheckBox("+ cfgSnippetArgs + "); onClickGlobalParameterCheckBox("+ masterSnippetArgs + "); onClickGlobalParameterCheckBox("+ maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
-  $('#dropdown').attr("onchange", onchanges);
+    for (var i = 0, l = array.length; i < l; i++) {
+        var option = array[i].split(':');
+        dropdownoption = dropdownoption + "<option value='" + option[1] + "' maskedresources='" + option[2] + ";'>" + option[0] + "</option>";
+    }
+    dropdownoption = dropdownoption + "</select>";
+    $('#dropdowndiv').html(dropdownoption);
+    var cfgSnippetKeyNumber = $('#CFGSNIPPET_KEY_SELECTED').attr("name").substring(20);
+    var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
+    var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
+    var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
+    var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
+    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
+    $('#dropdown').attr("onchange", onchanges);
 }
 
 function fillMask() {
-  var allMasks = "";
-  $('#masks :checked').each(function() {
-    allMasks += $(this).val() + ";";
-  });
-  $('#MASKED_RESOURCES').val($('#MASKED_RESOURCES').val()+allMasks);
-  $('#maskTest').html($('#MASKED_RESOURCES').val()+allMasks);
+    var allMasks = "";
+    $('#masks :checked').each(function () {
+        allMasks += $(this).val() + ";";
+    });
+    $('#MASKED_RESOURCES').val($('#MASKED_RESOURCES').val() + allMasks);
+    $('#maskTest').html($('#MASKED_RESOURCES').val() + allMasks);
 }
 
 function makecheckboxes(availableResources) {
-  availableResources = availableResources.substring(0, availableResources.length - 1);
-  var array = availableResources.split(';');
-  var maskDivContents = "<ul>";
-  for ( var i = 0, l = array.length; i < l; i++ ) {
-    var option = array[i].split(':');
-    var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
-    maskDivContents += checkbox;
-  }
-  maskDivContents += "</ul>";
-  $('#masks').html(maskDivContents);
+    availableResources = availableResources.substring(0, availableResources.length - 1);
+    var array = availableResources.split(';');
+    var maskDivContents = "<ul>";
+    for (var i = 0, l = array.length; i < l; i++) {
+        var option = array[i].split(':');
+        var checkbox = "<li><input type='checkbox' onchange='fillMask();' value='" + option + "'>" + option + "</li>";
+        maskDivContents += checkbox;
+    }
+    maskDivContents += "</ul>";
+    $('#masks').html(maskDivContents);
 }
 
 function hidecheckboxes() {
-  var currentState = $('#currentState').text();
-  if (currentState == "Initial") {
-    $('#dropdowndiv').show();
-    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
-    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-    $('#newMASKED_RESOURCEScheckbox :checkbox').show();
-  }
-  else {
-    $('#dropdowndiv').hide();
-    $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
-    $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-    $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
-  }
+    var currentState = $('#currentState').text();
+    if (currentState == "Initial") {
+        $('#dropdowndiv').show();
+        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
+        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
+        $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+    }
+    else {
+        $('#dropdowndiv').hide();
+        $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
+        $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
+        $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+    }
 }
 
 function hideinitializebutton() {
-  var button = $('#commandSection :input')
-  button.each(function() {
-    if ($('#CFGSNIPPET_KEY_SELECTED').val() == "not set") {
-      button.hide();
-    }
-    else {
-      button.show();
-    }
-  });
+    var button = $('#commandSection :input')
+    button.each(function () {
+        if ($('#CFGSNIPPET_KEY_SELECTED').val() == "not set") {
+            button.hide();
+        }
+        else {
+            button.show();
+        }
+    });
 }
 
 function hcalOnLoad() {
-  activate_relevant_table('AllParamTables');
-  onClickCommandParameterCheckBox();
-  removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
-  removeduplicatecheckbox('RUN_CONFIG_SELECTED');
-  removeduplicatecheckbox('MASKED_RESOURCES');
-  removeduplicatecheckbox('NUMBER_OF_EVENTS');
-  removeduplicatecheckbox('RUN_NUMBER');
-  copyContents(CFGSNIPPET_KEY_SELECTED,newCFGSNIPPET_KEY_SELECTED);
-  makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
-  copyContents(RUN_CONFIG_SELECTED,newRUN_CONFIG_SELECTED);
-  makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
-  copyContents(MASKED_RESOURCES,newMASKED_RESOURCES);
-  makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
-  copyContents(NUMBER_OF_EVENTS,newNUMBER_OF_EVENTS);
-  makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
-  copyContents(HCAL_EVENTSTAKEN,newHCAL_EVENTSTAKEN);
-  copyContents(RUN_NUMBER,newRUN_NUMBER);
-  makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
-  copyContents(HCAL_TIME_OF_FM_START,newHCAL_TIME_OF_FM_START);
-  hidecheckboxes();
-  hideinitializebutton();
-  hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
-  hideduplicatefield('RUN_CONFIG_SELECTED');
-  hideduplicatefield('MASKED_RESOURCES');
-  hideduplicatefield('NUMBER_OF_EVENTS');
-  hideduplicatefield('RUN_NUMBER');
-  hideduplicatefield('HCAL_EVENTSTAKEN');
-  hideduplicatefield('HCAL_TIME_OF_FM_START');
-  removeduplicatecheckbox('USE_RESET_FOR_RECOVER');
-  removeduplicatecheckbox('USE_PRIMARY_TCDS');
-  getfullpath();
-  showsupervisorerror();
+    activate_relevant_table('AllParamTables');
+    onClickCommandParameterCheckBox();
+    removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
+    removeduplicatecheckbox('RUN_CONFIG_SELECTED');
+    removeduplicatecheckbox('MASKED_RESOURCES');
+    removeduplicatecheckbox('NUMBER_OF_EVENTS');
+    removeduplicatecheckbox('RUN_NUMBER');
+    copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
+    makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
+    copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
+    makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
+    copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
+    makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
+    copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
+    makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
+    copyContents(HCAL_EVENTSTAKEN, newHCAL_EVENTSTAKEN);
+    copyContents(RUN_NUMBER, newRUN_NUMBER);
+    makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
+    copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
+    hidecheckboxes();
+    hideinitializebutton();
+    hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
+    hideduplicatefield('RUN_CONFIG_SELECTED');
+    hideduplicatefield('MASKED_RESOURCES');
+    hideduplicatefield('NUMBER_OF_EVENTS');
+    hideduplicatefield('RUN_NUMBER');
+    hideduplicatefield('HCAL_EVENTSTAKEN');
+    hideduplicatefield('HCAL_TIME_OF_FM_START');
+    removeduplicatecheckbox('USE_RESET_FOR_RECOVER');
+    removeduplicatecheckbox('USE_PRIMARY_TCDS');
+    getfullpath();
+    showsupervisorerror();
 }
