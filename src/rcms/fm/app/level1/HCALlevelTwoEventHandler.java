@@ -292,8 +292,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // Get SID from LV1:
         if (parameterSet.get(HCALParameters.SID) != null) {
           Sid = ((IntegerT)parameterSet.get(HCALParameters.SID).getValue()).getInteger();
+          sessionId = Sid;
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "] Received the following SID from LV1 :"+ Sid) ;
         }
         else {
           String warnMessage = "[Martin log HCAL LVL2 " + functionManager.FMname + "] Did not receive a SID from LV1...";

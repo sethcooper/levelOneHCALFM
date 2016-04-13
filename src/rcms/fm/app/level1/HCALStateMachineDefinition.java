@@ -171,6 +171,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT> configureSUPERVISOR_ERROR = new CommandParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(""));
     CommandParameter<StringT> configureAVAILABLE_RUN_CONFIGS = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS, new StringT(""));
     CommandParameter<StringT> configureRUN_CONFIG_SELECTED = new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(""));
+    CommandParameter<IntegerT> configureSID = new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(0));
     CommandParameter<StringT> configureCFGSNIPPET_KEY_SELECTED = new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(""));
     CommandParameter<StringT> configureAVAILABLE_RESOURCES = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES, new StringT(""));
     CommandParameter<StringT> configureMASKED_RESOURCES = new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(""));
@@ -199,6 +200,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureSUPERVISOR_ERROR);
       configureParameters.add(configureAVAILABLE_RUN_CONFIGS);
       configureParameters.add(configureRUN_CONFIG_SELECTED);
+      configureParameters.add(configureSID);
       configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
       configureParameters.add(configureAVAILABLE_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);

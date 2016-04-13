@@ -170,6 +170,19 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 				// request a session ID
 				getSessionId();
+      	// get the Sid from the init command
+				if (functionManager.getParameterSet().get(HCALParameters.SID) != null) {
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
+					Sid = ((IntegerT)functionManager.getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
+					//functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
+					//functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
+				}
+				else {
+					String warnMessage = "[Martin log HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
+					logger.warn(warnMessage);
+				}
+
 
 				GlobalConfKey = "not used";
 

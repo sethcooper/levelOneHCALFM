@@ -1818,6 +1818,7 @@ public class HCALEventHandler extends UserEventHandler {
     sessionId = tempSessionId;
     // put the session ID into parameter set
     functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
   }
 
   // get official CMS run and sequence number
