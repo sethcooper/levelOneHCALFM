@@ -2413,6 +2413,7 @@ public class HCALEventHandler extends UserEventHandler {
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
+                functionManager.theStateNotificationHandler.setTimeoutThread(false); // have to unset timeout thread here
 								if (!functionManager.containerFMChildren.isEmpty()) {
 									//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
 									functionManager.fireEvent(HCALInputs.SETHALT);
