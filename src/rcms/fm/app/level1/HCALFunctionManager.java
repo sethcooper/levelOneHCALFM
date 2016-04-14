@@ -55,7 +55,7 @@ import net.hep.cms.xdaqctl.WSESubscription;
 /**
  * Function Machine base class for HCAL Function Managers
  * 
- * @author Arno Heister
+ *
  *
  */
 
