@@ -1,11 +1,16 @@
 package rcms.fm.app.level1;
 
+import java.util.Map;
+
 import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.parameter.ParameterException;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
+
+import rcms.util.logger.RCMSLogger;
 
 /**
  * Defined HCAL Function Manager parameters.
@@ -36,8 +41,11 @@ import rcms.fm.fw.parameter.type.StringT;
  *
  */
 
-public class HCALParameters {
+public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
+	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
+
+	private static HCALParameters instance;
 	/**
 	 * standard parameter definitions for the HCAL Function Manager
 	 */
@@ -122,159 +130,210 @@ public class HCALParameters {
 	public static final String LPM_SUPERVISOR = "LPM_SUPERVISOR";
 	public static final String EVM_TRIG_FM = "EVM_TRIG_FM";
 	// standard level 1 parameter set
-	public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
+	//public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
 
-	static {
+	public static boolean isForGUI(String parameterName) {
+		logger.warn("JohnLog: called isForGUI()");
+		boolean isForGUI=false;
+		if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
+		return isForGUI;
+	} 
+
+	public static HCALParameters getInstance() {
+		logger.warn("JohnLog: called HCALParameters.getInstance()");
+		if (instance == null) {
+			synchronized (HCALParameters.class) {
+				if (instance == null) {
+					instance = new HCALParameters();
+				}
+			}
+		}
+		return instance;
+	}
+	private HCALParameters() {
+		super();
+		this.logger = new RCMSLogger(HCALFunctionManager.class);
+		try {
+			this.initializeParameters();
+			logger.warn("JohnLog: initialized HCALParameters object.");
+		} catch (ParameterException ex) {
+			logger.error("Encountered ParameterException while initializing parameter set.", ex);
+		}
+	}
+	public synchronized void initializeParameters() throws ParameterException {
+
 		/**
 		 * Session Identifier
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(SID, new IntegerT("0"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<IntegerT>(SID, new IntegerT("0"),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * State of the Function Manager is currently in
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(STATE, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(STATE, new StringT(""),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * Run sequence name is currently
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(SEQ_NAME, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(SEQ_NAME, new StringT(""),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * Run Type can be either "Fun", or "Physics"
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RUN_KEY, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(RUN_KEY, new StringT(""),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * mode can be "Normal" or "Debug". Influences the behaviour of the top FM.
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RUN_MODE, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(RUN_MODE, new StringT(""),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * global configuration key for current run
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(GLOBAL_CONF_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(GLOBAL_CONF_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * the run number
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(RUN_NUMBER, new IntegerT(0)));
+		this.put(new FunctionManagerParameter<IntegerT>(RUN_NUMBER, new IntegerT(0)));
 		/**
 		 * the run sequence number
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(RUN_SEQ_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<IntegerT>(RUN_SEQ_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
 		/**
 		 * the requested number of events for a local run
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(NUMBER_OF_EVENTS, new IntegerT(1000)));
+		this.put(new FunctionManagerParameter<IntegerT>(NUMBER_OF_EVENTS, new IntegerT(1000)));
 
 		/**
 		 * the FED list given by the level0
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT> (FED_ENABLE_MASK, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT> (FED_ENABLE_MASK, new StringT(""),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * parameters for monitoring
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(ACTION_MSG, new StringT(""),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(ERROR_MSG, new StringT(""),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<DoubleT>(COMPLETION, new DoubleT(-1),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(ACTION_MSG, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(ERROR_MSG, new StringT(""),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<DoubleT>(COMPLETION, new DoubleT(-1),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL CfgScript
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGSCRIPT, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_CFGSCRIPT, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL CfgCVSBasePath
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 
 		/**
 		 * HCAL TTCci control sequence
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_TTCCICONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_TTCCICONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL LTC control sequence
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_LTCCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_LTCCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL TCDS control sequence
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_TCDSCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_TCDSCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL LPM control sequence
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_LPMCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_LPMCONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL specific comments for a run
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_COMMENT, new StringT("")));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_COMMENT, new StringT("")));
 
 		/**
 		 * HCAL specific comments for a run
 		 */
-		//GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_SHIFTERS, new StringT("")));
+		//this.put(new FunctionManagerParameter<StringT>(HCAL_SHIFTERS, new StringT("")));
 
 		/**
 		 * HCAL specific run definition, by default a LVL2 can only be started in local mode
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_RUN_TYPE, new StringT("local")));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_RUN_TYPE, new StringT("local")));
 
 		/**
 		 * HCAL can be requested to perform specific actions during  CONFIGURING
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<BooleanT>(CLOCK_CHANGED, new BooleanT(false)));
+		this.put(new FunctionManagerParameter<BooleanT>(CLOCK_CHANGED, new BooleanT(false)));
 
 
 		/**
 		 * HCAL specific: events taken in local runs - retrieved from the TA
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(HCAL_EVENTSTAKEN, new IntegerT(-1),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<IntegerT>(HCAL_EVENTSTAKEN, new IntegerT(-1),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL specific: date and time when this FM was initialized
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_TIME_OF_FM_START, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_TIME_OF_FM_START, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * parameters for LVL0 read-back
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(INITIALIZED_WITH_SID, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(INITIALIZED_WITH_GLOBAL_CONF_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(INITIALIZED_WITH_SID, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(INITIALIZED_WITH_GLOBAL_CONF_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(CONFIGURED_WITH_RUN_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_RUN_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_TPG_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_FED_ENABLE_MASK, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<IntegerT>(CONFIGURED_WITH_RUN_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_RUN_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_TPG_KEY, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(CONFIGURED_WITH_FED_ENABLE_MASK, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<IntegerT>(STARTED_WITH_RUN_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<IntegerT>(STARTED_WITH_RUN_NUMBER, new IntegerT(0),FunctionManagerParameter.Exported.READONLY));
 
 
 		/**
-                 * parameters to select the specific run behaviors
-                 */
-                  
-		// Parameter to set the behavior of the "Recover" button.
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<BooleanT>(USE_RESET_FOR_RECOVER, new BooleanT(true)));
+		 * parameters to select the specific run behaviors
+		 */
 
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(AVAILABLE_RUN_CONFIGS, new StringT("none found")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RUN_CONFIG_SELECTED, new StringT("not set")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(CFGSNIPPET_KEY_SELECTED, new StringT("not set")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(AVAILABLE_RESOURCES, new StringT("none found")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(MASKED_RESOURCES, new StringT("")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(RU_INSTANCE, new StringT("")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(LPM_SUPERVISOR, new StringT("")));
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(EVM_TRIG_FM, new StringT("")));
+		// Parameter to set the behavior of the "Recover" button.
+		this.put(new FunctionManagerParameter<BooleanT>(USE_RESET_FOR_RECOVER, new BooleanT(true)));
+
+		this.put(new FunctionManagerParameter<StringT>(AVAILABLE_RUN_CONFIGS, new StringT("none found")));
+		this.put(new FunctionManagerParameter<StringT>(RUN_CONFIG_SELECTED, new StringT("not set")));
+		this.put(new FunctionManagerParameter<StringT>(CFGSNIPPET_KEY_SELECTED, new StringT("not set")));
+		this.put(new FunctionManagerParameter<StringT>(AVAILABLE_RESOURCES, new StringT("none found")));
+		this.put(new FunctionManagerParameter<StringT>(MASKED_RESOURCES, new StringT("")));
+		this.put(new FunctionManagerParameter<StringT>(RU_INSTANCE, new StringT("")));
+		this.put(new FunctionManagerParameter<StringT>(LPM_SUPERVISOR, new StringT("")));
+		this.put(new FunctionManagerParameter<StringT>(EVM_TRIG_FM, new StringT("")));
 
 		// Parameter to see the supervisor's overallErrorMessage
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(SUPERVISOR_ERROR, new StringT(""), FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(SUPERVISOR_ERROR, new StringT(""), FunctionManagerParameter.Exported.READONLY));
 
 		/**
 		 * HCAL PI control sequence
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_PICONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_PICONTROL, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 		//Parameter to set whether primary or secondary TCDS is used.
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<BooleanT>(USE_PRIMARY_TCDS, new BooleanT("true"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<BooleanT>(USE_PRIMARY_TCDS, new BooleanT("true"),FunctionManagerParameter.Exported.READONLY));
+	}
+
+	//  public synchronized HCALParameters getClonedParameterSet() { 
+	//    logger.warn("JohnLog: called getClonedParameterSet()");
+	//    HCALParameters cloned = this.clone();
+	//    return cloned;
+	//  }
+	public synchronized ParameterSet<FunctionManagerParameter> getChanged( ParameterSet<FunctionManagerParameter> earlier) {
+		logger.warn("JohnLog: called getChanged()");
+		ParameterSet<FunctionManagerParameter> changed = new ParameterSet<FunctionManagerParameter>();
+		for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
+			try {
+				if (earlier == null || earlier.get(pair.getKey()) == null || !pair.getValue().getValue().equals(earlier.get(pair.getKey()).getValue())) {
+					changed.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
+				}
+			}
+			catch (Exception e) {
+				System.out.println("Error: failed to determine if parameter " + pair.getKey() + " changed.");
+			}
+		}
+		return changed; 
 	}
 }
+
