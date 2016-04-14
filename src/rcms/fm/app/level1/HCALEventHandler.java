@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.text.DecimalFormat;
 import java.util.Random;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -3905,6 +3907,13 @@ public class HCALEventHandler extends UserEventHandler {
     public void run() {
 
       stopAlarmerWatchThread = false;
+			try {
+				URL alarmerURL = new URL(functionManager.alarmerURL);
+			} catch (MalformedURLException e) {
+        // in case the URL is bogus, just don't run the thread
+				stopAlarmerWatchThread = true;
+				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + functionManager.alarmerURL + "; not checking alarmer status");
+      }
 
 			// poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
@@ -3930,16 +3939,16 @@ public class HCALEventHandler extends UserEventHandler {
 						if (!status.equals("OK")) {
 							// go to degraded state if needed
 							if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-									logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
+									logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
 									functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
 							}
               else {
-							  logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to stay in RUNNINGDEGRADED state");
+							  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to stay in RUNNINGDEGRADED state");
               }
 						}
             else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 							// if we got back to OK, go back to RUNNING
-							logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+							logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which should be OK; going to get out of RUNNINGDEGRADED state now");
 							functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
 						}
 					}
