@@ -344,63 +344,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-//    // XMAS initalization and subscription
-//    // TODO: is this useful?
-//    {
-//      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
-//      if (!functionManager.RunInfoFlashlistName.equals("")) {
-//        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
-//
-//        functionManager.XMASMonitoringEnabled = true;
-//
-//        functionManager.wseMap = new HashMap<String,WSESubscription>();
-//
-//        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
-//
-//        // Get WSEs
-//        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
-//
-//        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//
-//    //    // Subscription to the WSEs
-//        for (QualifiedResource qr : functionManager.wseList) {
-//          try {
-//            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
-//            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
-//            functionManager.wsSubscription.setFilter(WSE_FILTER);
-//
-//            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
-//
-//            try {
-//              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
-//              functionManager.wsSubscription.subscribe();
-//            }
-//            catch (XDAQTimeoutException e) {
-//              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//            catch (Exception e){
-//              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//
-//          }
-//          catch (XDAQMessageException e) {
-//            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
-//            logger.error(errMessage,e);
-//            functionManager.sendCMSError(errMessage);
-//          }
-//
-//          // Store subscriptions for later use e.g. unsubscriptions, etc.
-//          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
-//
-//          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
-//        }
-//      }
-//    }
 
 
     // Check if the userXML specifies whether the AsyncEnable feature should be used
@@ -2176,34 +2119,6 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
 
-//        {
-//          String FullComment = "Preamble:\n";
-//
-//          // find comment tag in the userXML
-//          String CommentuserXML = GetUserXMLElement("Comment");
-//          if (CommentuserXML.equals("")) { FullComment += "not used"; }
-//
-//          FullComment += "\nUser comment:\n";
-//
-//          // if there is any user add in the comment field of the FM add this too
-//          String CommentUserGUI = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
-//          if (!CommentUserGUI.equals("")) {
-//            FullComment += CommentUserGUI;
-//          }
-//          else {
-//            FullComment += "not set";
-//          }
-//
-//          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
-//          try {
-//            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
-//            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
-//          }
-//          catch (RunInfoException e) {
-//            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-//            logger.error(errMessage,e);
-//          }
-//        }
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
