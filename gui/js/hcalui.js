@@ -70,7 +70,7 @@ $(document).ready(function () {
 function setProgress(progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val(),
         containerWidth = $(".container").width();
-    var progressPercent = progress * containerWidth / numberOfEvents;
+    var progressPercent = 100 * progress / numberOfEvents;
     var progressBarWidth = progressPercent * (containerWidth / 100);
     $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
