@@ -663,6 +663,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // start the alarmer watch thread here, now that we have the alarmerURL
 			logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+			logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
 			AlarmerWatchThread thread4 = new AlarmerWatchThread();
 			thread4.start();
 

@@ -861,7 +861,7 @@ public class HCALEventHandler extends UserEventHandler {
     logger.info("[Seth log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
         String TagName = "AlarmerURL";
-        tmpAlarmerURL = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+        tmpAlarmerURL = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
           logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
@@ -3910,33 +3910,50 @@ public class HCALEventHandler extends UserEventHandler {
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
 
         // delay between polls
-        try { Thread.sleep(30000); }
+        try { Thread.sleep(30000); } // check every 30 seconds
         catch (Exception ignored) { return; }
 
         Date now = Calendar.getInstance().getTime();
 
 				if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
 							functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
-					// ask for the status of the HCAL alarmer
 					try {
-						//XDAQParameter pam = new XDAQParameter("http://hcalmon.cms:9945","hcalAlarmer",0);
+						// ask for the status of the HCAL alarmer
+						// ("http://hcalmon.cms:9945","hcalAlarmer",0);
 						XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
 						// this does a lazy get. do we need to force the update before getting it?
-						logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
+						//logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
             pam.select(new String[] {"GlobalStatus"});
             pam.get();
             String status = pam.getValue("GlobalStatus");
 
-						if (status!="OK") {
-              // go to degraded state
-							logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
-							functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+						if (!status.equals("OK")) {
+							// go to degraded state if needed
+							if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+									logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
+									functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+							}
+              else {
+							  logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to stay in RUNNINGDEGRADED state");
+              }
+						}
+            else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+							// if we got back to OK, go back to RUNNING
+							logger.warn("HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+							functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
 						}
 					}
 					catch (Exception e) {
-						String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...Going to RUNNINGDEGRADED state";
-						logger.error(errMessage);
-						functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+            // on exceptions, we go to degraded, or stay there
+						if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
+							logger.error(errMessage);
+							functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+						}
+						else {
+							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to stay in RUNNINGDEGRADED state";
+							logger.warn(errMessage);
+						}
 					}
 				}
 			}
