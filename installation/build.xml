@@ -4,7 +4,7 @@
 	
 	<!-- Properties the user needs to modify -->
   <property name="gitRev" value="${gitRev}" />
-  <echo message="Compiling HCALFM using git commit ${gitRev}" />
+  <echo message="Compiling HCALFM using version ${gitRev}" />
 	<property name="fm.name" value="HCALFM_${gitRev}" />
 	<property name="output.dir" value="./jars" />
 	
