@@ -7,8 +7,8 @@
 # John Hakala 4/14/2016
 
 if [ "$1" = "release" ]; then
-  ANYCHANGES=`git diff-index --quiet HEAD`
-  if [ "$ANYCHANGES" = "0" ]; then
+  git diff-index --quiet HEAD
+  if [ "$?" = "0" ]; then
 		GITREV=`git rev-parse HEAD | head -c 7`
 		ant -DgitRev="${GITREV}"
   else
