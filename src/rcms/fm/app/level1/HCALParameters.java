@@ -43,9 +43,9 @@ import rcms.util.logger.RCMSLogger;
 
 public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
-  static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
+	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
-  private static HCALParameters instance;
+	private static HCALParameters instance;
 	/**
 	 * standard parameter definitions for the HCAL Function Manager
 	 */
@@ -87,7 +87,9 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	public static final String TTS_TEST_SEQUENCE_REPEAT = "TTS_TEST_SEQUENCE_REPEAT";
 
 	// HCAL specific paramters
+	public static final String HCAL_CFGCVSBASEPATH    = "HCAL_CFGCVSBASEPATH";
 	public static final String HCAL_CFGSCRIPT    = "HCAL_CFGSCRIPT";
+	public static final String HCAL_RUNINFOPUBLISH    = "HCAL_RUNINFOPUBLISH";
 	public static final String HCAL_TTCCICONTROL = "HCAL_TTCCICONTROL";
 	public static final String HCAL_LTCCONTROL = "HCAL_LTCCONTROL";
 	public static final String HCAL_TCDSCONTROL = "HCAL_TCDSCONTROL";
@@ -130,36 +132,36 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	// standard level 1 parameter set
 	//public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
 
-  public static boolean isForGUI(String parameterName) {
-    logger.warn("JohnLog: called isForGUI()");
-    boolean isForGUI=false;
-    if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
-    return isForGUI;
-  } 
+	public static boolean isForGUI(String parameterName) {
+		logger.warn("JohnLog: called isForGUI()");
+		boolean isForGUI=false;
+		if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
+		return isForGUI;
+	} 
 
-  public static HCALParameters getInstance() {
-    logger.warn("JohnLog: called HCALParameters.getInstance()");
-    if (instance == null) {
-      synchronized (HCALParameters.class) {
-        if (instance == null) {
-          instance = new HCALParameters();
-        }
-      }
-    }
-    return instance;
-  }
-  private HCALParameters() {
-    super();
-    this.logger = new RCMSLogger(HCALFunctionManager.class);
-    try {
-      this.initializeParameters();
-      logger.warn("JohnLog: initialized HCALParameters object.");
-    } catch (ParameterException ex) {
-      logger.error("Encountered ParameterException while initializing parameter set.", ex);
-    }
-  }
-  public synchronized void initializeParameters() throws ParameterException {
-  
+	public static HCALParameters getInstance() {
+		logger.warn("JohnLog: called HCALParameters.getInstance()");
+		if (instance == null) {
+			synchronized (HCALParameters.class) {
+				if (instance == null) {
+					instance = new HCALParameters();
+				}
+			}
+		}
+		return instance;
+	}
+	private HCALParameters() {
+		super();
+		this.logger = new RCMSLogger(HCALFunctionManager.class);
+		try {
+			this.initializeParameters();
+			logger.warn("JohnLog: initialized HCALParameters object.");
+		} catch (ParameterException ex) {
+			logger.error("Encountered ParameterException while initializing parameter set.", ex);
+		}
+	}
+	public synchronized void initializeParameters() throws ParameterException {
+
 		/**
 		 * Session Identifier
 		 */
@@ -213,6 +215,12 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		 * HCAL CfgScript
 		 */
 		this.put(new FunctionManagerParameter<StringT>(HCAL_CFGSCRIPT, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+
+		/**
+		 * HCAL CfgCVSBasePath
+		 */
+		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+
 
 		/**
 		 * HCAL TTCci control sequence
@@ -280,9 +288,9 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 
 		/**
-                 * parameters to select the specific run behaviors
-                 */
-                  
+		 * parameters to select the specific run behaviors
+		 */
+
 		// Parameter to set the behavior of the "Recover" button.
 		this.put(new FunctionManagerParameter<BooleanT>(USE_RESET_FOR_RECOVER, new BooleanT(true)));
 
@@ -307,25 +315,25 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put(new FunctionManagerParameter<BooleanT>(USE_PRIMARY_TCDS, new BooleanT("true"),FunctionManagerParameter.Exported.READONLY));
 	}
 
-//  public synchronized HCALParameters getClonedParameterSet() { 
-//    logger.warn("JohnLog: called getClonedParameterSet()");
-//    HCALParameters cloned = this.clone();
-//    return cloned;
-//  }
-  public synchronized ParameterSet<FunctionManagerParameter> getChanged( ParameterSet<FunctionManagerParameter> earlier) {
-    logger.warn("JohnLog: called getChanged()");
-    ParameterSet<FunctionManagerParameter> changed = new ParameterSet<FunctionManagerParameter>();
-    for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
-      try {
-        if (earlier == null || earlier.get(pair.getKey()) == null || !pair.getValue().getValue().equals(earlier.get(pair.getKey()).getValue())) {
-          changed.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
-        }
-      }
-      catch (Exception e) {
-        System.out.println("Error: failed to determine if parameter " + pair.getKey() + " changed.");
-      }
-    }
-  return changed; 
-  }
+	//  public synchronized HCALParameters getClonedParameterSet() { 
+	//    logger.warn("JohnLog: called getClonedParameterSet()");
+	//    HCALParameters cloned = this.clone();
+	//    return cloned;
+	//  }
+	public synchronized ParameterSet<FunctionManagerParameter> getChanged( ParameterSet<FunctionManagerParameter> earlier) {
+		logger.warn("JohnLog: called getChanged()");
+		ParameterSet<FunctionManagerParameter> changed = new ParameterSet<FunctionManagerParameter>();
+		for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
+			try {
+				if (earlier == null || earlier.get(pair.getKey()) == null || !pair.getValue().getValue().equals(earlier.get(pair.getKey()).getValue())) {
+					changed.put(new FunctionManagerParameter((FunctionManagerParameter) pair.getValue()));
+				}
+			}
+			catch (Exception e) {
+				System.out.println("Error: failed to determine if parameter " + pair.getKey() + " changed.");
+			}
+		}
+		return changed; 
+	}
 }
 

@@ -42,7 +42,11 @@ public class HCALlevelOneFunctionManager extends HCALFunctionManager {
 
 		super.init();
 
+    // get session ID
+    //getSessionId();
+
 		// add event handler
-		addEventHandler(new HCALlevelOneEventHandler());
+		theEventHandler = new HCALlevelOneEventHandler();
+		addEventHandler(theEventHandler);
 	}
 }

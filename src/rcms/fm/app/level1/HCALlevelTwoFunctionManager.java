@@ -43,6 +43,7 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
 		super.init();
 
 		// add event handler
-		addEventHandler(new HCALlevelTwoEventHandler());
+		theEventHandler = new HCALlevelTwoEventHandler();
+		addEventHandler(theEventHandler);
 	}
 }

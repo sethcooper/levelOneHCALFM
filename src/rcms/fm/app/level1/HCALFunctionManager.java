@@ -3,12 +3,14 @@ package rcms.fm.app.level1;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
 
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
+import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.statemachine.definition.Input;
@@ -20,6 +22,7 @@ import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionConnector;
 import rcms.errorFormat.CMS.CMSError;
 
+import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.resource.CommandException;
@@ -39,6 +42,8 @@ import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.type.StringT;
@@ -65,11 +70,12 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerXdaqApplication = null;  // this container contains _all_ XDAQ executives
 
   public XdaqApplicationContainer containerhcalSupervisor      = null;
+  public XdaqApplicationContainer containerlpmController       = null;
+  public XdaqApplicationContainer containerTCDSControllers     = null;
   public XdaqApplicationContainer containerhcalDCCManager      = null;
   public XdaqApplicationContainer containerTriggerAdapter      = null;
   public XdaqApplicationContainer containerTTCciControl        = null;
   public XdaqApplicationContainer containerLTCControl          = null;
-  public XdaqApplicationContainer containerMonLogger           = null;
   public XdaqApplicationContainer containerEVM                 = null;
   public XdaqApplicationContainer containerBU                  = null;
   public XdaqApplicationContainer containerRU                  = null;
@@ -78,6 +84,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerStorageManager      = null;
   public XdaqApplicationContainer containerFEDStreamer         = null;
   public XdaqApplicationContainer containerPeerTransportATCP   = null;
+  public XdaqApplicationContainer containerPeerTransportUTCP   = null;
   public XdaqApplicationContainer containerhcalRunInfoServer   = null;
 
   // string containing details on the setup from where this FM was started
@@ -105,8 +112,23 @@ public class HCALFunctionManager extends UserFunctionManager {
   // container of XdaqExecutive in the running Group.
   public XdaqApplicationContainer containerXdaqExecutive = null;
 
-  // container of FunctionManagers in the running Group.
+  // container of all FunctionManagers in the running Group.
   public QualifiedResourceContainer containerFMChildren = null;
+  
+  // container with the EvmTrig FunctionManager for local runs
+  public QualifiedResourceContainer containerFMEvmTrig = null;
+
+  // container with the TCDSLPM FunctionManager for local runs
+  public QualifiedResourceContainer containerFMTCDSLPM = null;
+
+  // container with all FunctionManagers except the EvmTrig and TCDSLPM
+  public QualifiedResourceContainer containerFMChildrenNoEvmTrigNoTCDSLPM = null;
+
+  public QualifiedResourceContainer containerFMChildrenL2Priority1 = null;
+  public QualifiedResourceContainer containerFMChildrenL2Priority2 = null;
+  public QualifiedResourceContainer containerFMChildrenL2Laser = null;
+  public QualifiedResourceContainer containerFMChildrenEvmTrig = null;
+  public QualifiedResourceContainer containerFMChildrenNormal = null;
 
   // used to derive the state from the resources i.e. child FMs
   public StateVectorCalculation svCalc = null;
@@ -115,6 +137,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   // the actual calculated State.
   public State calcState = null;
 
+	protected HCALEventHandler theEventHandler = null;
   // switch to find out if FM is available
   private boolean destroyed = false;
 
@@ -161,7 +184,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public boolean Level2FM = false;
 
   // switch to enable async SOAP communication with the HCAL supervisor
-  public boolean asynchcalSupervisor = false;
+  public boolean asynchcalSupervisor = true;
 
   // switch to force switch off all async communication 
   public boolean ForceNotToUseAsyncCommunication = false;
@@ -197,6 +220,10 @@ public class HCALFunctionManager extends UserFunctionManager {
   // switch to find out if this FM is configuring for the very first time
   protected Boolean VeryFirstConfigure = true;
 
+	public HCALStateNotificationHandler theStateNotificationHandler = null;
+
+  public String rcmsStateListenerURL = "";
+
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
 
@@ -230,11 +257,15 @@ public class HCALFunctionManager extends UserFunctionManager {
     // add SetParameterHandler
     addEventHandler(new HCALSetParameterHandler());
 
+		// state notification handler
+    theStateNotificationHandler = new HCALStateNotificationHandler();
+		addEventHandler(theStateNotificationHandler);
+
     // get log session connector
     logSessionConnector = getLogSessionConnector();
 
     // get session ID
-    getSessionId();
+    //getSessionId();
   }
 
   public void createAction(ParameterSet<CommandParameter> cps) throws UserActionException {
@@ -257,6 +288,22 @@ public class HCALFunctionManager extends UserFunctionManager {
     DateFormat dateFormatter = new SimpleDateFormat("M/d/yy hh:mm:ss a z");
     dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));;
     utcFMtimeofstart = dateFormatter.format(FMtimeofstart);
+
+    // set statelistener URL
+    try {
+			URL fmURL = new URL(FMurl);
+			String rcmsStateListenerHost = fmURL.getHost();
+			int rcmsStateListenerPort = fmURL.getPort()+1;
+			String rcmsStateListenerProtocol = fmURL.getProtocol();
+			rcmsStateListenerURL = rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms";
+		} catch (MalformedURLException e) {
+			String errMessage = "[HCAL " + FMname + "] Error! MalformedURLException in createAction" + e.getMessage();
+			logger.error(errMessage,e);
+			sendCMSError(errMessage);
+			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+			if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+		}
 
     FMpartition = FMname.substring(5);
 
@@ -424,21 +471,29 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     // catch very early state calculation problem when svCalc is not constructed
     if (svCalc == null) {
-      logger.debug("[HCAL " + FMname + "] scCalc not constructed.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
+      logger.debug("[HCAL " + FMname + "] svCalc not constructed.\nThis should be OK when happens very early i.e. when initializing a run configuration." );
       return this.getState();
     }
 
     // if child FMs are available calculate the resulting state incorporate the state of all child FMs 
-    if (containerFMChildren.isEmpty() && containerFUResourceBroker.isEmpty() && containerFUEventProcessor.isEmpty() && containerStorageManager.isEmpty() ) {
-      logger.debug("[HCAL " + FMname + "] No FM resources for asynchronous state transitions found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + FMrole);
-      return this.getState();
-    }
-    else {
-      logger.debug("[HCAL " + FMname + "] FM resources for asynchronous state transitions found.\nThis FM has the role: " + FMrole);
+    //if (containerFMChildren.isEmpty() && containerFUResourceBroker.isEmpty() && containerFUEventProcessor.isEmpty() && containerStorageManager.isEmpty() ) {
+    //  logger.debug("[HCAL " + FMname + "] No FM resources for asynchronous state transitions found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + FMrole);
+    //  return this.getState();
+    //}
+    //else {
+      //logger.warn("[HCAL " + FMname + "] getUpdatedState(): Do stateVector calculation for FM with the role: " + FMrole);
+      // SIC TEST
+      //Iterator it = containerFMChildren.getQualifiedResourceList().iterator();
+      //FunctionManager fmChild = null;
+      //while (it.hasNext()) {
+      //  fmChild = (FunctionManager) it.next();
+      //  logger.warn("[HCAL " + FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole() + " and state: " + fmChild.getState().getStateString());
+      //}
+      // SIC TEST
       calcState = svCalc.getState();
-    }
+    //}
 
-    logger.debug("[HCAL " + FMname + "] the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
+    //logger.warn("[HCAL " + FMname + "] getUpdatedState(): the new state of this FM - incorporating the states of all controlled resources - is: " + calcState.getStateString());
 
     logger.debug("[HCAL " + FMname + "] ... getting the updated state done.");
 
@@ -458,7 +513,8 @@ public class HCALFunctionManager extends UserFunctionManager {
       Set<QualifiedResource> resourceGroup = qualifiedGroup.getQualifiedResourceGroup();
       svCalc = new StateVectorCalculation(resourceGroup);
 
-
+      // all FM's are assumed to have either a supervisor or an LPMController which will give state notifications via xdaq2rc
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.INITIAL);
@@ -466,6 +522,20 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
+			if (!containerFMChildren.isEmpty())
+      {
+        StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.INITIALIZING);
+        sv.registerConditionState(containerFMChildren,HCALStates.INITIALIZING);
+        // not needed as level-2's can ignore calculating INITIALIZING
+        //sv.registerConditionState(containerlpmController,HCALStates.HALTING);
+        svCalc.add(sv);
+      }
+
+
+			//   the level-2's fire SETHALT on themselves at the end of initAction without any state calculations
+			//   but they will calculate this if reset/halt/recoverAction is called
+			//     in that case, the state should be calculated from either the supervisor or the LPM
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.HALTED);
@@ -473,6 +543,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFUResourceBroker,HCALStates.HALTED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.HALTED);
         sv.registerConditionState(containerStorageManager,HCALStates.HALTED);
+        sv.registerConditionState(containerlpmController,HCALStates.HALTED);
         if (asynchcalSupervisor) {
           sv.registerConditionState(containerhcalSupervisor,HCALStates.UNINITIALIZED);
         }
@@ -481,23 +552,38 @@ public class HCALFunctionManager extends UserFunctionManager {
 
       {
         StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.CONFIGURING);
+        sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
+        sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
+        if (asynchcalSupervisor) {
+          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
+        }
+        svCalc.add(sv);
+      }
+
+
+      {
+        StateVector sv = new StateVector();
         sv.setResultState(HCALStates.CONFIGURED);
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURED);
         sv.registerConditionState(containerFUResourceBroker,HCALStates.READY);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.READY);
         sv.registerConditionState(containerStorageManager,HCALStates.READY);
+        sv.registerConditionState(containerlpmController,HCALStates.CONFIGURED);
         if (asynchcalSupervisor) {
           sv.registerConditionState(containerhcalSupervisor,HCALStates.READY);
         }
         svCalc.add(sv);
       }
 
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RESUMING);
         sv.registerConditionState(containerFMChildren,HCALStates.RESUMING);
         svCalc.add(sv);
       }
+
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RUNNING);
@@ -505,6 +591,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
         sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
+        sv.registerConditionState(containerlpmController,HCALStates.ENABLED);
         if (asynchcalSupervisor) {
           sv.registerConditionState(containerhcalSupervisor,HCALStates.ACTIVE);
         }
@@ -513,11 +600,38 @@ public class HCALFunctionManager extends UserFunctionManager {
 
       {
         StateVector sv = new StateVector();
-        sv.setResultState(HCALStates.STOPPING);
-        sv.registerConditionState(containerFMChildren,HCALStates.STOPPING);
+        sv.setResultState(HCALStates.RUNNINGDEGRADED);
+        sv.registerConditionState(containerFMChildren,HCALStates.RUNNINGDEGRADED);
+        sv.registerConditionState(containerFUResourceBroker,HCALStates.ENABLED);
+        sv.registerConditionState(containerFUEventProcessor,HCALStates.ENABLED);
+        sv.registerConditionState(containerStorageManager,HCALStates.ENABLED);
+        sv.registerConditionState(containerlpmController,HCALStates.ENABLED);
+        if (asynchcalSupervisor) {
+          sv.registerConditionState(containerhcalSupervisor,HCALStates.ACTIVE);
+        }
         svCalc.add(sv);
       }
 
+			if (!containerFMChildren.isEmpty())
+      {
+        StateVector sv = new StateVector();
+        sv.setResultState(HCALStates.STOPPING);
+        sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
+				sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
+        sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
+        svCalc.add(sv);
+      }
+
+//FIXME combine the two stopping SVs
+      //{
+      //  StateVector sv = new StateVector();
+      //  sv.setResultState(HCALStates.STOPPING);
+      //  sv.registerConditionState(containerFMChildrenNoEvmTrig,HCALStates.RUNNING);
+      //  sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
+      //  svCalc.add(sv);
+      //}
+
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.PAUSED);
@@ -532,23 +646,30 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFUResourceBroker,HCALStates.ERROR);
         sv.registerConditionState(containerFUEventProcessor,HCALStates.ERROR);
         sv.registerConditionState(containerStorageManager,HCALStates.ERROR);
+        sv.registerConditionState(containerlpmController,HCALStates.ERROR);
         if (asynchcalSupervisor) {
-          sv.registerConditionState(containerhcalSupervisor,HCALStates.ERROR);
+          sv.registerConditionState(containerhcalSupervisor,HCALStates.FAILED);
         }
         svCalc.add(sv);
       }
+
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.PREPARING_TTSTEST_MODE);
         sv.registerConditionState(containerFMChildren,HCALStates.PREPARING_TTSTEST_MODE);
         svCalc.add(sv);
       }
+
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.TTSTEST_MODE);
         sv.registerConditionState(containerFMChildren,HCALStates.TTSTEST_MODE);
         svCalc.add(sv);
       }
+
+			if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.TESTING_TTS);
@@ -662,7 +783,83 @@ public class HCALFunctionManager extends UserFunctionManager {
         logger.warn("[HCAL " + FMname + "] " + getClass().toString() + ": Failed to send error message " + errMessage);
       }
     }
+
+    // access the HCALParameters object
     public HCALParameters getHCALparameterSet() {
       return this.hcalParameters;
     }
+
+
+	/**----------------------------------------------------------------------
+	 * set the current Action
+	 */
+	public void setAction(String action) {
+
+		getParameterSet().put(new FunctionManagerParameter<StringT>
+				(HCALParameters.ACTION_MSG,new StringT(action)));
+		return;
+	}
+
+	/**----------------------------------------------------------------------
+	*/
+	String findApplicationName( String id ) throws Exception {
+
+		List<XdaqApplication> apps = containerXdaqApplication.getApplications();
+		Iterator appIterator = apps.iterator();
+		while( appIterator.hasNext( ) ) {
+			XdaqApplication app = (XdaqApplication)appIterator.next();
+			if ( app.getURI().toString().equals( id ) )
+				return app.getApplication();
+		}
+
+		return "";
+	}
+
+	/**----------------------------------------------------------------------
+	 * go to the error state, setting messages and so forth, with exception
+	 */
+	public void goToError(String errMessage, Exception e) {
+		logger.error(errMessage,e);
+		sendCMSError(errMessage);
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+		if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+	}
+
+	/**----------------------------------------------------------------------
+	 * go to the error state, setting messages and so forth, without exception
+	 */
+	public void goToError(String errMessage) {
+		logger.error(errMessage);
+		sendCMSError(errMessage);
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+		if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+	}
+
+	/**----------------------------------------------------------------------
+	 * halt the LPM controller 
+	 */
+	public void haltLPMControllers() {
+		if (!containerlpmController.isEmpty()) {
+			XdaqApplication lpmApp = null;
+			try {
+				logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
+				Iterator it = containerlpmController.getQualifiedResourceList().iterator();
+				while (it.hasNext()) {
+					lpmApp = (XdaqApplication) it.next();
+          //XXX FIXME use real session ID here eventually
+					lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
+				}
+			}
+			catch (Exception e) {
+				String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
+				logger.error(errMessage,e);
+				sendCMSError(errMessage);
+				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+				if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+			}
+		}
+	}
 }

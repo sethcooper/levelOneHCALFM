@@ -18,7 +18,6 @@ import java.lang.Double;
 import java.util.Iterator;
 import java.math.BigInteger;
 import java.net.URI;
-import java.net.URL;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.text.DecimalFormat;
@@ -80,6 +79,7 @@ import rcms.statemachine.definition.Input;
 import rcms.fm.fw.user.UserEvent;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.fm.fw.user.UserEventHandler;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.common.db.DBConnectorException;
@@ -105,6 +105,9 @@ import rcms.utilities.runinfo.RunInfoConnectorIF;
 import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
+import rcms.utilities.fm.task.CompositeTask;
+import rcms.utilities.fm.task.SimpleTask;
+import rcms.utilities.fm.task.TaskSequence;
 import rcms.fm.resource.CommandException;
 import rcms.util.logsession.LogSessionConnector;
 import rcms.util.logsession.LogSessionException;
@@ -122,7 +125,7 @@ import net.hep.cms.xdaqctl.xdata.XDataType;
  * @maintainer John Hakala
  */
 
-public class HCALEventHandler extends UserStateNotificationHandler {
+public class HCALEventHandler extends UserEventHandler {
 
   public static final String XDAQ_NS = "urn:xdaq-soap:3.0";
 
@@ -166,9 +169,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // Switch to select primary or secondary TCDS system--should be true until we get a secondary TCDS system
   public boolean UsePrimaryTCDS = true;
-
-  // MonLogger application control switch
-  Boolean HandleMonLoggers = false;
 
   // Switch for whether a TriggerAdapter is used in the configuration. Default is false, as in global runs
   //public Boolean HandleTriggerAdapter = false;
@@ -236,15 +236,17 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   protected String SpecialZeroSuppressionSnippetName="/HTR/SpecialZeroSuppression.cfg/pro";
   protected String VdMSnippetName="/LUMI/VdM.cfg/pro";
 
+  // CfgCVSBasePath = Base path to read CVS Cfgs
+  public String CfgCVSBasePath ="";
+
   // XMAS related stuff
   protected String WSE_FILTER = "empty";
 
   public HCALEventHandler() throws rcms.fm.fw.EventHandlerException {
-    // this handler inherits UserStateNotificationHandler so it is already registered for StateNotification events
 
-    // Let's register also the StateEnteredEvent triggered when the FSM enters in a new state.
+    // Let's register the StateEnteredEvent triggered when the FSM enters in a new state.
     subscribeForEvents(StateEnteredEvent.class);
-    subscribeForEvents(UserEvent.class);
+    //subscribeForEvents(UserEvent.class);
 
     addAction(HCALStates.INITIALIZING,            "initAction");
     addAction(HCALStates.CONFIGURING,             "configureAction");
@@ -262,8 +264,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   }
 
   public void init() throws rcms.fm.fw.EventHandlerException {
-   logger.info("[HCAL " + functionManager.FMname + "]:  Executed init()");
-   xmlHandler = new HCALxmlHandler(this.functionManager);
+    logger.info("[HCAL " + functionManager.FMname + "]:  Executing HCALEventHandler::init()");
+    xmlHandler = new HCALxmlHandler(this.functionManager);
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
     {
@@ -278,22 +280,17 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String doRunInfoPublish =  "";
       try{
-        if(!xmlHandler.getHCALuserXML().equals(null) && !xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").equals(null) && xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").getLength() == 1 ) { 
-          
-          doRunInfoPublish = xmlHandler.getHCALuserXML().getElementsByTagName("RunInfoPublish").item(0).getTextContent();
-        }
+        doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
       }
-      if (doRunInfoPublish.equals("true_butwithnoRunInfoFromXDAQ")) {
-        logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
-        RunInfoPublish = true;
-      }
       if (doRunInfoPublish.equals("true")) {
         logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
         RunInfoPublish = true;
-        RunInfoPublishfromXDAQ = true;
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
+      }else{
+        logger.warn("[Martin Log HCAL base] Invalid text Content in RunInfoPublish tag of the userXML");
       }
     }
 
@@ -301,23 +298,15 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useOfficialRunNumbers = "";
       try {
-        if ( !xmlHandler.getHCALuserXML().equals(null) && !xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").equals(null) && xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").getLength() == 1  ) {
-         useOfficialRunNumbers = xmlHandler.getHCALuserXML().getElementsByTagName("OfficialRunNumbers").item(0).getTextContent();
-        } 
+        useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
-      }
-      if (useOfficialRunNumbers.equals("true_butwithnoRunInfoFromXDAQ")) {
-        logger.warn("[HCAL base] using offical run numbers for this session: " + sessionId.toString() + " (publishing to RunInfo is therefore switched on too)");
-        OfficialRunNumbers = true;
-        RunInfoPublish = true;
       }
       if (useOfficialRunNumbers.equals("true")) {
         logger.warn("[HCAL base] using offical run numbers for this session: " + sessionId.toString() + " (publishing to RunInfo and the info from the RunInfo XDAQ application is therefore switched on too)");
         OfficialRunNumbers = true;
         RunInfoPublish = true;
-        RunInfoPublishfromXDAQ = true;
       }
     }
 
@@ -344,7 +333,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useTestMode = "";
       try {
-          useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
+        useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -355,63 +344,63 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
     }
 
-//    // XMAS initalization and subscription
-//    // TODO: is this useful?
-//    {
-//      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
-//      if (!functionManager.RunInfoFlashlistName.equals("")) {
-//        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
-//
-//        functionManager.XMASMonitoringEnabled = true;
-//
-//        functionManager.wseMap = new HashMap<String,WSESubscription>();
-//
-//        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
-//
-//        // Get WSEs
-//        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
-//
-//        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//
-//    //    // Subscription to the WSEs
-//        for (QualifiedResource qr : functionManager.wseList) {
-//          try {
-//            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
-//            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
-//            functionManager.wsSubscription.setFilter(WSE_FILTER);
-//
-//            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
-//
-//            try {
-//              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
-//              functionManager.wsSubscription.subscribe();
-//            }
-//            catch (XDAQTimeoutException e) {
-//              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//            catch (Exception e){
-//              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//
-//          }
-//          catch (XDAQMessageException e) {
-//            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
-//            logger.error(errMessage,e);
-//            functionManager.sendCMSError(errMessage);
-//          }
-//
-//          // Store subscriptions for later use e.g. unsubscriptions, etc.
-//          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
-//
-//          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
-//        }
-//      }
-//    }
+    //    // XMAS initalization and subscription
+    //    // TODO: is this useful?
+    //    {
+    //      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
+    //      if (!functionManager.RunInfoFlashlistName.equals("")) {
+    //        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
+    //
+    //        functionManager.XMASMonitoringEnabled = true;
+    //
+    //        functionManager.wseMap = new HashMap<String,WSESubscription>();
+    //
+    //        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
+    //
+    //        // Get WSEs
+    //        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
+    //
+    //        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+    //
+    //    //    // Subscription to the WSEs
+    //        for (QualifiedResource qr : functionManager.wseList) {
+    //          try {
+    //            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+    //            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
+    //            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
+    //            functionManager.wsSubscription.setFilter(WSE_FILTER);
+    //
+    //            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
+    //
+    //            try {
+    //              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
+    //              functionManager.wsSubscription.subscribe();
+    //            }
+    //            catch (XDAQTimeoutException e) {
+    //              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
+    //              logger.error(errMessage,e);
+    //              functionManager.sendCMSError(errMessage);
+    //            }
+    //            catch (Exception e){
+    //              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
+    //              logger.error(errMessage,e);
+    //              functionManager.sendCMSError(errMessage);
+    //            }
+    //
+    //          }
+    //          catch (XDAQMessageException e) {
+    //            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
+    //            logger.error(errMessage,e);
+    //            functionManager.sendCMSError(errMessage);
+    //          }
+    //
+    //          // Store subscriptions for later use e.g. unsubscriptions, etc.
+    //          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
+    //
+    //          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
+    //        }
+    //      }
+    //    }
 
 
     // Check if the userXML specifies whether the AsyncEnable feature should be used
@@ -435,7 +424,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     {
       String useStopATCP = "";
       try {
-          useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
+        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -496,6 +485,25 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         logger.info("[HCAL base] Default number of events to take set to: " + DefaultNumberOfEvents.toString());
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.NUMBER_OF_EVENTS,new IntegerT(DefaultNumberOfEvents)));
       }
+    }
+
+    // Get the CfgCVSBasePath in the userXML
+    {
+      String DefaultCfgCVSBasePath = "/nfshome0/hcalcfg/cvs/RevHistory/";
+      //String DefaultCfgCVSBasePath = "/data/cfgcvs/cvs/RevHistory/";
+      String theCfgCVSBasePath = "";
+      try { theCfgCVSBasePath=xmlHandler.getHCALuserXMLelementContent("CfgCVSBasePath"); }
+      catch (UserActionException e) { logger.warn(e.getMessage()); }
+      if (!theCfgCVSBasePath.equals("")) {
+        CfgCVSBasePath = theCfgCVSBasePath;
+      } else{
+        CfgCVSBasePath = DefaultCfgCVSBasePath;
+      }
+      //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
+      logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
+
     }
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
@@ -670,7 +678,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         } 
         //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File("/nfshome0/hcalcfg/cvs/RevHistory/" + selectedRun + "/pro"));
+        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         DOMSource domSource = new DOMSource(masterSnippet);
@@ -715,7 +723,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
         logger.debug(xmlString);
         logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        configString = xmlString;
+        //configString = xmlString;
+        configString = ConfigDoc;
       }
       catch (TransformerException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
@@ -724,202 +733,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     catch (DOMException | ParserConfigurationException | SAXException | IOException  | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
     }
-    String TmpCfgScript = "";
-
-    // Check for a definition of the CfgScript for the LV1
-    if (!FullCfgScript.equals("not set")) {
-      TmpCfgScript += FullCfgScript;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1CfgScript:\n" + FullCfgScript);
-    }
-
-    // Getting the base directory of the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
-    }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the CfgScript or have a CVSCfgScript section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // Add the local CfgScript if found
-    String LocalCfgScript = GetUserXMLElement("CfgScript");
-    if (!LocalCfgScript.equals("")) {
-
-      TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local CfgScript defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // Parse the lines found in the CVSCfgScript area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based CfgScript section in userXML found.\nHere is it:\n" + LocalCfgScript);
-
-      Boolean foundZSSnippet = false;
-      Boolean foundSpecialZSSnippet = false;
-      Boolean foundVdMSnippet = false;
-
-      {
-        String CVSCfgScriptLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCfgScript));
-
-        try {
-          while ((CVSCfgScriptLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSCfgScriptLineToParse.length() > 0) && (!CVSCfgScriptLineToParse.startsWith("#")) ) {
-              Scanner s = new Scanner(CVSCfgScriptLineToParse);
-
-              // The syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use the exact whitespaces as in this example!! (courtesy of arno)
-
-              // TODO startstop-here
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // Check whether the lines could be parsed correctly, "in principle though ..." (ibid.)
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSCfgScript line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getCfgScript()! Parsing of CfgScript failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSCfgScript is: " + LocalCfgScript;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // Make a proper file name for the CfgScript being loaded
-                String CVSCfgScriptFileName = CfgCVSBasePath;
-                CVSCfgScriptFileName += result.group(2);
-                CVSCfgScriptFileName += "/";
-                CVSCfgScriptFileName += result.group(4);
-
-                String LocalCfgScriptFromFile = "";
-                {
-                  // Detect the zero supression snippet tag
-                  String smallCVSCfgScriptFileName = result.group(2);
-                  smallCVSCfgScriptFileName += "/";
-                  smallCVSCfgScriptFileName += result.group(4);
-
-                  // Get the CfgScript snippet and add it to the used TmpCfgScript
-                  logger.debug("[HCAL " + functionManager.FMname + "] Loading a CfgScript snippet from a from file named: " + CVSCfgScriptFileName);
-
-                  // CFG snippet blocking mechanism by means of the given RUN_KEY // TODO translate this
-                  // TODO Add comments that are intelligible to humans
-                  {
-                    Boolean SnippetNotBlocked = true;
-
-                    // zero supression
-                    if (!functionManager.useZS && (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + ZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // special zero suppression
-                    if (!functionManager.useSpecialZS && (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special zero suppression CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + SpecialZeroSuppressionSnippetName +"\n";
-                    }
-
-                    // VdM scan options
-                    if (!functionManager.useVdMSnippet && (smallCVSCfgScriptFileName.equals(VdMSnippetName))) {
-                      SnippetNotBlocked = false;
-                    }
-                    else {
-                      logger.warn("[HCAL " + functionManager.FMname + "] HCAL special zero suppression snippet named: " + CVSCfgScriptFileName + " blocked by the used RUN_KEY!\nTo enable the special zero supression use the appropriate RUN_KEY.");
-                      LocalCfgScriptFromFile = "# The special VdM scan CFG snippet found here was blocked by a RUN_KEY.\n# The name of the blocked snippet is: " + VdMSnippetName +"\n";
-                    }
-
-                    if (SnippetNotBlocked) { LocalCfgScriptFromFile = readTextFile(CVSCfgScriptFileName); }
-                  }
-
-                  // sanity checks if there are CFG snippet name ambiguities
-                  if (smallCVSCfgScriptFileName.equals(ZeroSuppressionSnippetName)) {
-                    foundZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(SpecialZeroSuppressionSnippetName)) {
-                    foundSpecialZSSnippet = true;
-                  }
-
-                  if (smallCVSCfgScriptFileName.equals(VdMSnippetName)) {
-                    foundVdMSnippet = true;
-                  }
-
-                }
-
-                if (!LocalCfgScriptFromFile.equals("")) {
-
-                  TmpCfgScript += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpCfgScript += LocalCfgScriptFromFile;
-                  TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSCfgScriptFileName + " a definition of a CfgScript - good!\nIt looks like this:\n" + LocalCfgScriptFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] CfgScript from CVS based file named: " + CVSCfgScriptFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              // TODO startstop-here
-              else {
-                TmpCfgScript += CVSCfgScriptLineToParse + "\n";
-              }
-            }
-
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getCfgScript()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpCfgScript += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local CfgScript\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Found definition of a CfgScript is this FM userXML.\nIt looks like this:\n" + LocalCfgScript);
-
-      // sanity checks if there are CFG snippet name ambiguities
-      if (!RunType.equals("local")) {
-        if (functionManager.useZS && (!foundZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a zero supression HCAL Cfg snippet!\nThe name looked for was: " + ZeroSuppressionSnippetName);
-        }
-        if (functionManager.useSpecialZS && (!foundSpecialZSSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special zero supression HCAL Cfg snippet!\nThe name looked for was: " + SpecialZeroSuppressionSnippetName);
-        }
-        if (functionManager.useVdMSnippet && (!foundVdMSnippet)) {
-          logger.warn("[HCAL " + functionManager.FMname + "] Did not find a special VdM scan snippet!\nThe name looked for was: " + VdMSnippetName);
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No CfgScript found in userXML of this FM.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullCfgScript = TmpCfgScript;
-
+    FullCfgScript=configString;
     logger.debug("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
 
-    FullCfgScript=configString;
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
   }
 
@@ -927,214 +743,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getTTCciControl() {
-    String TmpTTCciControl = "";
-
-    // check for LV1 TTCciControl definition
-    if (!FullTTCciControlSequence.equals("not set")) {
-      TmpTTCciControl += FullTTCciControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1TTCciControl:\n" + FullTTCciControlSequence);
+    String tmpTTCciControlSequence="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: This FM is going to parse TTCciControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "TTCciControl";
+      tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    catch (  UserActionException e) {
+      logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml in getTTCciControl: " + e.getMessage());
     }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the TTCciControl section or have a CVSTTCciControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add TTCciControls from a CVS maintained file - if defined
-    String LocalCVSTTCciControl = GetUserXMLElement("CVSTTCciControl");
-    if (!LocalCVSTTCciControl.equals("")) {
-
-      // parsing the lines found in the CVSTTCciControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
-
-      {
-        String CVSTTCciControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSTTCciControl));
-
-        try {
-          while ((CVSTTCciControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTTCciControlLineToParse.length() > 0) && (!CVSTTCciControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTTCciControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTTCciControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTTCciControl()! Parsing of CVSTTCciControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTTCciControl is: " + LocalCVSTTCciControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the TTCciControl snippet from a file
-              String CVSTTCciControlFileName = CfgCVSBasePath;
-              CVSTTCciControlFileName += result.group(2);
-              CVSTTCciControlFileName += "/";
-              CVSTTCciControlFileName += result.group(4);
-
-              // getting the TTCciControl snippet and adding it to the used TmpTTCciControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a TTCciControl snippet from a from file named: " + CVSTTCciControlFileName);
-
-              String LocalTTCciControlFromFile = readTextFile(CVSTTCciControlFileName);
-
-              if (!LocalTTCciControlFromFile.equals("")) {
-
-                TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpTTCciControl += LocalTTCciControlFromFile;
-                TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTTCciControlFileName + " a definition of a TTCciControl - good!\nIt looks like this:\n" + LocalTTCciControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] TTCciControl from CVS based file named: " + CVSTTCciControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTTCciControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based TTCciControl area found in userXML ..."); }
-    }
-
-    // add local TTCciControl - if available
-    String LocalTTCciControl = GetUserXMLElement("TTCciControl");
-    if (!LocalTTCciControl.equals("")) {
-
-      TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local TTCciControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSTTCciControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TTCciControl section in userXML found.\nHere is it:\n" + LocalCVSTTCciControl);
-
-      {
-        String CVSTTCciControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalTTCciControl));
-
-        try {
-          while ((CVSTTCciControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTTCciControlLineToParse.length() > 0) && (!CVSTTCciControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTTCciControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTTCciControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTTCciControl()! Parsing of CVSTTCciControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTTCciControl is: " + LocalCVSTTCciControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the TTCciControl snippet from a file
-                String CVSTTCciControlFileName = CfgCVSBasePath;
-                CVSTTCciControlFileName += result.group(2);
-                CVSTTCciControlFileName += "/";
-                CVSTTCciControlFileName += result.group(4);
-
-                // getting the TTCciControl snippet and adding it to the used TmpTTCciControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a TTCciControl snippet from a from file named: " + CVSTTCciControlFileName);
-
-                String LocalTTCciControlFromFile = readTextFile(CVSTTCciControlFileName);
-
-                if (!LocalTTCciControlFromFile.equals("")) {
-
-                  TmpTTCciControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpTTCciControl += LocalTTCciControlFromFile;
-                  TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTTCciControlFileName + " a definition of a TTCciControl - good!\nIt looks like this:\n" + LocalTTCciControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] TTCciControl from CVS based file named: " + CVSTTCciControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpTTCciControl += CVSTTCciControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTTCciControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpTTCciControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local TTCciControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using TTCciControl:\n" + LocalTTCciControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No TTCciControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullTTCciControlSequence = TmpTTCciControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
-
+    FullTTCciControlSequence = tmpTTCciControlSequence;
+    logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
   }
 
@@ -1142,213 +762,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getLTCControl() {
-    String TmpLTCControl = "";
-
-    // check for LV1 LTCControl definition
-    if (!FullLTCControlSequence.equals("not set")) {
-      TmpLTCControl += FullLTCControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1LTCControl:\n" + FullLTCControlSequence);
+    String tmpLTCControlSequence="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LTCControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "LTCControl";
+      tmpLTCControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    catch ( UserActionException e) {
+      logger.error("[Martin logHCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml in getLTCControl: " + e.getMessage());
     }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LTCControl section or have a CVSLTCControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add LTCControls from a CVS maintained file - if defined
-    String LocalCVSLTCControl = GetUserXMLElement("CVSLTCControl");
-    if (!LocalCVSLTCControl.equals("")) {
-
-      // parsing the lines found in the CVSLTCControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LTCControl section in userXML found.\nHere is it:\n" + LocalCVSLTCControl);
-
-      {
-        String CVSLTCControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSLTCControl));
-
-        try {
-          while ((CVSLTCControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLTCControlLineToParse.length() > 0) && (!CVSLTCControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLTCControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLTCControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLTCControl()! Parsing of CVSLTCControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLTCControl is: " + LocalCVSLTCControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the LTCControl snippet from a file
-              String CVSLTCControlFileName = CfgCVSBasePath;
-              CVSLTCControlFileName += result.group(2);
-              CVSLTCControlFileName += "/";
-              CVSLTCControlFileName += result.group(4);
-
-              // getting the LTCControl snippet and adding it to the used TmpLTCControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a LTCControl snippet from a from file named: " + CVSLTCControlFileName);
-
-              String LocalLTCControlFromFile = readTextFile(CVSLTCControlFileName);
-
-              if (!LocalLTCControlFromFile.equals("")) {
-
-                TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpLTCControl += LocalLTCControlFromFile;
-                TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLTCControlFileName + " a definition of a LTCControl - good!\nIt looks like this:\n" + LocalLTCControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] LTCControl from CVS based file named: " + CVSLTCControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLTCControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based LTCControl area found in userXML ..."); }
-    }
-
-    // add local LTCControl - if available
-    String LocalLTCControl = GetUserXMLElement("LTCControl");
-    if (!LocalLTCControl.equals("")) {
-
-      TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local LTCControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSLTCControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LTCControl section in userXML found.\nHere is it:\n" + LocalCVSLTCControl);
-
-      {
-        String CVSLTCControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalLTCControl));
-
-        try {
-          while ((CVSLTCControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLTCControlLineToParse.length() > 0) && (!CVSLTCControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLTCControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLTCControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLTCControl()! Parsing of CVSLTCControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLTCControl is: " + LocalCVSLTCControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the LTCControl snippet from a file
-                String CVSLTCControlFileName = CfgCVSBasePath;
-                CVSLTCControlFileName += result.group(2);
-                CVSLTCControlFileName += "/";
-                CVSLTCControlFileName += result.group(4);
-
-                // getting the LTCControl snippet and adding it to the used TmpLTCControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a LTCControl snippet from a from file named: " + CVSLTCControlFileName);
-
-                String LocalLTCControlFromFile = readTextFile(CVSLTCControlFileName);
-
-                if (!LocalLTCControlFromFile.equals("")) {
-
-                  TmpLTCControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpLTCControl += LocalLTCControlFromFile;
-                  TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLTCControlFileName + " a definition of a LTCControl - good!\nIt looks like this:\n" + LocalLTCControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] LTCControl from CVS based file named: " + CVSLTCControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpLTCControl += CVSLTCControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLTCControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      TmpLTCControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local LTCControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using LTCControl:\n" + LocalLTCControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] No LTCControl found in userXML.\nProbably this is OK if no LTC is used for this run config ..."); }
-    }
-
-    FullLTCControlSequence = TmpLTCControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
+    FullLTCControlSequence = tmpLTCControlSequence;
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
 
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(FullLTCControlSequence)));
   }
@@ -1357,213 +782,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getTCDSControl() {
-    String TmpTCDSControl = "";
-
-    // check for LV1 TCDSControl definition
-    if (!FullTCDSControlSequence.equals("not set") && !TmpTCDSControl.contains(FullTCDSControlSequence)) {
-      TmpTCDSControl += FullTCDSControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1TCDSControl:\n" + FullTCDSControlSequence);
+    String tmpTCDSControlSequence="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse TCDSControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "TCDSControl";
+      tmpTCDSControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    catch ( UserActionException e) {
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml in getTCDSControl(): " + e.getMessage());
     }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the TCDSControl section or have a CVSTCDSControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add TCDSControls from a CVS maintained file - if defined
-    String LocalCVSTCDSControl = GetUserXMLElement("CVSTCDSControl");
-    if (!LocalCVSTCDSControl.equals("")) {
-
-      // parsing the lines found in the CVSTCDSControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TCDSControl section in userXML found.\nHere is it:\n" + LocalCVSTCDSControl);
-
-      {
-        String CVSTCDSControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSTCDSControl));
-
-        try {
-          while ((CVSTCDSControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTCDSControlLineToParse.length() > 0) && (!CVSTCDSControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTCDSControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTCDSControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTCDSControl()! Parsing of CVSTCDSControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTCDSControl is: " + LocalCVSTCDSControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the TCDSControl snippet from a file
-              String CVSTCDSControlFileName = CfgCVSBasePath;
-              CVSTCDSControlFileName += result.group(2);
-              CVSTCDSControlFileName += "/";
-              CVSTCDSControlFileName += result.group(4);
-
-              // getting the TCDSControl snippet and adding it to the used TmpTCDSControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a TCDSControl snippet from a from file named: " + CVSTCDSControlFileName);
-
-              String LocalTCDSControlFromFile = readTextFile(CVSTCDSControlFileName);
-
-              if (!LocalTCDSControlFromFile.equals("") && !TmpTCDSControl.contains(LocalTCDSControlFromFile)) {
-
-                //                TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpTCDSControl += LocalTCDSControlFromFile;
-                //                TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTCDSControlFileName + " a definition of a TCDSControl - good!\nIt looks like this:\n" + LocalTCDSControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] TCDSControl from CVS based file named: " + CVSTCDSControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTCDSControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based TCDSControl area found in userXML ..."); }
-    }
-
-    // add local TCDSControl - if available
-    String LocalTCDSControl = GetUserXMLElement("TCDSControl");
-    if (!LocalTCDSControl.equals("")) {
-
-      //      TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local TCDSControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSTCDSControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based TCDSControl section in userXML found.\nHere is it:\n" + LocalCVSTCDSControl);
-
-      {
-        String CVSTCDSControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalTCDSControl));
-
-        try {
-          while ((CVSTCDSControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSTCDSControlLineToParse.length() > 0) && (!CVSTCDSControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSTCDSControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSTCDSControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getTCDSControl()! Parsing of CVSTCDSControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSTCDSControl is: " + LocalCVSTCDSControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the TCDSControl snippet from a file
-                String CVSTCDSControlFileName = CfgCVSBasePath;
-                CVSTCDSControlFileName += result.group(2);
-                CVSTCDSControlFileName += "/";
-                CVSTCDSControlFileName += result.group(4);
-
-                // getting the TCDSControl snippet and adding it to the used TmpTCDSControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a TCDSControl snippet from a from file named: " + CVSTCDSControlFileName);
-
-                String LocalTCDSControlFromFile = readTextFile(CVSTCDSControlFileName);
-
-                if (!LocalTCDSControlFromFile.equals("") && !TmpTCDSControl.contains(LocalTCDSControlFromFile)) {
-
-                  //                  TmpTCDSControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpTCDSControl += LocalTCDSControlFromFile;
-                  //                  TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSTCDSControlFileName + " a definition of a TCDSControl - good!\nIt looks like this:\n" + LocalTCDSControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] TCDSControl from CVS based file named: " + CVSTCDSControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else if (!TmpTCDSControl.contains(CVSTCDSControlLineToParse)){
-                TmpTCDSControl += CVSTCDSControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getTCDSControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpTCDSControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local TCDSControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using TCDSControl:\n" + LocalTCDSControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No TCDSControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullTCDSControlSequence = TmpTCDSControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
+    FullTCDSControlSequence = tmpTCDSControlSequence;
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
 
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTCDSControlSequence)));
   }
@@ -1572,213 +802,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getLPMControl() {
-    String TmpLPMControl = "";
-
-    // check for LV1 LPMControl definition
-    if (!FullLPMControlSequence.equals("not set")) {
-      TmpLPMControl += FullLPMControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1LPMControl:\n" + FullLPMControlSequence);
+    String tmpLPMControlSequence="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LPMControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "LPMControl";
+      tmpLPMControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    catch ( UserActionException e) {
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml in getLPMControl(): " + e.getMessage());
     }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the LPMControl section or have a CVSLPMControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add LPMControls from a CVS maintained file - if defined
-    String LocalCVSLPMControl = GetUserXMLElement("CVSLPMControl");
-    if (!LocalCVSLPMControl.equals("")) {
-
-      // parsing the lines found in the CVSLPMControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LPMControl section in userXML found.\nHere is it:\n" + LocalCVSLPMControl);
-
-      {
-        String CVSLPMControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSLPMControl));
-
-        try {
-          while ((CVSLPMControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLPMControlLineToParse.length() > 0) && (!CVSLPMControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLPMControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLPMControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLPMControl()! Parsing of CVSLPMControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLPMControl is: " + LocalCVSLPMControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the LPMControl snippet from a file
-              String CVSLPMControlFileName = CfgCVSBasePath;
-              CVSLPMControlFileName += result.group(2);
-              CVSLPMControlFileName += "/";
-              CVSLPMControlFileName += result.group(4);
-
-              // getting the LPMControl snippet and adding it to the used TmpLPMControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a LPMControl snippet from a from file named: " + CVSLPMControlFileName);
-
-              String LocalLPMControlFromFile = readTextFile(CVSLPMControlFileName);
-
-              if (!LocalLPMControlFromFile.equals("") && !TmpLPMControl.contains(LocalLPMControlFromFile)) {
-
-                //                TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpLPMControl += LocalLPMControlFromFile;
-                //                TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLPMControlFileName + " a definition of a LPMControl - good!\nIt looks like this:\n" + LocalLPMControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] LPMControl from CVS based file named: " + CVSLPMControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLPMControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based LPMControl area found in userXML ..."); }
-    }
-
-    // add local LPMControl - if available
-    String LocalLPMControl = GetUserXMLElement("LPMControl");
-    if (!LocalLPMControl.equals("")) {
-
-      //      TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local LPMControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSLPMControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based LPMControl section in userXML found.\nHere is it:\n" + LocalCVSLPMControl);
-
-      {
-        String CVSLPMControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalLPMControl));
-
-        try {
-          while ((CVSLPMControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSLPMControlLineToParse.length() > 0) && (!CVSLPMControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSLPMControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSLPMControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getLPMControl()! Parsing of CVSLPMControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSLPMControl is: " + LocalCVSLPMControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the LPMControl snippet from a file
-                String CVSLPMControlFileName = CfgCVSBasePath;
-                CVSLPMControlFileName += result.group(2);
-                CVSLPMControlFileName += "/";
-                CVSLPMControlFileName += result.group(4);
-
-                // getting the LPMControl snippet and adding it to the used TmpLPMControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a LPMControl snippet from a from file named: " + CVSLPMControlFileName);
-
-                String LocalLPMControlFromFile = readTextFile(CVSLPMControlFileName);
-
-                if (!LocalLPMControlFromFile.equals("") && !TmpLPMControl.contains(LocalLPMControlFromFile)) {
-
-                  //                  TmpLPMControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpLPMControl += LocalLPMControlFromFile;
-                  //                  TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSLPMControlFileName + " a definition of a LPMControl - good!\nIt looks like this:\n" + LocalLPMControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] LPMControl from CVS based file named: " + CVSLPMControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else if (!TmpLPMControl.contains(CVSLPMControlLineToParse)){
-                TmpLPMControl += CVSLPMControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getLPMControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpLPMControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local LPMControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using LPMControl:\n" + LocalLPMControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No LPMControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullLPMControlSequence = TmpLPMControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
+    FullLPMControlSequence = tmpLPMControlSequence;
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
 
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
   }
@@ -1787,242 +822,68 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // It can get the info from the userXML to find a sequence or parts of it from text files or the definition
   // can be done directly in the userXML.
   protected void getPIControl() {
-    String TmpPIControl = "";
-
-    // check for LV1 PIControl definition
-    if (!FullPIControlSequence.equals("not set")) {
-      TmpPIControl += FullPIControlSequence;
-      logger.info("[HCAL " + functionManager.FMname + "] Using LVL1PIControl:\n" + FullPIControlSequence);
+    String tmpPIControlSequence="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse PIControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "PIControl";
+      tmpPIControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
-
-    // getting the basedir of where to find the files containing the configuration snippets
-    String CfgCVSBasePath = GetUserXMLElement("CfgCVSBasePath");
-    if (!CfgCVSBasePath.equals("")) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found CfgCVSBasePath, which points to: " + CfgCVSBasePath);
-      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### CfgCVSBasePath=" + CfgCVSBasePath + "\n\n";
+    catch ( UserActionException e) {
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml in getPIControl(): " + e.getMessage());
     }
-    else {
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] No CfgCVSBasePath found! This is bad in case you have includes in the PIControl section or have a CVSPIControl section. So please check the userXML of this FM if you experience problems ..."); }
-    }
-
-    // add PIControls from a CVS maintained file - if defined
-    String LocalCVSPIControl = GetUserXMLElement("CVSPIControl");
-    if (!LocalCVSPIControl.equals("")) {
-
-      // parsing the lines found in the CVSPIControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based PIControl section in userXML found.\nHere is it:\n" + LocalCVSPIControl);
-
-      {
-        String CVSPIControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalCVSPIControl));
-
-        try {
-          while ((CVSPIControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSPIControlLineToParse.length() > 0) && (!CVSPIControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSPIControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>");
-
-              String ParsedPieces = " | ";
-              MatchResult result = s.match();
-              for (int i=1; i<=result.groupCount(); i++)
-              {
-                ParsedPieces += result.group(i);
-                ParsedPieces += " | ";
-              }
-
-              s.close();
-
-              // check if lines could be parsed correctly, in principle though ...
-              if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSPIControl line definition, which was parsed to:\n" + ParsedPieces);
-              }
-              else {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error in getPIControl()! Parsing of CVSPIControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSPIControl is: " + LocalCVSPIControl;
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-              }
-
-              // compile a proper file name to load the PIControl snippet from a file
-              String CVSPIControlFileName = CfgCVSBasePath;
-              CVSPIControlFileName += result.group(2);
-              CVSPIControlFileName += "/";
-              CVSPIControlFileName += result.group(4);
-
-              // getting the PIControl snippet and adding it to the used TmpPIControl
-              logger.debug("[HCAL " + functionManager.FMname + "] Loading a PIControl snippet from a from file named: " + CVSPIControlFileName);
-
-              String LocalPIControlFromFile = readTextFile(CVSPIControlFileName);
-
-              if (!LocalPIControlFromFile.equals("")) {
-
-                //                TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                TmpPIControl += LocalPIControlFromFile;
-                //                TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSPIControlFileName + " a definition of a PIControl - good!\nIt looks like this:\n" + LocalPIControlFromFile);
-              }
-              else{
-                logger.warn("[HCAL " + functionManager.FMname + "] PIControl from CVS based file named: " + CVSPIControlFileName + " is empty! This is bad, please check this file ...");
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getPIControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.debug("[HCAL " + functionManager.FMname + "] Warning! No definition of a CVS based PIControl area found in userXML ..."); }
-    }
-
-    // add local PIControl - if available
-    String LocalPIControl = GetUserXMLElement("PIControl");
-    if (!LocalPIControl.equals("")) {
-
-      //      TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN Local PIControl sequence as defined in userXML of FM named: " + functionManager.FMname + "\n";
-
-      // parsing the lines found in the CVSPIControl area, etc.
-      logger.info("[HCAL " + functionManager.FMname + "] CVS based PIControl section in userXML found.\nHere is it:\n" + LocalCVSPIControl);
-
-      {
-        String CVSPIControlLineToParse;
-
-        BufferedReader reader = new BufferedReader(new StringReader(LocalPIControl));
-
-        try {
-          while ((CVSPIControlLineToParse = reader.readLine()) != null) {
-
-            if ( (CVSPIControlLineToParse.length() > 0) && (!CVSPIControlLineToParse.startsWith("#")) ){
-
-              Scanner s = new Scanner(CVSPIControlLineToParse);
-
-              // the syntax is e.g. <include file="DCC" version="1.6" />
-              // IMPORTANT: one has to use exactly the whitespaces as they are given!!
-
-              if (s.findInLine("<include\\s+(\\w+)=\"(\\S+)\"\\s+(\\w+)=\"(\\S+)\"\\s*/>")!=null) {
-
-                String ParsedPieces = " | ";
-                MatchResult result = s.match();
-                for (int i=1; i<=result.groupCount(); i++)
-                {
-                  ParsedPieces += result.group(i);
-                  ParsedPieces += " | ";
-                }
-
-                s.close();
-
-                // check if lines could be parsed correctly, in principle though ...
-                if ( result.groupCount()==4 && result.group(1).equals("file") && result.group(3).equals("version") ) {
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] Found a valid CVSPIControl line definition, which was parsed to:\n" + ParsedPieces);
-                }
-                else {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error in getPIControl()! Parsing of CVSPIControl failed.\nThe questioned line is: " + ParsedPieces + "\nThe CVSPIControl is: " + LocalCVSPIControl;
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                // compile a proper file name to load the PIControl snippet from a file
-                String CVSPIControlFileName = CfgCVSBasePath;
-                CVSPIControlFileName += result.group(2);
-                CVSPIControlFileName += "/";
-                CVSPIControlFileName += result.group(4);
-
-                // getting the PIControl snippet and adding it to the used TmpPIControl
-                logger.debug("[HCAL " + functionManager.FMname + "] Loading a PIControl snippet from a from file named: " + CVSPIControlFileName);
-
-                String LocalPIControlFromFile = readTextFile(CVSPIControlFileName);
-
-                if (!LocalPIControlFromFile.equals("")) {
-
-                  //                  TmpPIControl += "\n### add from HCAL FM named: " + functionManager.FMname + " ### BEGIN CfgCVS f.i.l.e.=" + result.group(2) + ", version=" + result.group(4) + "\n";
-                  TmpPIControl += LocalPIControlFromFile;
-                  //                  TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END CfgCVS\n";
-
-                  logger.info("[HCAL " + functionManager.FMname + "] Found in the CVS based file named: " + CVSPIControlFileName + " a definition of a PIControl - good!\nIt looks like this:\n" + LocalPIControlFromFile);
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname + "] PIControl from CVS based file named: " + CVSPIControlFileName + " is empty! This is bad, please check this file ...");
-                }
-
-              }
-              else {
-                TmpPIControl += CVSPIControlLineToParse + "\n";
-              }
-            }
-          }
-        }
-        catch(IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! IOException: getPIControl()";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
-
-      //      TmpPIControl += "### add from HCAL FM named: " + functionManager.FMname + " ### END Local PIControl\n";
-
-      logger.info("[HCAL " + functionManager.FMname + "] Using PIControl:\n" + LocalPIControl);
-    }
-    else{
-      if (!functionManager.Level2FM) { logger.warn("[HCAL " + functionManager.FMname + "] Warning! No PIControl found in userXML.\nProbably this is OK if the LVL1 FM has sent one."); }
-    }
-
-    FullPIControlSequence = TmpPIControl;
-
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
+    FullPIControlSequence = tmpPIControlSequence;
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
+  //protected void getFedEnableMask(){
+  //  String FedEnableMask = GetUserXMLElement("FedEnableMask");
+  //  if (!FedEnableMask.equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+  //  }
+  //  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+  //  //more logging stuff here...?
+  //}
+
+  // New getFEDEnableMask function, which looks for FEDEnableMask in mastersnippet
+  // This is used in local only
   protected void getFedEnableMask(){
-    String FedEnableMask = GetUserXMLElement("FedEnableMask");
-    if (!FedEnableMask.equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] FedEnableMask in userXML found.\nHere is it:\n" + FedEnableMask);
+    String FedEnableMask="";
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse FedEnableMask from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+      String TagName = "FedEnableMask";
+      FedEnableMask = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
     }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
+    catch ( UserActionException e) {
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
+    }
+    if (!FedEnableMask.equals("")){
+      logger.info("[Martin log HCAL " + functionManager.FMname + "] The FEDEnableMask which was successfully compiled for this FM.\nIt looks like this:\n" + FedEnableMask);
+    }else{
+      logger.info("[Martin log HCAL " + functionManager.FMname + "] No FedEnableMask found in mastersnippet.\n");
     }
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
-    //more logging stuff here...?
   }
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
-  protected void getUsePrimaryTCDS(){
-    boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
-    if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
-      logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
-    }
-    else {
-      logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
-    }
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
-    // more logging stuff here...?
-  }
+  //protected void getUsePrimaryTCDS(){
+  //  boolean UsePrimaryTCDS = Boolean.parseBoolean(GetUserXMLElement("UsePrimaryTCDS"));
+  //  if (GetUserXMLElement("UsePrimaryTCDS").equals("")){
+  //    logger.info("[HCAL " + functionManager.FMname + "] UsePrimaryTCDS in userXML found.\nHere is it:\n" + GetUserXMLElement("UsePrimaryTCDS"));
+  //  }
+  //  else {
+  //    logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
+  //  }
+  //  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
+  //  // more logging stuff here...?
+  //}
 
   // configuring all created HCAL applications by means of sending the HCAL CfgScript to the HCAL supervisor
   protected void sendRunTypeConfiguration(String CfgScript, String TTCciControlSequence, String LTCControlSequence, String TCDSControlSequence, String LPMControlSequence, String PIControlSequence, String FedEnableMask, boolean UsePrimaryTCDS) {
@@ -2140,8 +1001,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             else {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
-              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + ConfigDoc);
-              pam.setValue("ConfigurationDoc",ConfigDoc);
+              logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
+              //pam.setValue("ConfigurationDoc",ConfigDoc);
+              pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
               pam.setValue("hardwareConfigurationStringTCDS", FullTCDSControlSequence);
@@ -2224,15 +1086,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     boolean somebodysHandlingTA = false;
     boolean itsThisLvl2 = false;
+    boolean itsAdummy = false;
     String allMaskedResources = "";
     String ruInstance = "";
     String lpmSupervisor = "";
+    String EvmTrigsApps = "";
     for (QualifiedResource qr : level2list) {
       itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
         Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
+        // TODO see here
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
         if (MaskedFMs.length() > 0) {
           logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
@@ -2242,7 +1107,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             if (qr.getName().equals(MaskedFM)) {
               logger.debug("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
-              
+
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
               allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
               for (Resource level2resource : fullconfigList) {
@@ -2259,9 +1124,25 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA) { 
-                if (level2resource.getName().contains("FanoutTTCciTA") && !EvmTrigsApps.contains("FanoutTTCciTA")) {
+              if (somebodysHandlingTA ) { 
+                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
+                  // itsAdummy=true;
+                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
+                  qr.getResource().setRole("EvmTrig");
+                  logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
+                  logger.warn("[JohnLog] starting to look for the old EvmTrig to be replaced.");
+                  for (QualifiedResource otherLevel2FM : level2list) {
+                    logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
+
+                    if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
+                      otherLevel2FM.getResource().setRole("HCAL");
+                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+                      itsThisLvl2=true;
+                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+                      logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
+                    }
+                  }
                 }
                 else {
                   allMaskedResources+=level2resource.getName()+";"; 
@@ -2274,16 +1155,23 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
+                // if (qr.getName().contains("DummyTriggerAdapter")){
+                //   itsAdummy = true;
+                //  }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
                 functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
                 EvmTrigsApps += level2resource.getName()+";";
+                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
+              }
+              else {
+                EvmTrigsApps += level2resource.getName()+";";
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
@@ -2292,6 +1180,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
               else {
+                EvmTrigsApps += level2resource.getName()+";";
                 ruInstance=level2resource.getName();
                 logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
@@ -2299,6 +1188,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
               if (somebodysHandlingTA && !itsThisLvl2) { 
                 logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
+              }
+              else if (somebodysHandlingTA && itsThisLvl2) {
+                logger.info("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
+                lpmSupervisor=level2resource.getName();
               }
               else {
                 logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
@@ -2322,7 +1215,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       }
     }
     if (!somebodysHandlingTA) logger.warn("[HCAL " + functionManager.FMname + "]: Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
-    
+
   }
 
 
@@ -2603,53 +1496,90 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
     functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
+    // get the EvmTrig FM and handle it separately for sane state calculation
+    List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+    Iterator fmChItr = childFMs.iterator();
+    while (fmChItr.hasNext()) {
+      FunctionManager fmChild = (FunctionManager) fmChItr.next();
+      //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+      // role is set at beginning of init() so it's already set here
+      if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
+    }
+    functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
+    functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
+    functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
+    // get masked FMs and remove them from container
+    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
+    fmChItr = allChildFMs.iterator();
+    while (fmChItr.hasNext()) {
+      FunctionManager fmChild = (FunctionManager) fmChItr.next();
+      if (!fmChild.isActive()) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+        // role is set at beginning of init() so it's already set here
+        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
+    }
 
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
 
+    // see if we have any "special" FMs
+    List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
+    List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
+    List<FunctionManager> normalList = new ArrayList<FunctionManager>();
+    // see if we have any "special" FMs; store them in containers
     {
       Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-
-        logger.debug("[HCAL " + functionManager.FMname + "] FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-
-        if (fmChild.getName().toString().equals("HCAL_EventBuilder") || fmChild.getName().toString().equals("ECALFM") || fmChild.getName().toString().equals("ESFM") || fmChild.getName().toString().equals("PSFM") ) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (old naming): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
+        if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
+          l2LaserFMList.add(fmChild);
         }
-
-        if (fmChild.getName().toString().equals("HCAL_RCTMASTER") || fmChild.getName().toString().equals("HCAL_HCALMASTER") ) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named (this is not the correct spelling!!): " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
+        else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
+            fmChild.getRole().toString().equals("Level2_Priority_1")) {
+          l2Priority1List.add(fmChild);
         }
-
-        if (fmChild.getName().toString().equals("HCAL_RCTMaster") || fmChild.getName().toString().equals("HCAL_HCALMaster")) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
+        else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
+          l2Priority2List.add(fmChild);
         }
-
-        //if (fmChild.getRole().toString().equals("Level2_F-i-l-t-e-r-F-a-r-m") ) {
-        //  //TODO -- Why does this break configuring?!
-        //  logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-        //  SpecialFMsAreControlled = true;
-        //}
-
-        if (fmChild.getName().toString().equals("HCAL_Laser") && fmChild.getRole().toString().equals("Level2_Laser")) {
-          logger.warn("[HCAL " + functionManager.FMname + "] SpecialFMsAreControlled FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-          SpecialFMsAreControlled = true;
+        else if (fmChild.getRole().toString().equals("EvmTrig")) {
+          evmTrigList.add(fmChild);
         }
-
+        else {
+          normalList.add(fmChild);
+        }
       }
     }
+    functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
+    functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
+    functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
+    functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
+    functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
+
 
     // fill applications for level two role
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving HCAL XDAQ applications ...")));
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
+    // TCDS apps
+    List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
+    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(lpmList);
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
 
@@ -2665,7 +1595,6 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.containerLTCControl     = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("LTCControl"));
     }
 
-    functionManager.containerMonLogger      = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalMonLogger"));
 
     functionManager.containerEVM   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("EVM"));
     functionManager.containerBU    = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("BU"));
@@ -2679,22 +1608,21 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
 
+    functionManager.containerPeerTransportUTCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportUTCP"));
+
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
+
 
     // find out if this FM controlls applications which talk asynchronous SOAP
     if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
       functionManager.asyncSOAP = true;
     }
 
-    // check if MonLogger applications are found
-    if (HandleMonLoggers) {
-      if (!functionManager.containerMonLogger.isEmpty()) {
-        logger.warn("[HCAL " + functionManager.FMname + "] MonLogger applications found in this configuration - good!");
-      }
-    }
-
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
+    }
+    if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
+      logger.info("[HCAL " + functionManager.FMname + "] Found PeerTransportUTCP applications - will handle them ...");
     }
 
     // find out if HCAL supervisor is ready for async SOAP communication
@@ -2717,6 +1645,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress","ReportStateToRCMS"});
           pam.get();
 
+          //FIXME SIC set this ourselves!
           dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
 
           logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor ReportStateToRCMS results in: " + dowehaveanasynchcalSupervisor);
@@ -2764,6 +1693,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.asyncSOAP = false;
     }
 
+    // finally, halt all LPM apps
+    functionManager.haltLPMControllers();
 
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
@@ -2866,25 +1797,29 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   protected void getSessionId() {
     String user = functionManager.getQualifiedGroup().getGroup().getDirectory().getUser();
     String description = functionManager.getQualifiedGroup().getGroup().getDirectory().getFullPath();
-    int sessionId = 0;
+    logSessionConnector = functionManager.logSessionConnector;
+    int tempSessionId = 0;
 
-    logger.debug("[HCAL " + functionManager.FMname + "] Log session connector: " + logSessionConnector );
+    logger.debug("[HCAL " + functionManager.FMname + "] HCALEventHandler: Log session connector: " + logSessionConnector );
 
     if (logSessionConnector != null) {
       try {
-        sessionId = logSessionConnector.createSession( user, description );
-        logger.debug("[HCAL " + functionManager.FMname + "] New session Id obtained =" + sessionId );
+        tempSessionId = logSessionConnector.createSession( user, description );
+        logger.info("[HCAL " + functionManager.FMname + "] New session Id obtained =" +tempSessionId );
       }
       catch (LogSessionException e1) {
-        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + sessionId + ". Exception: ",e1);
+        logger.warn("[HCAL " + functionManager.FMname + "] Could not get session ID, using default = " + tempSessionId + ". Exception: ",e1);
       }
     }
     else {
-      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + sessionId + ".");
+      logger.warn("[HCAL " + functionManager.FMname + "] logSessionConnector = " + logSessionConnector + ", using default = " + tempSessionId + ".");
     }
 
+    // and put it into the instance variable
+    sessionId = tempSessionId;
     // put the session ID into parameter set
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
   }
 
   // get official CMS run and sequence number
@@ -3242,34 +2177,34 @@ public class HCALEventHandler extends UserStateNotificationHandler {
           }
         }
 
-//        {
-//          String FullComment = "Preamble:\n";
-//
-//          // find comment tag in the userXML
-//          String CommentuserXML = GetUserXMLElement("Comment");
-//          if (CommentuserXML.equals("")) { FullComment += "not used"; }
-//
-//          FullComment += "\nUser comment:\n";
-//
-//          // if there is any user add in the comment field of the FM add this too
-//          String CommentUserGUI = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
-//          if (!CommentUserGUI.equals("")) {
-//            FullComment += CommentUserGUI;
-//          }
-//          else {
-//            FullComment += "not set";
-//          }
-//
-//          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
-//          try {
-//            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
-//            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
-//          }
-//          catch (RunInfoException e) {
-//            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-//            logger.error(errMessage,e);
-//          }
-//        }
+        //        {
+        //          String FullComment = "Preamble:\n";
+        //
+        //          // find comment tag in the userXML
+        //          String CommentuserXML = GetUserXMLElement("Comment");
+        //          if (CommentuserXML.equals("")) { FullComment += "not used"; }
+        //
+        //          FullComment += "\nUser comment:\n";
+        //
+        //          // if there is any user add in the comment field of the FM add this too
+        //          String CommentUserGUI = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
+        //          if (!CommentUserGUI.equals("")) {
+        //            FullComment += CommentUserGUI;
+        //          }
+        //          else {
+        //            FullComment += "not set";
+        //          }
+        //
+        //          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
+        //          try {
+        //            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
+        //            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
+        //          }
+        //          catch (RunInfoException e) {
+        //            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
+        //            logger.error(errMessage,e);
+        //          }
+        //        }
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
@@ -3381,14 +2316,14 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   // toState: target state
   public void computeNewState(StateNotification newState) {
 
-    logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is calculating new state for FM\n@ URI: "+ functionManager.getURI());
+    //logger.warn("[SethLog HCAL " + functionManager.FMname + "] 1 BEGIN computeNewState(): calculating new state for FM\n@ URI: "+ functionManager.getURI());
 
     if (newState.getToState() == null) {
       logger.debug("[HCAL " + functionManager.FMname + "] computeNewState() is receiving a state with empty ToState\nfor FM @ URI: "+ functionManager.getURI());
       return;
     }
     else {
-      logger.debug("[HCAL " + functionManager.FMname + "] received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
+      logger.info("[SethLog HCAL " + functionManager.FMname + "] 2 received id: " + newState.getIdentifier() + ", ToState: " + newState.getToState());
     }
 
     // search the resource which sent the notification
@@ -3405,9 +2340,20 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
-    // check if the resource was a FM
+    // check if the resource was a FM or xdaq app
     if (checkIfControlledResource(resource)) {
-      if (newState.getToState().equals(HCALStates.ERROR.getStateString())) {
+      // check if it's a tcds app
+      for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()) {
+        if(app.getURL().equals(resource.getURL())) {
+          if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
+            return;
+          if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
+            logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
+            return; 
+          }
+        }
+      }
+      if (newState.getToState().equals(HCALStates.ERROR.getStateString()) || newState.getToState().equals(HCALStates.FAILED.getStateString())) {
 
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!";
         logger.error(errMessage);
@@ -3421,7 +2367,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         functionManager.calcState = functionManager.getUpdatedState();
 
-        logger.debug("[HCAL " + functionManager.FMname + "] calcState = " + functionManager.calcState.getStateString() + ", from state: " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
+        logger.info("[SethLog HCAL " + functionManager.FMname + "] 3 calcState = " + functionManager.calcState.getStateString() + ", from state (actualState): " + functionManager.getState().getStateString() + "\nfor FM: " + functionManager.getURI());
 
         if (!functionManager.calcState.getStateString().equals("Undefined") && !functionManager.calcState.getStateString().equals(functionManager.getState().getStateString())) {
 
@@ -3456,21 +2402,22 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETHALT);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Uninitialized yet ...");
-                  }
+                functionManager.theStateNotificationHandler.setTimeoutThread(false); // have to unset timeout thread here
+                if (!functionManager.containerFMChildren.isEmpty()) {
+                  //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
+                  functionManager.fireEvent(HCALInputs.SETHALT);
                 }
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
               }
-              else if (actualState.equals(HCALStates.HALTING.getStateString()))       { functionManager.fireEvent(HCALInputs.SETHALT); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    { functionManager.fireEvent(HCALInputs.SETHALT); }
-              else if (actualState.equals(HCALStates.RESETTING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETHALT); }
+              else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
+                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
+              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
+              else if (actualState.equals(HCALStates.RESETTING.getStateString()))     {
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
               else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
               else {
@@ -3482,22 +2429,12 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.RUNNING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-              else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Ready yet ...");
-                  }
-                }
+              if (actualState.equals(HCALStates.INITIALIZING.getStateString()) || actualState.equals(HCALStates.RECOVERING.getStateString()) ||
+                  actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
+                  actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+ actualState+", but SETCONFIGURE ...");
+                functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
-              else if (actualState.equals(HCALStates.STOPPING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
                 logger.error(errMessage);
@@ -3508,21 +2445,18 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.RUNNING.getStateString())) {
-              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     { functionManager.fireEvent(HCALInputs.SETSTART); }
-              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  { functionManager.fireEvent(HCALInputs.SETSTART); }
+              if (actualState.equals(HCALStates.INITIALIZING.getStateString()))     {
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is INITIALIZING, but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
+              }
+              else if (actualState.equals(HCALStates.RECOVERING.getStateString()))  {
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is RECOVERING, but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
+              }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                if ( (!functionManager.asynchcalSupervisor) && (!functionManager.ErrorState) ) {
-
-                  if (HCALSuperVisorIsOK) {
-                    functionManager.fireEvent(HCALInputs.SETSTART);
-
-                  }
-                  else {
-                    AllButHCALSuperVisorIsOK = true;
-                    logger.debug("[HCAL " + functionManager.FMname + "] HCALSupervisor is not Active yet ...");
-                  }
-                }
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
@@ -3546,7 +2480,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
             }
             else if (toState.equals(HCALStates.STOPPING.getStateString())) {
-              if (actualState.equals(HCALStates.RUNNING.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
+              if (actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()))       { functionManager.fireEvent(HCALInputs.STOP); }
               else if (actualState.equals(HCALStates.STARTING.getStateString())) { /* do nothing */ }
               else {
                 logger.error(errMessage);
@@ -3926,7 +2860,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
 
     }
-    else if (!functionManager.FMrole.equals("Level2_TCDSLPM")){
+    else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
@@ -4138,7 +3072,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
   // find out the state of an FMs with and return true if this state is reached
   protected Boolean waitforFM(FunctionManager fmChild, String toState) {
-    
+
     Boolean OkToProceed = true;
     if (fmChild.isActive()) {
 
@@ -4169,47 +3103,47 @@ public class HCALEventHandler extends UserStateNotificationHandler {
   }
 
   // find out the state of a class of FMs with a role _not_ given and return true if this state is reached for all of them
-	protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
+  protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
 
-		Boolean OkToProceed = true;
+    Boolean OkToProceed = true;
 
-		Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-		FunctionManager fmChild = null;
-		while (it.hasNext()) {
-			fmChild = (FunctionManager) it.next();
+    Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+    FunctionManager fmChild = null;
+    while (it.hasNext()) {
+      fmChild = (FunctionManager) it.next();
 
-			if (fmChild.isActive()) {
-				// if FM is in an error state do not block ...
-				if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
-					String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-					logger.error(errMessage);
-					functionManager.sendCMSError(errMessage);
-					functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-					functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-					if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-					break;
-				}
+      if (fmChild.isActive()) {
+        // if FM is in an error state do not block ...
+        if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+          logger.error(errMessage);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+          break;
+        }
 
-				// check if FMs with not the role given have the desired state
-				if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
-					// check if the given toState is reached
-					if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
-						OkToProceed = false;
-					}
-					else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
-						String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-						logger.error(errMessage);
-						functionManager.sendCMSError(errMessage);
-						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-						if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-						break;
-					}
-				}
-			}
-		}
-		return OkToProceed;
-	}
+        // check if FMs with not the role given have the desired state
+        if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
+          // check if the given toState is reached
+          if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
+            OkToProceed = false;
+          }
+          else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+            break;
+          }
+        }
+      }
+    }
+    return OkToProceed;
+  }
 
   // find out the state of a class of FMs with a role substring _not_ given and return true if this state is reached for all of them
   protected Boolean waitforFMswithNotTheRoleMatch(String Role1 ,String Role2 ,String Role3 ,String Role4, String Role5 , String toState) {
@@ -4625,6 +3559,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNING.toString())));
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNINGDEGRADED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+          }
         }
 
         // move the little fishys every 2s
@@ -4634,7 +3572,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
             LittleA.movehim();
           }
           // move the little fishy when running
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             LittleB.movehim();
           }
         }
@@ -4713,8 +3652,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
     }
   }
 
-  // thread which checks the HCAL supervisor state when in a runtype applications are getting e.g. configured, etc.
-  // TODO
+  // thread which checks the HCAL supervisor state
   protected class HCALSupervisorWatchThread extends Thread {
 
     public HCALSupervisorWatchThread() {
@@ -4727,7 +3665,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
       int icount = 0;
 
-      while ((stopHCALSupervisorWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.asyncSOAP == false)) {
+      while ((stopHCALSupervisorWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
 
         icount++;
 
@@ -4737,330 +3675,12 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         Date now = Calendar.getInstance().getTime();
 
-        // poll HCAL supervisor status every 1 sec for task when entering dedicated transition states
-        if (icount%1==0) {
-
-          // poll the status when in the configuring or stopping state
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) || functionManager.getState().getStateString().equals(HCALStates.STOPPING.toString()))) {
-
-            if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-              {
-                String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking its state - good!";
-                logger.debug(debugMessage);
-              }
-
-              XDAQParameter pam = null;
-              String status   = "undefined";
-              String progress = "undefined";
-              String taname   = "undefined";
-              String supervisorState = "undefined";
-              // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-              String supervisorError = "";
-              int HCALSuperVisors_to_be_considered = functionManager.containerhcalSupervisor.getQualifiedResourceList().size();
-              for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-
-                try {
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "stateName"});
-                  pam.get();
-
-                  taname = pam.getValue("TriggerAdapterName");
-                  if (taname!=null) {
-                    if ( taname.equals("DummyTriggerAdapter") || (!LocalMultiPartitionReadOut) ) {
-
-                      status = pam.getValue("PartitionState");
-                      if (status==null) {
-                        String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState when Configuring resulted in a NULL pointer - this is bad!";
-                        logger.error(errMessage);
-                        functionManager.sendCMSError(errMessage);
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                      }
-
-                      supervisorState = pam.getValue("stateName");
-                      if (supervisorState==null) {
-                        String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor's state resulted in a NULL pointer - this is bad!";
-                        logger.error(errMessage);
-                        functionManager.sendCMSError(errMessage);
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                      }
-
-                      progress = pam.getValue("InitializationProgress");
-                      if (progress!=null) {
-                        localcompletion = Double.parseDouble(progress);
-                      }
-                      else {
-                        String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the InitializationProgress during Configuring resulted in a NULL pointer - this is bad!";
-                        logger.error(errMessage);
-                        functionManager.sendCMSError(errMessage);
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                      }
-                    }
-                  }
-                  else {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the TriggerAdapterName during Configuring resulted in a NULL pointer - this is bad!";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                  }
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState after sending the RunType, which is: " + status + " (still to go: " + progress + ")");
-
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("asking for the HCAL supervisor PartitionState after sending the RunType, which is: " + status + " (still to go: " + progress + ")")));
-
-                }
-                catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\n Perhaps this application is dead!?";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
-                }
-                catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
-                }
-
-                if (status.equals("Cold-Init")) {
-                  logger.warn("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + ".\nThis means that the configuring takes longer because of e.g. firmware uploads, LUTs changes, etc.\nStill to go: " + progress + ")");
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
-                }
-
-
-                if (supervisorState.equals("failed")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! The supervisor application controlled by level 2 function manager with name " + functionManager.FMname + "is in the state " + supervisorState + "!";
-                  logger.error(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                }
-
-                if (status.equals("Failed") || status.equals("Faulty") || status.equals("Error")) {
-                  try {
-                    pam =((XdaqApplication)qr).getXDAQParameter();
-                    pam.select(new String[] {"Partition", "overallErrorMessage"});
-                    pam.get();
-                    supervisorError = "(" + pam.getValue("Partition") + ") " + pam.getValue("overallErrorMessage");
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(supervisorError)));
-                    if (supervisorError==null) {
-                      String errMessage = "[HCAL " + functionManager.FMname + "] Error! overallErrorMessage was not retrieved.";
-                      logger.error(errMessage);
-                    }
-
-                  }
-                  catch (XDAQTimeoutException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\n Perhaps this application is dead!?";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
-                  }
-                  catch (XDAQException e) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                  }
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + ".\nPlease check log messages which were sent earlier than this one for more details ...(E5)"; logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                }
-
-                if (status.equals("Ready")) {
-                  logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + ".\nThis means that the configuring i.e. the sending of the CfgScript was successful.");
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Configured")));
-
-                  if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-
-                    // leave intermediate state directly only when not talking to asynchronous applications
-                    functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-                  }
-                  else {
-                    HCALSuperVisors_to_be_considered -=1;
-
-                    // report that the HCAL supervisor is done ...
-                    if (HCALSuperVisors_to_be_considered==0) { HCALSuperVisorIsOK = true; }
-
-                    if (HCALSuperVisorIsOK && AllButHCALSuperVisorIsOK) {
-                      // leave intermediate state cause all other asynchronous applications are ready to go
-                      functionManager.fireEvent(HCALInputs.SETCONFIGURE);
-                      logger.debug("[HCAL " + functionManager.FMname + "] Finally also the HCALSupervisor is Ready ...");
-                    }
-                  }
-                }
-              }
-            }
-            else {
-              String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: HCALSupervisorWatchThread()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-              else { functionManager.fireEvent(HCALInputs.SETCONFIGURE); }
-            }
-          }
-
-          // poll the status when in the starting state
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.STARTING.toString()))) {
-
-            if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-              {
-                String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking its state - good!";
-                logger.debug(debugMessage);
-              }
-
-              XDAQParameter pam = null;
-              String status   = "undefined";
-              String progress = "undefined";
-              String taname   = "undefined";
-
-              // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-              int HCALSuperVisors_to_be_considered = functionManager.containerhcalSupervisor.getQualifiedResourceList().size();
-              for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-
-                try {
-                  pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress"});
-                  pam.get();
-
-                  taname = pam.getValue("TriggerAdapterName");
-
-                  if (taname!=null) {
-                    if ( taname.equals("DummyTriggerAdapter") || (!LocalMultiPartitionReadOut) ) {
-
-                      status = pam.getValue("PartitionState");
-                      if (status==null) {
-                        String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState when Starting resulted in a NULL pointer - this is bad!";
-                        logger.error(errMessage);
-                        functionManager.sendCMSError(errMessage);
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                      }
-
-                      progress = pam.getValue("InitializationProgress");
-                      if (progress!=null) {
-                        localcompletion = Double.parseDouble(progress);
-                      }
-                      else {
-                        String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the InitializationProgress during Starting resulted in a NULL pointer - this is bad!";
-                        logger.error(errMessage);
-                        functionManager.sendCMSError(errMessage);
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                      }
-
-                    }
-                  }
-                  else {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the TriggerAdapterName during Starting resulted in a NULL pointer - this is bad!";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                  }
-
-                  logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState during starting, which is: " + status + " (still to go: " + progress + ")");
-
-                }
-                catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\n Perhaps this application is dead!?";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
-                }
-                catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
-                }
-
-                if (status.equals("Failed")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + ".\nPlease check log messages which were sent earlier than this one for more details ... (E6)";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-                }
-
-                if (status.equals("Active")) {
-                  logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + ".\nThis means that the starting of the HCALSupervisor was successful.");
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Running")));
-
-                  if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-
-                    // leave intermediate state directly only when not talking to asynchronous applications
-                    functionManager.fireEvent(HCALInputs.SETSTART);
-                  }
-                  else {
-                    HCALSuperVisors_to_be_considered -=1;
-
-                    // report that the HCAL supervisor is done ...
-                    if (HCALSuperVisors_to_be_considered==0) { HCALSuperVisorIsOK = true; }
-
-                    if (HCALSuperVisorIsOK && AllButHCALSuperVisorIsOK) {
-                      // leave intermediate state cause all other asynchronous applications are ready to go
-                      functionManager.fireEvent(HCALInputs.SETSTART);
-                      logger.debug("[HCAL " + functionManager.FMname + "] Finally also the HCALSupervisor is Enabled ...");
-                    }
-                  }
-                }
-
-              }
-
-            }
-            else {
-              String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: HCALSupervisorWatchThread()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-              else { functionManager.fireEvent(HCALInputs.SETSTART); }
-            }
-          }
-
-        }
-
-        // poll HCAL supervisor status in the "Configured" and "Running" state every 20 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
-        if (icount%20==0) {
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) || functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+        // poll HCAL supervisor status in the Configuring/Configured/Running/RunningDegraded states every 5 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
+        if (icount%5==0) {
+          if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) ||
+                functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) ||
+                functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+                functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
             if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
               {
@@ -5070,6 +3690,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
               XDAQParameter pam = null;
               String status   = "undefined";
+              String stateName   = "undefined";
               String progress = "undefined";
               String taname   = "undefined";
 
@@ -5078,60 +3699,37 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
                 try {
                   pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress"});
+                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "stateName"});
                   pam.get();
 
                   status = pam.getValue("PartitionState");
+                  stateName = pam.getValue("stateName");
 
-                  if (status==null) {
-                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState to see if it is alive or not resulted in a NULL pointer - this is bad!";
-                    logger.error(errMessage);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                  if (status==null || stateName==null) {
+                    String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
+                    functionManager.goToError(errMessage);
                   }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
-
                 }
                 catch (XDAQTimeoutException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is dead.\nCheck the corresponding jobcontrol status ...\nHere is the exception: " +e;
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                  functionManager.goToError(errMessage);
                 }
                 catch (XDAQException e) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()\nProbably the HCAL supervisor application is in a bad condition.\nCheck the corresponding jobcontrol status, etc. ...\nHere is the exception: " +e;
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                  functionManager.goToError(errMessage);
                 }
 
-                if (status.equals("Failed") || status.equals("Faulty") || status.equals("Error")) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + ".\nPlease check log messages which were sent earlier than this one for more details ... (E7)";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                if (status.equals("Failed") || status.equals("Faulty") || status.equals("Error") || stateName.equalsIgnoreCase("failed")) {
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports partitionState: " + status + " and stateName: " + stateName + ".\nPlease check log messages which were sent earlier than this one for more details ... (E7)";
+                  functionManager.goToError(errMessage);
                 }
-
               }
             }
             else {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: HCALSupervisorWatchThread()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+              functionManager.goToError(errMessage);
             }
           }
         }
@@ -5142,9 +3740,8 @@ public class HCALEventHandler extends UserStateNotificationHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
 
       HCALSupervisorWatchThreadList.remove(this);
-
     }
-  } // TODO
+  }
 
   // thread which checks the TriggerAdapter state
   protected class TriggerAdapterWatchThread extends Thread {
@@ -5169,68 +3766,17 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
         Date now = Calendar.getInstance().getTime();
 
-        // poll the status of the FMs which do the event building every 5 sec
-        if (icount%5==0) {
-					logger.debug("[HCAL " + functionManager.FMname + "]: About to check whether an EVMTrig FM has stopped already.");
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
-
-            // check if a level2 FM which does the event building is configured and pass this info to other level2 FMs
-            //if (SpecialFMsAreControlled && !NotifiedControlledFMs) {
-
-					    logger.debug("[HCAL " + functionManager.FMname + "]: found SpecialFMsAreControlled=true and about to loop over other level2s.");
-              Iterator it1 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-              FunctionManager fmChild_HCAL_EvmTrig = null;
-              while (it1.hasNext()) {
-                fmChild_HCAL_EvmTrig = (FunctionManager) it1.next();
-
-                if (fmChild_HCAL_EvmTrig.getRole().toString().equals("EvmTrig"))
-                {
-                  if (fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild_HCAL_EvmTrig.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) {
-                    logger.info("[HCAL " + functionManager.FMname + "]: HCALFM is in the Stopping or Configured state. Will sent all level2 FMs to Stopping state too ...");
-
-                    NotifiedControlledFMs = true;  // take care that a notification to the controlled child FMs is only sent once
-
-                    Iterator it2 = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-                    FunctionManager fmChild = null;
-                    while (it2.hasNext()) {
-                      fmChild = (FunctionManager) it2.next();
-                      if (fmChild.isActive()) { 
-                        if ( !fmChild.getRole().toString().equals("EvmTrig") ) {
-
-                          if (! (fmChild.refreshState().toString().equals(HCALStates.STOPPING.toString()) || fmChild.refreshState().toString().equals(HCALStates.CONFIGURED.toString())) ) {
-                            try {
-                              logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Found FM child named: " + fmChild.getName().toString() + "\nThis FM is in the state: " + fmChild.refreshState().toString() + "\nThe role of this FM: " + fmChild.getRole().toString() + "\nNow we send fireEvent: " + HCALInputs.STOP);
-                              fmChild.execute(HCALInputs.STOP);
-                            }
-                            catch (CommandException e) {
-                              String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! CommandException: sending: " + HCALInputs.STOP + " failed ...";
-                              logger.error(errMessage,e);
-                              functionManager.sendCMSError(errMessage);
-                              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            //}
-          }
-        }
-
         // poll TriggerAdapter status every 5 sec
         if (icount%5==0) {
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             // check the state of the TriggerAdapter
             if (functionManager.containerTriggerAdapter!=null) {
               if (!functionManager.containerTriggerAdapter.isEmpty()) {
 
                 {
                   String debugMessage = "[HCAL " + functionManager.FMname + "] TriggerAdapter found for asking its state - good!";
-                  logger.debug(debugMessage);
+                  logger.info(debugMessage);
                 }
 
                 XDAQParameter pam = null;
@@ -5247,11 +3793,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                     status = pam.getValue("stateName");
                     if (status==null) {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
-                      logger.error(errMessage);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                      functionManager.goToError(errMessage);
                     }
 
                     String NextEventNumberString = pam.getValue("NextEventNumber");
@@ -5267,46 +3809,28 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                     }
                     else {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the NextEventNumber when Running resulted in a NULL pointer - this is bad!";
-                      logger.error(errMessage);
-                      functionManager.sendCMSError(errMessage);
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                      functionManager.goToError(errMessage);
                     }
 
-                    logger.debug("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
+                    logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
 
                     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
 
                   }
                   catch (XDAQTimeoutException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                    functionManager.goToError(errMessage,e);
 
                   }
                   catch (XDAQException e) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
-                    logger.error(errMessage,e);
-                    functionManager.sendCMSError(errMessage);
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+                    functionManager.goToError(errMessage,e);
                   }
                 }
 
-                if (status.equals("Failed")) {
+                if (status.equalsIgnoreCase("Failed")) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E9)";
-                  logger.error(errMessage);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                  functionManager.goToError(errMessage);
                 }
 
                 if (status.equals("Ready")) {
@@ -5314,7 +3838,10 @@ public class HCALEventHandler extends UserStateNotificationHandler {
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
                   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Stopping the TA ...")));
 
-                  if (!SpecialFMsAreControlled) { functionManager.fireEvent(HCALInputs.STOP); }
+                  if (!SpecialFMsAreControlled) {
+                    logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
+                    functionManager.fireEvent(HCALInputs.STOP);
+                  }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] TriggerAdapter should have reported to be in the Ready state, which means the events are taken ...");
                   logger.info("[HCAL " + functionManager.FMname + "] All L1As were sent, i.e. Trigger adapter is in the Ready state, changing back to Configured state ...");
@@ -5322,11 +3849,7 @@ public class HCALEventHandler extends UserStateNotificationHandler {
               }
               else {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: TriggerAdapterWatchThread()";
-                logger.error(errMessage);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+                functionManager.goToError(errMessage);
               }
             }
           }
@@ -5335,13 +3858,9 @@ public class HCALEventHandler extends UserStateNotificationHandler {
 
       // stop the TriggerAdapter watchdog thread
       System.out.println("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-      logger.debug("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-
+      logger.warn("[SethLog HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
       TriggerAdapterWatchThreadList.remove(this);
-
     }
   }
-
-
 }
- 
+

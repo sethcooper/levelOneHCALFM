@@ -29,6 +29,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addState(HCALStates.HALTED);
     addState(HCALStates.CONFIGURED);
     addState(HCALStates.RUNNING);
+    addState(HCALStates.RUNNINGDEGRADED);
     addState(HCALStates.PAUSED);
     addState(HCALStates.ERROR);
     addState(HCALStates.TTSTEST_MODE);
@@ -85,6 +86,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addInput(HCALInputs.SETTESTING_TTS);
     addInput(HCALInputs.SETTTSTEST_MODE);
     addInput(HCALInputs.SETCOLDRESET);
+    addInput(HCALInputs.SETRUNNINGDEGRADED);
+    addInput(HCALInputs.UNSETRUNNINGDEGRADED);
 
     // make these invisible
     HCALInputs.SETCONFIGURE.setVisualizable(false);
@@ -96,6 +99,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     HCALInputs.SETRESET.setVisualizable(false);
     HCALInputs.SETTTSTEST_MODE.setVisualizable(false);
     HCALInputs.SETCOLDRESET.setVisualizable(false);
+		HCALInputs.SETRUNNINGDEGRADED.setVisualizable(false);
+		HCALInputs.UNSETRUNNINGDEGRADED.setVisualizable(false);
 
     //
     // Define command parameters.
@@ -166,6 +171,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT> configureSUPERVISOR_ERROR = new CommandParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(""));
     CommandParameter<StringT> configureAVAILABLE_RUN_CONFIGS = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS, new StringT(""));
     CommandParameter<StringT> configureRUN_CONFIG_SELECTED = new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(""));
+    CommandParameter<IntegerT> configureSID = new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(0));
     CommandParameter<StringT> configureCFGSNIPPET_KEY_SELECTED = new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(""));
     CommandParameter<StringT> configureAVAILABLE_RESOURCES = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES, new StringT(""));
     CommandParameter<StringT> configureMASKED_RESOURCES = new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(""));
@@ -194,6 +200,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureSUPERVISOR_ERROR);
       configureParameters.add(configureAVAILABLE_RUN_CONFIGS);
       configureParameters.add(configureRUN_CONFIG_SELECTED);
+      configureParameters.add(configureSID);
       configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
       configureParameters.add(configureAVAILABLE_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);
@@ -320,6 +327,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     // state, and moves the FSM in the STOPPING state.
     //
     addTransition(HCALInputs.STOP,    HCALStates.RUNNING, HCALStates.STOPPING);
+    // also needed for runningdegraded
+    addTransition(HCALInputs.STOP,    HCALStates.RUNNINGDEGRADED, HCALStates.STOPPING);
 
     // RECOVER Command:
     // The RECOVER input is allowed from ERROR and moves the FSM in to
@@ -364,11 +373,16 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.SETCONFIGURE, HCALStates.CONFIGURING, HCALStates.CONFIGURED);
     addTransition(HCALInputs.SETCONFIGURE, HCALStates.STOPPING, HCALStates.CONFIGURED);
     addTransition(HCALInputs.SETCONFIGURE, HCALStates.RUNNING, HCALStates.CONFIGURED);
+    addTransition(HCALInputs.SETCONFIGURE, HCALStates.RUNNINGDEGRADED, HCALStates.CONFIGURED);
 
     // Reach the RUNNING State
     addTransition(HCALInputs.SETSTART, HCALStates.INITIALIZING, HCALStates.RUNNING);
     addTransition(HCALInputs.SETSTART, HCALStates.RECOVERING, HCALStates.RUNNING);
     addTransition(HCALInputs.SETSTART, HCALStates.STARTING, HCALStates.RUNNING);
+
+    // RUNNINGDEGRADED
+    addTransition(HCALInputs.SETRUNNINGDEGRADED, HCALStates.RUNNING, HCALStates.RUNNINGDEGRADED);
+    addTransition(HCALInputs.UNSETRUNNINGDEGRADED, HCALStates.RUNNINGDEGRADED, HCALStates.RUNNING);
 
     // Reach the PAUSED State
     addTransition(HCALInputs.SETPAUSE, HCALStates.PAUSING, HCALStates.PAUSED);
