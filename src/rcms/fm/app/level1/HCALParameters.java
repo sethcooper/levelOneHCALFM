@@ -219,7 +219,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		/**
 		 * HCAL CfgCVSBasePath
 		 */
-		GLOBAL_PARAMETER_SET.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
+		this.put(new FunctionManagerParameter<StringT>(HCAL_CFGCVSBASEPATH, new StringT("not set"),FunctionManagerParameter.Exported.READONLY));
 
 
 		/**

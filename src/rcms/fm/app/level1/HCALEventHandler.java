@@ -1119,7 +1119,6 @@ public class HCALEventHandler extends UserEventHandler {
             }
           }
         }
-        String EvmTrigsApps = "";
         for (Resource level2resource : fullconfigList) {
           logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
           if (!MaskedFMs.contains(qr.getName())) { 
