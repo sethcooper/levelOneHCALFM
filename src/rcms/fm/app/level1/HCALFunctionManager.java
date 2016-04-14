@@ -63,6 +63,9 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
+  private HCALParameters hcalParameters;
+  public HCALParameterSender parameterSender;
+
   // definition of some XDAQ containers
   public XdaqApplicationContainer containerXdaqApplication = null;  // this container contains _all_ XDAQ executives
 
@@ -225,12 +228,13 @@ public class HCALFunctionManager extends UserFunctionManager {
     // any State Machine Implementation must provide the framework with some information about itself.
 
     // make the parameters available
+    this.hcalParameters = HCALParameters.getInstance();
     addParameters();
   }
 
   // add parameters to parameterSet. After this they are accessible.
   private void addParameters() {
-    parameterSet = HCALParameters.GLOBAL_PARAMETER_SET;
+    parameterSet = this.hcalParameters;
   }
 
   // enable/disable the FM custom GUI
@@ -268,7 +272,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     // This method is called by the framework when the Function Manager is created.
 
     //  needed before RCMS release 3.2.0 here: super.createAction(cps); 
-
+    
     System.out.println("[HCAL base] entering createAction ...");
     logger.debug("[HCAL base] entering createAction ...");
 
@@ -333,6 +337,11 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     destroyed = false;
 
+    logger.warn("JohnLog: about to construct HCALParameterSender.");
+    this.parameterSender = new HCALParameterSender(this);
+    this.parameterSender.start();
+    logger.warn("JohnLog: finished calling HCALParameterSender.start()");
+
     System.out.println("[HCAL " + FMname + "] createAction executed ...");
     logger.debug("[HCAL " + FMname + "] createAction executed ...");
   }
@@ -342,6 +351,7 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     System.out.println("[HCAL " + FMname + "] destroyAction called");
     logger.debug("[HCAL " + FMname + "] destroyAction called");
+
 
     // if RunInfo database is connected try to report the destroying of this FM
     /*if ((HCALRunInfo!=null) && (RunWasStarted)) {
@@ -774,6 +784,11 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
     }
 
+    // access the HCALParameters object
+    public HCALParameters getHCALparameterSet() {
+      return this.hcalParameters;
+    }
+
 
 	/**----------------------------------------------------------------------
 	 * set the current Action
@@ -801,7 +816,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 	}
 
 	/**----------------------------------------------------------------------
-<<<<<<< HEAD
 	 * go to the error state, setting messages and so forth, with exception
 	 */
 	public void goToError(String errMessage, Exception e) {
@@ -848,5 +862,4 @@ public class HCALFunctionManager extends UserFunctionManager {
 			}
 		}
 	}
-
 }
