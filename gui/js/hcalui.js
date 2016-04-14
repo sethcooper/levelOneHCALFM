@@ -170,6 +170,15 @@ function hideinitializebutton() {
     });
 }
 
+function moveversionnumber() {
+
+    $('#hcalfmVersion').css('font-size', '12');
+    $('#hcalfmVersion').css('color', '#000099');
+    $('#hcalfmVersion').css('font-family', 'Arial, Helvetica, sans-serif');
+    $('#hcalfmVersion').appendTo('#versionSpot');
+}
+
+
 function hcalOnLoad() {
     activate_relevant_table('AllParamTables');
     onClickCommandParameterCheckBox();
@@ -203,4 +212,5 @@ function hcalOnLoad() {
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
     getfullpath();
     showsupervisorerror();
+    moveversionnumber();
 }
