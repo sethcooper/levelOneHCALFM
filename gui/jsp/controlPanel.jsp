@@ -11,16 +11,6 @@
 <%@ taglib prefix="rcms.globalParameter" uri="rcms.globalParameter" %>
 <%@ taglib prefix="rcms.notification"    uri="rcms.notification"    %>
 
-<!-- Optional Section to set the visibility of available commands at a given state begin -->
-<%
-  /*
-  List visibleCommandList = new ArrayList();
-  visibleCommandList.add("TurnOn");
-  visibleCommandList.add("TurnOff");
-  pageContext.setAttribute(FMPilotConstants.VISIBLE_COMMANDS, visibleCommandList);
-  */
-%>
-
 <%
 FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(FMPilotConstants.FM_PILOT_BEAN));
 %>
@@ -45,6 +35,13 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/GUI.js" />
+  <script type="text/javascript">
+    var guiInst = new GUI();
+  </script>
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequest.js" />
+  <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/ajaxRequestFunctions.js" />--%>
+  <%--<rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />--%>
   <script type="text/javascript" src="../js/stateNotification.js"></script>
   <script type="text/javascript" src="../js/common.js"></script>
   <script type="text/javascript" src="../js/control.js"></script>
@@ -57,17 +54,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     <rcms.notification:jSRenderer indentation="2"/>
     <rcms.globalParameter:jSRenderer indentation="2"/>
 
-    function drawMyCommandButtons(currentState) {
-        // do nothing
-        // placeholder for custom function
-    }
-
-    function myUpdateParameters(message) {
-        // do nothing
-        // placeholder for custom function
-    }
-
-
   </script>
 
   <script>
@@ -76,25 +62,19 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
       var eloginfo = document.getElementById("elogInfo");
       eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
     }
-  </script>
 
-  <script>
-    $(document).ready(function() {
-       setProgress(Math.round(${pars.HCAL_EVENTSTAKEN}/${pars.NUMBER_OF_EVENTS} * 1000)/10);
-    });
-  </script>
-
-  <script>
     function activate_relevant_table(tbid) {
       if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
       else {turn_off_visibility(tbid);}
     }
   </script>
+
+  <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <!-- Custom javascript section end -->
 
 </head>
 
-<body onLoad='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
 
 
 <!-- Table T1 begin -->
@@ -114,11 +94,19 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     <!-- Custom dynamic content begin -->
     <td height="259" valign="top" colspan="2">
       <!-- Form begin -->
-      <form id="FMPilotForm" method="POST" action="FMPilotServlet">
+      <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>
         <rcms.control:commandHiddenInputRenderer indentation="4"/>
         <rcms.notification:hiddenInputRenderer indentation="4"/>
         <rcms.control:configurationKeyRenderer titleClass="control_label1" label="Configuration Keys:&nbsp;" contentClass="control_label2" indentation="10"/>
+		<input type="hidden" id="globalParameterName1"
+			name="globalParameterName1" value="" />
+		<input type="hidden"
+			id="globalParameterValue1" name="globalParameterValue1" value="" />
+		<input type="hidden" id="globalParameterType1"
+			name="globalParameterType1" value="" />
+		<input type="hidden"
+			id="NO_RESPONSE" name="NO_RESPONSE" value="" />
         <!-- Working area begin -->
         <table border="0" cellpadding="0" cellspacing="10" align="left">
           <!-- First section begin -->
@@ -262,7 +250,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                               </tr>
                               <tr>
                                 <!--Area for masking checkboxes-->
-                                <td class="label_center_black" colspan="3">
+                                <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
                                     <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
                                     <br>
@@ -366,5 +354,13 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 </table>
 
 <!-- Table T1 end -->
+  <script type="text/javascript">
+    guiInst.attach(document);
+
+    // a call to onLoad is needed since it starts the notification system
+    $(document).ready(function() {
+      onLoad();
+    });
+  </script>
 </body>
 </html>

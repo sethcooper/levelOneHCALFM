@@ -264,8 +264,8 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   public void init() throws rcms.fm.fw.EventHandlerException {
-   logger.info("[HCAL " + functionManager.FMname + "]:  Executing HCALEventHandler::init()");
-   xmlHandler = new HCALxmlHandler(this.functionManager);
+    logger.info("[HCAL " + functionManager.FMname + "]:  Executing HCALEventHandler::init()");
+    xmlHandler = new HCALxmlHandler(this.functionManager);
     // Evaluating some basic configurations from the userXML
     // Switch for each level1 and level2 to enable TriggerAdapter handling. Note that only one level2 should handle the TriggerAdapter
     {
@@ -280,7 +280,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String doRunInfoPublish =  "";
       try{
-          doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish");
+        doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -288,7 +288,7 @@ public class HCALEventHandler extends UserEventHandler {
       if (doRunInfoPublish.equals("true")) {
         logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
         RunInfoPublish = true;
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH,new BooleanT(RunInfoPublish)));
       }else{
         logger.warn("[Martin Log HCAL base] Invalid text Content in RunInfoPublish tag of the userXML");
       }
@@ -298,7 +298,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useOfficialRunNumbers = "";
       try {
-         useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers");
+        useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -326,14 +326,14 @@ public class HCALEventHandler extends UserEventHandler {
       else {
         logger.debug("[HCAL base] using RunSequenceName: " + RunSequenceName);
       }
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SEQ_NAME, new StringT(""+RunSequenceName)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SEQ_NAME, new StringT(""+RunSequenceName)));
     }
 
     // Check if TestMode has been specified in the userXML
     {
       String useTestMode = "";
       try {
-          useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
+        useTestMode = xmlHandler.getHCALuserXMLelementContent("TestMode");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -344,63 +344,63 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-//    // XMAS initalization and subscription
-//    // TODO: is this useful?
-//    {
-//      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
-//      if (!functionManager.RunInfoFlashlistName.equals("")) {
-//        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
-//
-//        functionManager.XMASMonitoringEnabled = true;
-//
-//        functionManager.wseMap = new HashMap<String,WSESubscription>();
-//
-//        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
-//
-//        // Get WSEs
-//        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
-//
-//        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//
-//    //    // Subscription to the WSEs
-//        for (QualifiedResource qr : functionManager.wseList) {
-//          try {
-//            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-//            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
-//            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
-//            functionManager.wsSubscription.setFilter(WSE_FILTER);
-//
-//            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
-//
-//            try {
-//              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
-//              functionManager.wsSubscription.subscribe();
-//            }
-//            catch (XDAQTimeoutException e) {
-//              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//            catch (Exception e){
-//              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
-//              logger.error(errMessage,e);
-//              functionManager.sendCMSError(errMessage);
-//            }
-//
-//          }
-//          catch (XDAQMessageException e) {
-//            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
-//            logger.error(errMessage,e);
-//            functionManager.sendCMSError(errMessage);
-//          }
-//
-//          // Store subscriptions for later use e.g. unsubscriptions, etc.
-//          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
-//
-//          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
-//        }
-//      }
-//    }
+    //    // XMAS initalization and subscription
+    //    // TODO: is this useful?
+    //    {
+    //      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
+    //      if (!functionManager.RunInfoFlashlistName.equals("")) {
+    //        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
+    //
+    //        functionManager.XMASMonitoringEnabled = true;
+    //
+    //        functionManager.wseMap = new HashMap<String,WSESubscription>();
+    //
+    //        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
+    //
+    //        // Get WSEs
+    //        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
+    //
+    //        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+    //
+    //    //    // Subscription to the WSEs
+    //        for (QualifiedResource qr : functionManager.wseList) {
+    //          try {
+    //            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
+    //            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
+    //            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
+    //            functionManager.wsSubscription.setFilter(WSE_FILTER);
+    //
+    //            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
+    //
+    //            try {
+    //              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
+    //              functionManager.wsSubscription.subscribe();
+    //            }
+    //            catch (XDAQTimeoutException e) {
+    //              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
+    //              logger.error(errMessage,e);
+    //              functionManager.sendCMSError(errMessage);
+    //            }
+    //            catch (Exception e){
+    //              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
+    //              logger.error(errMessage,e);
+    //              functionManager.sendCMSError(errMessage);
+    //            }
+    //
+    //          }
+    //          catch (XDAQMessageException e) {
+    //            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
+    //            logger.error(errMessage,e);
+    //            functionManager.sendCMSError(errMessage);
+    //          }
+    //
+    //          // Store subscriptions for later use e.g. unsubscriptions, etc.
+    //          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
+    //
+    //          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
+    //        }
+    //      }
+    //    }
 
 
     // Check if the userXML specifies whether the AsyncEnable feature should be used
@@ -424,7 +424,7 @@ public class HCALEventHandler extends UserEventHandler {
     {
       String useStopATCP = "";
       try {
-          useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
+        useStopATCP = xmlHandler.getHCALuserXMLelementContent("StopATCP");
       }
       catch (UserActionException e) { 
         logger.warn(e.getMessage());
@@ -483,7 +483,7 @@ public class HCALEventHandler extends UserEventHandler {
       if (!theNumberOfEvents.equals("")) {
         DefaultNumberOfEvents = Integer.valueOf(theNumberOfEvents);
         logger.info("[HCAL base] Default number of events to take set to: " + DefaultNumberOfEvents.toString());
-        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.NUMBER_OF_EVENTS,new IntegerT(DefaultNumberOfEvents)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.NUMBER_OF_EVENTS,new IntegerT(DefaultNumberOfEvents)));
       }
     }
 
@@ -502,8 +502,8 @@ public class HCALEventHandler extends UserEventHandler {
       //logger.debug("[HCAL base] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
       //logger.info("[HCAL ] CfgCVSBasePath: " +CfgCVSBasePath + " is used.");
       logger.info("[Martin Log HCAL " + functionManager.FMname + "] The CfgCVSBasePath for this FM is " + CfgCVSBasePath);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
-      
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
+
     }
 
     // Check if a default ZeroSuppressionSnippetName is given in the userXML
@@ -545,7 +545,7 @@ public class HCALEventHandler extends UserEventHandler {
       try { useResetForRecover=xmlHandler.getHCALuserXMLelementContent("UseResetForRecover"); }
       catch (UserActionException e) { logger.warn(e.getMessage()); }
       if (useResetForRecover.equals("false")) {
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_RESET_FOR_RECOVER,new BooleanT(false)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_RESET_FOR_RECOVER,new BooleanT(false)));
         logger.debug("[HCAL base] UseResetForRecover: " + useResetForRecover + " - this means the \"Recover\" button will perform \"Reset\" unless the user overrides this setting.");
       }
       else if (useResetForRecover.equals("true")) {
@@ -572,7 +572,7 @@ public class HCALEventHandler extends UserEventHandler {
 
         logger.debug("[HCAL " + functionManager.FMname + "]: availableRunConfigs is now: " + availableRunConfigs);
       }
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS,new StringT(availableRunConfigs)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS,new StringT(availableRunConfigs)));
     }
     catch (DOMException | UserActionException e) {
       logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
@@ -593,7 +593,7 @@ public class HCALEventHandler extends UserEventHandler {
     qrList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
     for (QualifiedResource qr : qrList) availableResources += qr.getName() + ";";
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES,new StringT(availableResources)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES,new StringT(availableResources)));
   }
 
   public void destroy() {
@@ -658,7 +658,7 @@ public class HCALEventHandler extends UserEventHandler {
         logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
             + " and snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue());
       }
-      String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+      String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
       logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);
       HCALFunctionManager fmChild = null;
 
@@ -736,7 +736,7 @@ public class HCALEventHandler extends UserEventHandler {
     FullCfgScript=configString;
     logger.debug("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
   }
 
   // Function, which compiles a TTCciControl sequence, which can then "be sent" to the HCAL supervisor application.
@@ -744,18 +744,18 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getTTCciControl() {
     String tmpTTCciControlSequence="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[HCAL " + functionManager.FMname + "]: This FM is going to parse TTCciControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "TTCciControl";
-        tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "TTCciControl";
+      tmpTTCciControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
     catch (  UserActionException e) {
-          logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml in getTTCciControl: " + e.getMessage());
+      logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the TTCciControl xml in getTTCciControl: " + e.getMessage());
     }
     FullTTCciControlSequence = tmpTTCciControlSequence;
     logger.info("[Martin Log HCAL " + functionManager.FMname + "] The FullTTCciControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTTCciControlSequence);
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTTCciControlSequence)));
   }
 
   // Function, which compiles a LTCControl sequence, which can then "be sent" to the HCAL supervisor application.
@@ -763,19 +763,19 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getLTCControl() {
     String tmpLTCControlSequence="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LTCControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "LTCControl";
-        tmpLTCControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "LTCControl";
+      tmpLTCControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
-          logger.error("[Martin logHCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml in getLTCControl: " + e.getMessage());
+      logger.error("[Martin logHCAL " + functionManager.FMname + "]: Got a error when parsing the LTCControl xml in getLTCControl: " + e.getMessage());
     }
     FullLTCControlSequence = tmpLTCControlSequence;
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLTCControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLTCControlSequence);
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(FullLTCControlSequence)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(FullLTCControlSequence)));
   }
 
   // Function, which compiles a TCDSControl sequence, which can then "be sent" to the HCAL supervisor application.
@@ -783,19 +783,19 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getTCDSControl() {
     String tmpTCDSControlSequence="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse TCDSControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "TCDSControl";
-        tmpTCDSControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "TCDSControl";
+      tmpTCDSControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
-          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml in getTCDSControl(): " + e.getMessage());
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the TCDSControl xml in getTCDSControl(): " + e.getMessage());
     }
     FullTCDSControlSequence = tmpTCDSControlSequence;
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullTCDSControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullTCDSControlSequence);
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTCDSControlSequence)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullTCDSControlSequence)));
   }
 
   // Function, which compiles a LPMControl sequence, which can then "be sent" to the HCAL supervisor application.
@@ -803,19 +803,19 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getLPMControl() {
     String tmpLPMControlSequence="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse LPMControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "LPMControl";
-        tmpLPMControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "LPMControl";
+      tmpLPMControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
-          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml in getLPMControl(): " + e.getMessage());
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the LPMControl xml in getLPMControl(): " + e.getMessage());
     }
     FullLPMControlSequence = tmpLPMControlSequence;
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullLPMControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullLPMControlSequence);
 
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullLPMControlSequence)));
   }
 
   // Function, which compiles a PIControl sequence, which can then "be sent" to the HCAL supervisor application.
@@ -823,19 +823,19 @@ public class HCALEventHandler extends UserEventHandler {
   // can be done directly in the userXML.
   protected void getPIControl() {
     String tmpPIControlSequence="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse PIControl seqence from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "PIControl";
-        tmpPIControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "PIControl";
+      tmpPIControlSequence = xmlHandler.getHCALControlSequence(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
-          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml in getPIControl(): " + e.getMessage());
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the PIControl xml in getPIControl(): " + e.getMessage());
     }
     FullPIControlSequence = tmpPIControlSequence;
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The FullPIControlSequence which was successfully compiled for this FM.\nIt looks like this:\n" + FullPIControlSequence);
 
-     functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
@@ -847,7 +847,7 @@ public class HCALEventHandler extends UserEventHandler {
   //  else {
   //    logger.info("[HCAL "+ functionManager.FMname + "] No FedEnableMask found in userXML.\n");
   //  }
-  //  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+  //  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
   //  //more logging stuff here...?
   //}
 
@@ -855,21 +855,21 @@ public class HCALEventHandler extends UserEventHandler {
   // This is used in local only
   protected void getFedEnableMask(){
     String FedEnableMask="";
-    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
     logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse FedEnableMask from : " +CfgCVSBasePath+ selectedRun+"/pro");    
     try{
-        String TagName = "FedEnableMask";
-        FedEnableMask = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
+      String TagName = "FedEnableMask";
+      FedEnableMask = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
     }
     catch ( UserActionException e) {
-          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
+      logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the FedEnableMask in getFedEnableMask(): " + e.getMessage());
     }
     if (!FedEnableMask.equals("")){
-       logger.info("[Martin log HCAL " + functionManager.FMname + "] The FEDEnableMask which was successfully compiled for this FM.\nIt looks like this:\n" + FedEnableMask);
+      logger.info("[Martin log HCAL " + functionManager.FMname + "] The FEDEnableMask which was successfully compiled for this FM.\nIt looks like this:\n" + FedEnableMask);
     }else{
-       logger.info("[Martin log HCAL " + functionManager.FMname + "] No FedEnableMask found in mastersnippet.\n");
+      logger.info("[Martin log HCAL " + functionManager.FMname + "] No FedEnableMask found in mastersnippet.\n");
     }
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
   }
 
   // Function to "send" the USE_PRIMARY_TCDS aprameter to the HCAL supervisor application. It gets the info from the userXML.
@@ -881,7 +881,7 @@ public class HCALEventHandler extends UserEventHandler {
   //  else {
   //    logger.info("[HCAL "+ functionManager.FMname + "] No UsePrimaryTCDS found in userXML.\n");
   //  }
-  //  functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
+  //  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS,new BooleanT(UsePrimaryTCDS)));
   //  // more logging stuff here...?
   //}
 
@@ -913,8 +913,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the TTCciControl application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -922,8 +922,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()" + e.getMessage();
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -957,8 +957,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the LTCControl application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -966,8 +966,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()" + e.getMessage();
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -1031,8 +1031,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: sendRunTypeConfiguration()\n Perhaps the HCAL supervisor application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -1040,8 +1040,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: sendRunTypeConfiguration()";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -1056,8 +1056,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! QualifiedResourceContainerException: sendRunTypeConfiguration()";
         logger.error(errMessage,e);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
       }
@@ -1066,8 +1066,8 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: sendRunTypeConfiguration()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
     }
@@ -1075,11 +1075,11 @@ public class HCALEventHandler extends UserEventHandler {
 
   protected void setMaskedFMs() {
 
-    // functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
+    // functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     // TODO send all masked applications defined in global parameter 
-    String MaskedFMs =  ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
     if (MaskedFMs.length() > 0) {
       MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
     }
@@ -1107,10 +1107,10 @@ public class HCALEventHandler extends UserEventHandler {
             if (qr.getName().equals(MaskedFM)) {
               logger.debug("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
-              
+
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-                allMaskedResources = ((StringT)functionManager.getParameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-                for (Resource level2resource : fullconfigList) {
+              allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+              for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources+=level2resource.getName();
                 allMaskedResources+=";";
@@ -1125,7 +1125,7 @@ public class HCALEventHandler extends UserEventHandler {
             if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
               if (somebodysHandlingTA ) { 
                 if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                 // itsAdummy=true;
+                  // itsAdummy=true;
                   logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
                   allMaskedResources += EvmTrigsApps;
                   qr.getResource().setRole("EvmTrig");
@@ -1133,13 +1133,13 @@ public class HCALEventHandler extends UserEventHandler {
                   logger.warn("[JohnLog] starting to look for the old EvmTrig to be replaced.");
                   for (QualifiedResource otherLevel2FM : level2list) {
                     logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
-                   
+
                     if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
-                       otherLevel2FM.getResource().setRole("HCAL");
-                       logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-                       itsThisLvl2=true;
-                       functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                       logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
+                      otherLevel2FM.getResource().setRole("HCAL");
+                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
+                      itsThisLvl2=true;
+                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+                      logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
                     }
                   }
                 }
@@ -1154,11 +1154,11 @@ public class HCALEventHandler extends UserEventHandler {
                 logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
                 somebodysHandlingTA=true;
                 itsThisLvl2=true;
-               // if (qr.getName().contains("DummyTriggerAdapter")){
-               //   itsAdummy = true;
-              //  }
+                // if (qr.getName().contains("DummyTriggerAdapter")){
+                //   itsAdummy = true;
+                //  }
                 logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
                 logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
                 EvmTrigsApps += level2resource.getName()+";";
                 logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
@@ -1169,8 +1169,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
               }
-      	      else {
-             	  EvmTrigsApps += level2resource.getName()+";";
+              else {
+                EvmTrigsApps += level2resource.getName()+";";
               }
             }
             if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
@@ -1178,8 +1178,8 @@ public class HCALEventHandler extends UserEventHandler {
                 allMaskedResources+=level2resource.getName()+";"; 
                 logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
               }
-       	      else {
-            		EvmTrigsApps += level2resource.getName()+";";
+              else {
+                EvmTrigsApps += level2resource.getName()+";";
                 ruInstance=level2resource.getName();
                 logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
               }
@@ -1200,13 +1200,13 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the new MASKED_RESOURCES list.");
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the new MASKED_RESOURCES list.");
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + ruInstance);
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the LPM_SUPERVISOR to " + lpmSupervisor);
       }
       catch (DBConnectorException ex) {
@@ -1214,7 +1214,7 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
     if (!somebodysHandlingTA) logger.warn("[HCAL " + functionManager.FMname + "]: Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
-    
+
   }
 
 
@@ -1257,16 +1257,16 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: getTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: getTriggerAdapter()";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
         }
@@ -1277,8 +1277,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! Not at least one TriggerAdapter with name " +  TriggerAdapter + " found. This is not good ...";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
 
@@ -1287,8 +1287,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: getTriggerAdapter()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
     }
@@ -1345,8 +1345,8 @@ public class HCALEventHandler extends UserEventHandler {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
                 logger.error(errMessage,e);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
               }
@@ -1354,8 +1354,8 @@ public class HCALEventHandler extends UserEventHandler {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforTriggerAdapter()";
                 logger.error(errMessage,e);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
               }
@@ -1364,7 +1364,7 @@ public class HCALEventHandler extends UserEventHandler {
 
             logger.debug("[HCAL " + functionManager.FMname + "] The data was taken in about: " + elapsedseconds + " sec (+ " + TimeOut + " sec timeout)");
 
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec (+60 sec)")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec (+60 sec)")));
 
           }
           else {
@@ -1399,8 +1399,8 @@ public class HCALEventHandler extends UserEventHandler {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforTriggerAdapter()\n Perhaps the trigger adapter application is dead!?";
                 logger.error(errMessage,e);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
               }
@@ -1408,8 +1408,8 @@ public class HCALEventHandler extends UserEventHandler {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforTriggerAdapter()";
                 logger.error(errMessage,e);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
@@ -1420,16 +1420,16 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E1)";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
         if (elapsedseconds>TimeOut) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter timed out (> " + TimeOut + "sec). Please check log messages which were sent earlier than this one for more details ... (E2)";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
         }
       }
@@ -1437,8 +1437,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: waitforTriggerAdapter()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
     }
@@ -1458,9 +1458,9 @@ public class HCALEventHandler extends UserEventHandler {
       if (hostName.equals("tcds-control-hcal.cms")) {
         usingTCDS = true;
         logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
-				qr.setInitialized(true);
-			}
-		}
+        qr.setInitialized(true);
+      }
+    }
 
     List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr: jobControlList) {
@@ -1481,8 +1481,8 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources";
       logger.error(errMessage,e);
       functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
@@ -1492,36 +1492,36 @@ public class HCALEventHandler extends UserEventHandler {
     logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
 
     // fill applications for level one role
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
 
-		functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
-		// get the EvmTrig FM and handle it separately for sane state calculation
-		List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-		Iterator fmChItr = childFMs.iterator();
-		while (fmChItr.hasNext()) {
-			FunctionManager fmChild = (FunctionManager) fmChItr.next();
-			//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-			// role is set at beginning of init() so it's already set here
-			if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
-				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-				fmChItr.remove();
-			}
-		}
-		functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
+    functionManager.containerFMChildren = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager()));
+    // get the EvmTrig FM and handle it separately for sane state calculation
+    List<QualifiedResource> childFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
+    Iterator fmChItr = childFMs.iterator();
+    while (fmChItr.hasNext()) {
+      FunctionManager fmChild = (FunctionManager) fmChItr.next();
+      //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+      // role is set at beginning of init() so it's already set here
+      if (fmChild.getRole().toString().equals("EvmTrig") || fmChild.getRole().toString().equals("Level2_TCDSLPM")) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
+    }
+    functionManager.containerFMChildrenNoEvmTrigNoTCDSLPM = new QualifiedResourceContainer(childFMs);
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
     // get masked FMs and remove them from container
     //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-		List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
+    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
     fmChItr = allChildFMs.iterator();
     while (fmChItr.hasNext()) {
       FunctionManager fmChild = (FunctionManager) fmChItr.next();
-			if (!fmChild.isActive()) {
-				//logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-				// role is set at beginning of init() so it's already set here
-				logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-				fmChItr.remove();
-			}
+      if (!fmChild.isActive()) {
+        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
+        // role is set at beginning of init() so it's already set here
+        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
+        fmChItr.remove();
+      }
     }
 
     if (functionManager.containerFMChildren.isEmpty()) {
@@ -1530,54 +1530,54 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // see if we have any "special" FMs
-		List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
-		List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
-		List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
-		List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
-		List<FunctionManager> normalList = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
+    List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
+    List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
+    List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
     {
       Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-				if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
-					l2LaserFMList.add(fmChild);
+        if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
+          l2LaserFMList.add(fmChild);
         }
-				else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
-						fmChild.getRole().toString().equals("Level2_Priority_1")) {
-					l2Priority1List.add(fmChild);
-				}
-				else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
-					l2Priority2List.add(fmChild);
-				}
-				else if (fmChild.getRole().toString().equals("EvmTrig")) {
-					evmTrigList.add(fmChild);
-				}
-				else {
-					normalList.add(fmChild);
-				}
-			}
-		}
-		functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
-		functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
-		functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
-		functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
-		functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
+        else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
+            fmChild.getRole().toString().equals("Level2_Priority_1")) {
+          l2Priority1List.add(fmChild);
+        }
+        else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
+          l2Priority2List.add(fmChild);
+        }
+        else if (fmChild.getRole().toString().equals("EvmTrig")) {
+          evmTrigList.add(fmChild);
+        }
+        else {
+          normalList.add(fmChild);
+        }
+      }
+    }
+    functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
+    functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
+    functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
+    functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
+    functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
 
     // fill applications for level two role
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving HCAL XDAQ applications ...")));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Retrieving HCAL XDAQ applications ...")));
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
     // TCDS apps
     List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
-		functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
-		List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-		tcdsList.addAll(lpmList);
-		tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-		tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
-		functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
+    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(lpmList);
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
+    functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
 
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
     functionManager.containerTTCciControl   = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("ttc::TTCciControl"));
@@ -1654,8 +1654,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException in initXDAQ() when checking the async SOAP capabilities ...\n Perhaps the HCAL supervisor application is dead!?";
           logger.error(errMessage,e);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
 
         }
@@ -1663,8 +1663,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException in initXDAQ() when checking the async SOAP capabilities ...";
           logger.error(errMessage,e);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
 
         }
@@ -1698,7 +1698,7 @@ public class HCALEventHandler extends UserEventHandler {
     // define the condition state vectors only here since the group must have been qualified before and all containers are filled
     functionManager.defineConditionState();
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("")));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("")));
   }
 
   // get all XDAQ executives and kill them
@@ -1817,7 +1817,7 @@ public class HCALEventHandler extends UserEventHandler {
     // and put it into the instance variable
     sessionId = tempSessionId;
     // put the session ID into parameter set
-    functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(sessionId)));
     logger.info("[Martin log HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
   }
 
@@ -2044,7 +2044,7 @@ public class HCALEventHandler extends UserEventHandler {
         }
 
         {
-          String localRunKeyOnStopping = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+          String localRunKeyOnStopping = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
           Parameter<StringT> localrunkey;
           if (!localRunKeyOnStopping.equals("")) {
             localrunkey = new Parameter<StringT>("LOCAL_RUN_KEY",new StringT(localRunKeyOnStopping));
@@ -2176,34 +2176,34 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
 
-//        {
-//          String FullComment = "Preamble:\n";
-//
-//          // find comment tag in the userXML
-//          String CommentuserXML = GetUserXMLElement("Comment");
-//          if (CommentuserXML.equals("")) { FullComment += "not used"; }
-//
-//          FullComment += "\nUser comment:\n";
-//
-//          // if there is any user add in the comment field of the FM add this too
-//          String CommentUserGUI = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
-//          if (!CommentUserGUI.equals("")) {
-//            FullComment += CommentUserGUI;
-//          }
-//          else {
-//            FullComment += "not set";
-//          }
-//
-//          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
-//          try {
-//            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
-//            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
-//          }
-//          catch (RunInfoException e) {
-//            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-//            logger.error(errMessage,e);
-//          }
-//        }
+        //        {
+        //          String FullComment = "Preamble:\n";
+        //
+        //          // find comment tag in the userXML
+        //          String CommentuserXML = GetUserXMLElement("Comment");
+        //          if (CommentuserXML.equals("")) { FullComment += "not used"; }
+        //
+        //          FullComment += "\nUser comment:\n";
+        //
+        //          // if there is any user add in the comment field of the FM add this too
+        //          String CommentUserGUI = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
+        //          if (!CommentUserGUI.equals("")) {
+        //            FullComment += CommentUserGUI;
+        //          }
+        //          else {
+        //            FullComment += "not set";
+        //          }
+        //
+        //          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
+        //          try {
+        //            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
+        //            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
+        //          }
+        //          catch (RunInfoException e) {
+        //            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
+        //            logger.error(errMessage,e);
+        //          }
+        //        }
 
         /* {
            Date runStop = Calendar.getInstance().getTime();
@@ -2334,8 +2334,8 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an URI exception!";
       logger.error(errMessage,e);
       functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
@@ -2343,22 +2343,22 @@ public class HCALEventHandler extends UserEventHandler {
     if (checkIfControlledResource(resource)) {
       // check if it's a tcds app
       for (QualifiedResource app : functionManager.containerTCDSControllers.getQualifiedResourceList()) {
-				if(app.getURL().equals(resource.getURL())) {
-					if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
-						return;
-					if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
-						logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
-						return; 
-					}
-				}
-			}
+        if(app.getURL().equals(resource.getURL())) {
+          if(!functionManager.containerhcalSupervisor.isEmpty()) // we have a supervisor to listen to; ignore all TCDS notifications
+            return;
+          if(!functionManager.FMrole.equals("Level2_TCDSLPM")) { // no supervisor, but this is not a TCDS LPM FM: we are not expecting this to happen
+            logger.warn("[HCAL " + functionManager.FMname + "] Warning: Ignoring TCDS state notification, but this FM is not a TCDSLPM FM and does not have a supervisor either! This is unexpected.");
+            return; 
+          }
+        }
+      }
       if (newState.getToState().equals(HCALStates.ERROR.getStateString()) || newState.getToState().equals(HCALStates.FAILED.getStateString())) {
 
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
       }
@@ -2384,8 +2384,8 @@ public class HCALEventHandler extends UserEventHandler {
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
@@ -2394,43 +2394,43 @@ public class HCALEventHandler extends UserEventHandler {
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
             else if (toState.equals(HCALStates.HALTED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()))    {
                 functionManager.theStateNotificationHandler.setTimeoutThread(false); // have to unset timeout thread here
-								if (!functionManager.containerFMChildren.isEmpty()) {
-									//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
-									functionManager.fireEvent(HCALInputs.SETHALT);
-								}
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
+                if (!functionManager.containerFMChildren.isEmpty()) {
+                  //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in initializing and have no FM children so functionManager.fireEvent(HCALInputs.SETHALT)");
+                  functionManager.fireEvent(HCALInputs.SETHALT);
+                }
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... task done.")));
               }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))       {
-								logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in halting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RECOVERING.getStateString()))    {
-								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in recovering so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.RESETTING.getStateString()))     {
-								//logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
-								functionManager.fireEvent(HCALInputs.SETHALT); }
+                //logger.warn("[SethLog HCAL " + functionManager.FMname + "] computeNewState() we are in resetting so functionManager.fireEvent(HCALInputs.SETHALT)");
+                functionManager.fireEvent(HCALInputs.SETHALT); }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString()))   { /* do nothing */ }
               else if (actualState.equals(HCALStates.COLDRESETTING.getStateString())) { functionManager.fireEvent(HCALInputs.SETCOLDRESET); }
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
             else if (toState.equals(HCALStates.CONFIGURED.getStateString())) {
               if (actualState.equals(HCALStates.INITIALIZING.getStateString()) || actualState.equals(HCALStates.RECOVERING.getStateString()) ||
-									actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
-									actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
+                  actualState.equals(HCALStates.RUNNING.getStateString()) || actualState.equals(HCALStates.RUNNINGDEGRADED.getStateString()) ||
+                  actualState.equals(HCALStates.CONFIGURING.getStateString()) || actualState.equals(HCALStates.STOPPING.getStateString())) {
                 //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+ actualState+", but SETCONFIGURE ...");
                 functionManager.fireEvent(HCALInputs.SETCONFIGURE);
               }
@@ -2438,8 +2438,8 @@ public class HCALEventHandler extends UserEventHandler {
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
@@ -2454,16 +2454,16 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-								//logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
-								functionManager.fireEvent(HCALInputs.SETSTART);
+                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
               else if (actualState.equals(HCALStates.HALTING.getStateString()))    { /* do nothing */ }
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
@@ -2473,8 +2473,8 @@ public class HCALEventHandler extends UserEventHandler {
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
@@ -2484,17 +2484,17 @@ public class HCALEventHandler extends UserEventHandler {
               else {
                 logger.error(errMessage);
                 functionManager.sendCMSError(errMessage);
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-                functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
                 if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
               }
             }
-						else {
+            else {
               String errMessage2 = "[HCAL " + functionManager.FMname + "] Error! transitional state not found in computeNewState() for FM\n@ URI: " + functionManager.getURI() + "\nthe Resource: " + newState.getIdentifier() + " reports an error state!\nFrom state: " + functionManager.getState().getStateString() + " \nstate: " + functionManager.calcState.getStateString();
               logger.error(errMessage2);
               functionManager.sendCMSError(errMessage2);
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
             }
           }
@@ -2527,8 +2527,8 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! state of the LVL2 FM with role: " + fmChild.getRole().toString() + "\nPlease check the chainsaw logs, jobcontrol, etc. The name of this FM is: " + fmChild.getName().toString() +"\nThe URI is: " + fmChild.getURI().toString();
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
     }
 
@@ -2567,7 +2567,7 @@ public class HCALEventHandler extends UserEventHandler {
 
             ParameterSet<FunctionManagerParameter> paraSet;
             try {
-              paraSet = aFMChild.getParameter(HCALParameters.GLOBAL_PARAMETER_SET);
+              paraSet = aFMChild.getParameter(functionManager.getHCALparameterSet());
             }
             catch (ParameterServiceException e) {
               logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + aFMChild.getResource().getName() + " The exception is:", e);
@@ -2597,8 +2597,8 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    functionManager.getParameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(completion)));
-    functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.HCAL_EVENTSTAKEN,new IntegerT(eventstaken)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(completion)));
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.HCAL_EVENTSTAKEN,new IntegerT(eventstaken)));
   }
 
   // check that the controlled LVL2 FMs are not in an error state
@@ -2621,9 +2621,9 @@ public class HCALEventHandler extends UserEventHandler {
               try {
                 errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Level 2 FM with name " + fmChild.getName().toString() + " has received an xdaq error from the hcalSupervisor: " + ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
                 logger.error(errMessage);
-                if (!((StringT)functionManager.getParameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString().contains(((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString())){
-                  String totalSupervisorError = ((StringT)functionManager.getParameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString() + ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString() +  System.getProperty("line.separator") ;
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(totalSupervisorError)));
+                if (!((StringT)functionManager.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString().contains(((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString())){
+                  String totalSupervisorError = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString() + ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString() +  System.getProperty("line.separator") ;
+                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(totalSupervisorError)));
                   functionManager.sendCMSError(totalSupervisorError);
                 }
               }
@@ -2633,7 +2633,7 @@ public class HCALEventHandler extends UserEventHandler {
                 functionManager.sendCMSError(errMessage);
               }
               //functionManager.sendCMSError(errMessage);
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); }
             }
           }
@@ -2786,8 +2786,8 @@ public class HCALEventHandler extends UserEventHandler {
 
             if (status.equals("Cold-Init")) {
               logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + " , which means that the configuring takes longer because of e.g. firmware uploads, LUTs changes, etc. (still to go: " + progress + ")");
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
               timetosleep = 10000;
             }
 
@@ -2796,8 +2796,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforHCALsupervisor()\n Perhaps this application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -2805,8 +2805,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforHCALsupervisor()";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
           }
@@ -2820,7 +2820,7 @@ public class HCALEventHandler extends UserEventHandler {
             pam.select(new String[] {"Partition", "overallErrorMessage"});
             pam.get();
             supervisorError = "(" + pam.getValue("Partition") + ") " + pam.getValue("overallErrorMessage");
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(supervisorError)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(supervisorError)));
             if (supervisorError==null) {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! overallErrorMessage was not retrieved.";
               logger.error(errMessage);
@@ -2831,8 +2831,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: HCALSupervisorWatchThread()\n Perhaps this application is dead!?";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
 
           }
@@ -2840,31 +2840,31 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: HCALSupervisorWatchThread()";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
           }
         }
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ...(E3)";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
 
       logger.info("[HCAL " + functionManager.FMname + "] Supervisor did his job in about: " + elapsedseconds + " sec");
 
-      functionManager.getParameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(elapsedseconds)));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(elapsedseconds)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
 
     }
     else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
       logger.error(errMessage);
       functionManager.sendCMSError(errMessage);
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
   }
@@ -2902,8 +2902,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: TriggerAdapterWatchThread()\n Perhaps this application is dead!?";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
 
           }
@@ -2911,8 +2911,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: TriggerAdapterWatchThread()";
             logger.error(errMessage,e);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
 
           }
@@ -2922,15 +2922,15 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ...(E4)";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
         }
 
         if (status.equals("Ready")) {
           logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter reports: " + status + " , which means that all Triggers were sent ...");
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The TA is stopped ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The TA is stopped ...")));
           TAisstopped = true;
         }
       }
@@ -2938,8 +2938,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: TriggerAdapterWatchThread()";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
       }
     }
@@ -2968,8 +2968,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error in reading file named: " + FileName;
           logger.error(errMessage,e);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Problems when reading local CVS based files which include HCAL configurations ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Problems when reading local CVS based files which include HCAL configurations ...")));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
         }
       }
@@ -2977,8 +2977,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error in opening file named: " + FileName;
         logger.error(errMessage,e);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Problems when opening local CVS based files which include HCAL configurations ...")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Problems when opening local CVS based files which include HCAL configurations ...")));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
       }
     }
@@ -3001,8 +3001,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
           break;
         }
@@ -3016,8 +3016,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
             break;
           }
@@ -3043,8 +3043,8 @@ public class HCALEventHandler extends UserEventHandler {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
           logger.error(errMessage);
           functionManager.sendCMSError(errMessage);
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
           if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
           break;
         }
@@ -3058,8 +3058,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
             break;
           }
@@ -3071,7 +3071,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   // find out the state of an FMs with and return true if this state is reached
   protected Boolean waitforFM(FunctionManager fmChild, String toState) {
-    
+
     Boolean OkToProceed = true;
     if (fmChild.isActive()) {
 
@@ -3080,8 +3080,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
       }
 
@@ -3093,8 +3093,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
         logger.error(errMessage);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
       }
     }
@@ -3102,47 +3102,47 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // find out the state of a class of FMs with a role _not_ given and return true if this state is reached for all of them
-	protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
+  protected Boolean waitforFMswithNotTheRole(String Role1 ,String Role2 ,String Role3 ,String Role4 ,String Role5 , String toState) {
 
-		Boolean OkToProceed = true;
+    Boolean OkToProceed = true;
 
-		Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
-		FunctionManager fmChild = null;
-		while (it.hasNext()) {
-			fmChild = (FunctionManager) it.next();
+    Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+    FunctionManager fmChild = null;
+    while (it.hasNext()) {
+      fmChild = (FunctionManager) it.next();
 
-			if (fmChild.isActive()) {
-				// if FM is in an error state do not block ...
-				if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
-					String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-					logger.error(errMessage);
-					functionManager.sendCMSError(errMessage);
-					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-					if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-					break;
-				}
+      if (fmChild.isActive()) {
+        // if FM is in an error state do not block ...
+        if ((fmChild!=null) && (fmChild.refreshState().equals(HCALStates.ERROR))) {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+          logger.error(errMessage);
+          functionManager.sendCMSError(errMessage);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+          break;
+        }
 
-				// check if FMs with not the role given have the desired state
-				if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
-					// check if the given toState is reached
-					if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
-						OkToProceed = false;
-					}
-					else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
-						String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
-						logger.error(errMessage);
-						functionManager.sendCMSError(errMessage);
-						functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-						functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-						if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-						break;
-					}
-				}
-			}
-		}
-		return OkToProceed;
-	}
+        // check if FMs with not the role given have the desired state
+        if ((fmChild!=null) && (!(fmChild.getRole().toString().equals(Role1) || fmChild.getRole().toString().equals(Role2) || fmChild.getRole().toString().equals(Role3) || fmChild.getRole().toString().equals(Role4) || fmChild.getRole().toString().equals(Role5)))) {
+          // check if the given toState is reached
+          if ((fmChild!=null) && (!fmChild.refreshState().equals(HCALStates.ERROR)) && (!fmChild.refreshState().getStateString().equals(toState))) {
+            OkToProceed = false;
+          }
+          else if (fmChild.refreshState().equals(HCALStates.ERROR)) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
+            logger.error(errMessage);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
+            break;
+          }
+        }
+      }
+    }
+    return OkToProceed;
+  }
 
   // find out the state of a class of FMs with a role substring _not_ given and return true if this state is reached for all of them
   protected Boolean waitforFMswithNotTheRoleMatch(String Role1 ,String Role2 ,String Role3 ,String Role4, String Role5 , String toState) {
@@ -3160,8 +3160,8 @@ public class HCALEventHandler extends UserEventHandler {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
             logger.error(errMessage);
             functionManager.sendCMSError(errMessage);
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
             break;
           }
@@ -3176,8 +3176,8 @@ public class HCALEventHandler extends UserEventHandler {
               String errMessage = "[HCAL " + functionManager.FMname + "] Error! for FM with name: " + fmChild.getName() + "\nThe role of this FM is: " + fmChild.getRole().toString() + " when checking its state ...";
               logger.error(errMessage);
               functionManager.sendCMSError(errMessage);
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
               if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
               break;
             }
@@ -3341,8 +3341,8 @@ public class HCALEventHandler extends UserEventHandler {
         String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: RunInfoServerReader::acquire(..) when trying to retrieve info from a hcalRunInfoServer XDAQ application";
         logger.error(errMessage,e);
         functionManager.sendCMSError(errMessage);
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
 
@@ -3467,7 +3467,7 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
       }
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(TheLine)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(TheLine)));
     }
   }
 
@@ -3529,38 +3529,38 @@ public class HCALEventHandler extends UserEventHandler {
         if (icount%1==0) {
 
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.UNINITIALIZED.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.UNINITIALIZED.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.UNINITIALIZED.toString() + "\" state.")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.UNINITIALIZED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.UNINITIALIZED.toString() + "\" state.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.INITIAL.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.INITIAL.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.INITIAL.toString() + "\" state.")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.INITIAL.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.INITIAL.toString() + "\" state.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.HALTED.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.HALTED.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.HALTED.toString() + "\" state.")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.HALTED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.HALTED.toString() + "\" state.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()))) {
             pollCompletion(); // get the latest update of the LVL2 config times
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.CONFIGURED.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.CONFIGURED.toString() + "\" state in about " + elapsedseconds + " sec.")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.CONFIGURED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.CONFIGURED.toString() + "\" state in about " + elapsedseconds + " sec.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.PAUSED.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.PAUSED.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.PAUSED.toString() + "\" state.")));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.PAUSED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("... reached the \"" + HCALStates.PAUSED.toString() + "\" state.")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNING.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNING.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNINGDEGRADED.toString())));
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(HCALStates.RUNNINGDEGRADED.toString())));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ERROR_MSG,new StringT("")));
           }
         }
 
@@ -3572,7 +3572,7 @@ public class HCALEventHandler extends UserEventHandler {
           }
           // move the little fishy when running
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && ((functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
-               (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
+                (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) ) {
             LittleB.movehim();
           }
         }
@@ -3581,7 +3581,7 @@ public class HCALEventHandler extends UserEventHandler {
         Boolean noticedonce = false;
         if ((functionManager != null) && (functionManager.isDestroyed() == false) && (!functionManager.FMrole.equals("HCAL")) && (!noticedonce) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
           noticedonce = true;
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("running like hell ...")));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("running like hell ...")));
         }
 
         // check the LVL2 health
@@ -3592,10 +3592,10 @@ public class HCALEventHandler extends UserEventHandler {
         // from time to time report the progress in some transitional states
         if (icount%120==0) {
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still executing configureAction ... - so we should be closer now...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still executing configureAction ... - so we should be closer now...")));
           }
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
-            functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still running like hell ...")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still running like hell ...")));
           }
         }
 
@@ -3607,10 +3607,10 @@ public class HCALEventHandler extends UserEventHandler {
           }
           if (OkToShow) {
             if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()))) {
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still executing configureAction ... - we should be better done soon!!")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("still executing configureAction ... - we should be better done soon!!")));
             }
             if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
-              functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("catch the little fishy ;-)")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("catch the little fishy ;-)")));
             }
             OkToShow =false;
           }
@@ -3677,9 +3677,9 @@ public class HCALEventHandler extends UserEventHandler {
         // poll HCAL supervisor status in the Configuring/Configured/Running/RunningDegraded states every 5 sec to see if it is still alive  (dangerous because ERROR state is reported wrongly quite frequently)
         if (icount%5==0) {
           if ((functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()) ||
-               functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) ||
-               functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
-               functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
+                functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString()) ||
+                functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+                functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))) {
             if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
               {
@@ -3739,7 +3739,6 @@ public class HCALEventHandler extends UserEventHandler {
       logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
 
       HCALSupervisorWatchThreadList.remove(this);
-
     }
   }
 
@@ -3793,7 +3792,7 @@ public class HCALEventHandler extends UserEventHandler {
                     status = pam.getValue("stateName");
                     if (status==null) {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the stateName when Running resulted in a NULL pointer - this is bad!";
-											functionManager.goToError(errMessage);
+                      functionManager.goToError(errMessage);
                     }
 
                     String NextEventNumberString = pam.getValue("NextEventNumber");
@@ -3809,12 +3808,12 @@ public class HCALEventHandler extends UserEventHandler {
                     }
                     else {
                       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the TA for the NextEventNumber when Running resulted in a NULL pointer - this is bad!";
-											functionManager.goToError(errMessage);
+                      functionManager.goToError(errMessage);
                     }
 
                     logger.info("[HCAL " + functionManager.FMname + "] state of the TriggerAdapter stateName is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")");
 
-                    functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
+                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("The state of the TriggerAdapter is: " + status + ".\nThe NextEventNumberString is: " + NextEventNumberString + ". \nThe local completion is: " + localcompletion + " (" + NextEventNumber + "/" + TriggersToTake.doubleValue() + ")")));
 
                   }
                   catch (XDAQTimeoutException e) {
@@ -3830,13 +3829,13 @@ public class HCALEventHandler extends UserEventHandler {
 
                 if (status.equalsIgnoreCase("Failed")) {
                   String errMessage = "[HCAL " + functionManager.FMname + "] Error! TriggerAdapter reports error state: " + status + ". Please check log messages which were sent earlier than this one for more details ... (E9)";
-									functionManager.goToError(errMessage);
+                  functionManager.goToError(errMessage);
                 }
 
                 if (status.equals("Ready")) {
                   logger.info("[HCAL " + functionManager.FMname + "] The Trigger adapter reports: " + status + " , which means that all Triggers were sent ...");
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Stopping the TA ...")));
+                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("")));
+                  functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Stopping the TA ...")));
 
                   if (!SpecialFMsAreControlled) {
                     logger.warn("[SethLog HCAL " + functionManager.FMname + "] Do functionManager.fireEvent(HCALInputs.STOP)");
@@ -3849,7 +3848,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else {
                 String errMessage = "[HCAL " + functionManager.FMname + "] Error! No TriggerAdapter found: TriggerAdapterWatchThread()";
-								functionManager.goToError(errMessage);
+                functionManager.goToError(errMessage);
               }
             }
           }
@@ -3859,12 +3858,8 @@ public class HCALEventHandler extends UserEventHandler {
       // stop the TriggerAdapter watchdog thread
       System.out.println("[HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
       logger.warn("[SethLog HCAL " + functionManager.FMname + "] ... stopping TriggerAdapter watchdog thread done.");
-
       TriggerAdapterWatchThreadList.remove(this);
-
     }
   }
-
-
 }
- 
+
