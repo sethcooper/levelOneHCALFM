@@ -183,9 +183,9 @@ public class HCALxmlHandler {
               lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
-            if (xcApplicationClass.equals(ttcci)){
-              if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-            }
+            //if (xcApplicationClass.equals(ttcci)){
+            //  if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+            //}
             if (xcApplicationClass.equals(ici)){
               newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
             }
