@@ -1,18 +1,19 @@
 package rcms.fm.app.level1;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import rcms.util.logger.RCMSLogger;
-
-import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.fw.parameter.FunctionManagerParameter;
-
+import rcms.common.db.DBConnectorException;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
-import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.FunctionManagerParameter;
+import rcms.fm.fw.user.UserActionException;
 
 /**
  *  @author John Hakala
@@ -31,7 +32,7 @@ public class HCALMasker {
     logger.warn("Done constructing masker.");
   }
 
-  protected Boolean isEvmTrigCandidate(List<Resource> level2Children) {
+  protected Map<String, Boolean> isEvmTrigCandidate(List<Resource> level2Children) {
     boolean hasAtriggerAdapter = false;
     boolean hasAdummy = false;
     boolean hasAnEventBuilder = false;
@@ -54,11 +55,46 @@ public class HCALMasker {
         hasAnEventBuilder=true;
       }
     }
-    return new Boolean( hasAtriggerAdapter && hasAnFU && hasAnEventBuilder );
+    Map<String, Boolean> response = new HashMap<String, Boolean>();
+    Boolean isAcandidate = new Boolean( hasAtriggerAdapter && hasAnFU && hasAnEventBuilder );
+    response.put("isAcandidate", isAcandidate);
+    Boolean isAdummyCandidate = new Boolean( hasAtriggerAdapter && hasAnFU && hasAnEventBuilder && hasAdummy);
+    response.put("isAdummyCandidate", isAdummyCandidate);
+    return response;
   }
-  protected void pickEvmTrig() {
+
+  protected Map<String, Resource> getEvmTrigResources(List<Resource> level2Children) throws UserActionException { 
+    if (isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+      // This implementation assumes no level2 function managers will have no more than one TA.
+      Map<String, Resource> evmTrigResources = new HashMap<String, Resource>();
+      for (Resource level2resource : level2Children) {
+        if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
+          evmTrigResources.put("TriggerAdapter", level2resource);
+        }
+        if (level2resource.getName().contains("hcalTrivialFU")) {
+          evmTrigResources.put("hcalTrivialFU", level2resource);
+        }
+        if (level2resource.getName().contains("hcalEventBuilder")) {
+          evmTrigResources.put("hcalEventBuilder", level2resource);
+        }
+      }
+      return evmTrigResources;
+    }
+    else {
+      String errMessage = "getEvmTrigResources was called on a level2 that does not have the required apps (TA, eventbuilder, trivialFU).";
+      throw new UserActionException(errMessage);
+    }
+  }
+
+  protected Map<String, Resource> pickEvmTrig() {
     // Function to pick an FM that has the needed applications for triggering and eventbuilding, and put it in charge of those duties
     // This will prefer an FM with a DummyTriggerAdapter to other kinds of trigger adapters.
+
+    Map<String, Resource> candidates = new HashMap<String, Resource>();
+
+    Boolean theresAcandidate = false;
+    Boolean theresAdummyCandidate = false;
+
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
@@ -67,21 +103,51 @@ public class HCALMasker {
     }
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
+
     for (QualifiedResource level2 : level2list) {
       try {
         QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
+
         Group fullConfig = level2group.rs.retrieveLightGroup(level2.getResource());
         List<Resource> level2Children = fullConfig.getChildrenResources();
-        logger.warn("[JohnLog2] " + functionManager.FMname + ": pickEvmTrig is calling isEvmTrigCandidate() on " + level2.getName());
-        logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() is: " + isEvmTrigCandidate(level2Children).toString());
 
+        logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
+        logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
+
+        try {
+          if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+            logger.warn("[JohnLog2] found a non-dummy candidate.");
+            candidates = getEvmTrigResources(level2Children);
+            candidates.put("EvmTrigFM", level2.getResource());
+            theresAcandidate = true;
+          }
+          if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
+            logger.warn("[JohnLog2] found a dummy candidate.");
+            candidates = getEvmTrigResources(level2Children);
+            candidates.put("EvmTrigFM", level2.getResource());
+            theresAcandidate = true;
+            theresAdummyCandidate = true;
+          }
+        }
+        catch (UserActionException ex) {
+          logger.error("[JohnLog2] " + functionManager.FMname + ": got an exception while getting the EvmTrig resources for " + level2.getName() + ": " + ex.getMessage());
+        }
       }
       catch (DBConnectorException ex) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
+    //logger.warn("[JohnLog2] The following resources were picked as evmTrig resources: " + candidates.get("EvmTrigFM") +  ", " + candidates.get("TriggerAdapter").getName() + ", " + candidates.get("hcalTrivialFU").getName() + ", " + candidates.get("hcalEventBuilder").getName());
 
+
+    for (Map.Entry<String, Resource> entry : candidates.entrySet()) {
+      String key = entry.getKey();
+      logger.warn("[JohnLog2] key:" + key);
+   }
+  
+  
+    return candidates;
   }
 
   protected void setMaskedFMs() {
