@@ -105,37 +105,39 @@ public class HCALMasker {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
 
     for (QualifiedResource level2 : level2list) {
-      try {
-        QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
-        logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
-
-        Group fullConfig = level2group.rs.retrieveLightGroup(level2.getResource());
-        List<Resource> level2Children = fullConfig.getChildrenResources();
-
-        logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
-        logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
-
+      if (level2.isActive()) {
         try {
-          if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
-            logger.warn("[JohnLog2] found a non-dummy candidate.");
-            candidates = getEvmTrigResources(level2Children);
-            candidates.put("EvmTrigFM", level2.getResource());
-            theresAcandidate = true;
+          QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
+          logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
+
+          Group fullConfig = level2group.rs.retrieveLightGroup(level2.getResource());
+          List<Resource> level2Children = fullConfig.getChildrenResources();
+
+          logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate()  on " + level2.getName() + " has isAcandidate: " + isEvmTrigCandidate(level2Children).get("isAcandidate").toString());
+          logger.warn("[JohnLog2] " + functionManager.FMname + ": the result of isEvmTrigCandidate() has isAdummyCandidate: " + isEvmTrigCandidate(level2Children).get("isAdummyCandidate").toString());
+
+          try {
+            if (!theresAcandidate && isEvmTrigCandidate(level2Children).get("isAcandidate")) {
+              logger.warn("[JohnLog2] found a non-dummy candidate.");
+              candidates = getEvmTrigResources(level2Children);
+              candidates.put("EvmTrigFM", level2.getResource());
+              theresAcandidate = true;
+            }
+            if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
+              logger.warn("[JohnLog2] found a dummy candidate.");
+              candidates = getEvmTrigResources(level2Children);
+              candidates.put("EvmTrigFM", level2.getResource());
+              theresAcandidate = true;
+              theresAdummyCandidate = true;
+            }
           }
-          if (!theresAdummyCandidate && isEvmTrigCandidate(level2Children).get("isAdummyCandidate")) {
-            logger.warn("[JohnLog2] found a dummy candidate.");
-            candidates = getEvmTrigResources(level2Children);
-            candidates.put("EvmTrigFM", level2.getResource());
-            theresAcandidate = true;
-            theresAdummyCandidate = true;
+          catch (UserActionException ex) {
+            logger.error("[JohnLog2] " + functionManager.FMname + ": got an exception while getting the EvmTrig resources for " + level2.getName() + ": " + ex.getMessage());
           }
         }
-        catch (UserActionException ex) {
-          logger.error("[JohnLog2] " + functionManager.FMname + ": got an exception while getting the EvmTrig resources for " + level2.getName() + ": " + ex.getMessage());
+        catch (DBConnectorException ex) {
+          logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
         }
-      }
-      catch (DBConnectorException ex) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
     //logger.warn("[JohnLog2] The following resources were picked as evmTrig resources: " + candidates.get("EvmTrigFM") +  ", " + candidates.get("TriggerAdapter").getName() + ", " + candidates.get("hcalTrivialFU").getName() + ", " + candidates.get("hcalEventBuilder").getName());
@@ -161,15 +163,20 @@ public class HCALMasker {
       MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
     }
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-    boolean somebodysHandlingTA = false;
-    boolean itsThisLvl2 = false;
-    boolean itsAdummy = false;
+    //boolean somebodysHandlingTA = false;
+    //boolean itsThisLvl2 = false;
+    //boolean itsAdummy = false;
     String allMaskedResources = "";
-    String ruInstance = "";
-    String lpmSupervisor = "";
-    String EvmTrigsApps = "";
+    //String ruInstance = "";
+    //String lpmSupervisor = "";
+    //String EvmTrigsApps = "";
+    Map<String, Resource> evmTrigResources = pickEvmTrig();
+    String eventBuilder = evmTrigResources.get("hcalEventBuilder").getName();
+    String trivialFU = evmTrigResources.get("hcalTrivialFU").getName();
+    String triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
+
     for (QualifiedResource qr : level2list) {
-      itsThisLvl2 = false;
+      //itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
         logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -197,82 +204,9 @@ public class HCALMasker {
           }
         }
         for (Resource level2resource : fullconfigList) {
-          logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
-          if (!MaskedFMs.contains(qr.getName())) { 
-            if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA ) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                  // itsAdummy=true;
-                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
-                  allMaskedResources += EvmTrigsApps;
-                  qr.getResource().setRole("EvmTrig");
-                  logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
-                  logger.warn("[JohnLog] starting to look for the old EvmTrig to be replaced.");
-                  for (QualifiedResource otherLevel2FM : level2list) {
-                    logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
-
-                    if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
-                      otherLevel2FM.getResource().setRole("HCAL");
-                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-                      itsThisLvl2=true;
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                      logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
-                    }
-                  }
-                }
-                else {
-                  allMaskedResources+=level2resource.getName()+";"; 
-                  logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant trigger adapter " + level2resource.getName());
-                }
-              }
-
-              else {
-                qr.getResource().setRole("EvmTrig");
-                logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
-                somebodysHandlingTA=true;
-                itsThisLvl2=true;
-                // if (qr.getName().contains("DummyTriggerAdapter")){
-                //   itsAdummy = true;
-                //  }
-                logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
-                EvmTrigsApps += level2resource.getName()+";";
-                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
-              }
-              else {
-                EvmTrigsApps += level2resource.getName()+";";
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
-              }
-              else {
-                EvmTrigsApps += level2resource.getName()+";";
-                ruInstance=level2resource.getName();
-                logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
-              }
-              else if (somebodysHandlingTA && itsThisLvl2) {
-                logger.info("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
-                lpmSupervisor=level2resource.getName();
-              }
-              else {
-                logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
-                lpmSupervisor=level2resource.getName();
-              }
+          if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
+            if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
+              allMaskedResources += level2resource.getName();
             }
           }
         }
@@ -280,18 +214,13 @@ public class HCALMasker {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the new MASKED_RESOURCES list.");
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
-        logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + ruInstance);
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(eventBuilder)));
+        logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + eventBuilder);
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
-        logger.info("[HCAL " + functionManager.FMname + "]: Just set the LPM_SUPERVISOR to " + lpmSupervisor);
       }
       catch (DBConnectorException ex) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
     }
-    if (!somebodysHandlingTA) logger.warn("[HCAL " + functionManager.FMname + "]: Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
-
   }
-
 }
