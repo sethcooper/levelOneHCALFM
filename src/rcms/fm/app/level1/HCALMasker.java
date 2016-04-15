@@ -105,7 +105,7 @@ public class HCALMasker {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
 
     for (QualifiedResource level2 : level2list) {
-      if (level2.isActive()) {
+      if (!MaskedFMs.contains(level2.getName())) {
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
           logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -176,6 +176,10 @@ public class HCALMasker {
     String triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
 
     for (QualifiedResource qr : level2list) {
+      if (qr.getName().equals(evmTrigResources.get("EvmTrigFM").getName())) { 
+         qr.getResource().setRole("EvmTrig");
+         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+      }
       //itsThisLvl2 = false;
       try {
         QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
@@ -207,6 +211,7 @@ public class HCALMasker {
           if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
             if (!level2resource.getName().equals(eventBuilder) && !level2resource.getName().equals(trivialFU) && !level2resource.getName().equals(triggerAdapter)) { 
               allMaskedResources += level2resource.getName();
+              allMaskedResources+=";";
             }
           }
         }
