@@ -103,6 +103,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 	public void initAction(Object obj) throws UserActionException {
 
 		if (obj instanceof StateEnteredEvent) {
+			masker.pickEvmTrig();
 			masker.setMaskedFMs();
 			QualifiedGroup qg = functionManager.getQualifiedGroup();
 			List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
