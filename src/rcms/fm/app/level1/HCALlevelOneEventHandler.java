@@ -82,6 +82,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 	static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
+  public HCALMasker masker = null;
 
 	public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -92,6 +93,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 		functionManager = (HCALFunctionManager) getUserFunctionManager();
 		qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
+    masker = new HCALMasker(this.functionManager);
 
 		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
@@ -101,7 +103,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 	public void initAction(Object obj) throws UserActionException {
 
 		if (obj instanceof StateEnteredEvent) {
-			setMaskedFMs();
+			masker.setMaskedFMs();
 			QualifiedGroup qg = functionManager.getQualifiedGroup();
 			List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
 			// loop over the executives to strip the connections
