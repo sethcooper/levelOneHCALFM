@@ -183,9 +183,12 @@ public class HCALxmlHandler {
               lpmApplicationElement = (Element) currentApplicationNode.cloneNode(true);
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
-            //if (xcApplicationClass.equals(ttcci)){
-            //  if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
-            //}
+            if (xcApplicationClass.equals(ttcci)){
+              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+                currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+                logger.warn("[JohnLog3] " + functionManager.FMname + ": just removed the ttcci context in an executive.");
+              }
+            }
             if (xcApplicationClass.equals(ici)){
               newLPMnodeContext = (Element) currentApplicationNode.getParentNode();
             }
