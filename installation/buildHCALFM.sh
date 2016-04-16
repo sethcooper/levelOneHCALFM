@@ -9,17 +9,17 @@
 if [ "$1" = "release" ]; then
   git diff-index --quiet HEAD
   if [ "$?" = "0" ]; then
-		GITREV=`git rev-parse HEAD | head -c 7`
+    GITREV=`git rev-parse HEAD | head -c 7`
     sed -i '$ d' ../gui/jsp/footer.jspf
     echo "<div id='hcalfmVersion'>HCALFM version: ${GITREV}</div>" >> ../gui/jsp/footer.jspf
-		ant -DgitRev="${GITREV}"
+    ant -DgitRev="${GITREV}"
   else
     echo "No changes since the last commit are permitted when building a release FM. Please commit your changes or stash them."
     exit 1
   fi
     
 elif [ "$1" = "test" ]; then
-	DATE=`date  +%m-%d-%y`
+  DATE=`date  +%m-%d-%y`
   ITERATION=1
   
   while [ -f jars/HCALFM_${DATE}_v${ITERATION}.jar ];
@@ -30,8 +30,7 @@ elif [ "$1" = "test" ]; then
   ant -DgitRev="${DATE}_v${ITERATION}"
 
 else 
-	echo "Please run buildHCALFM with either the 'release' or 'test' option. Example:\n./buildHCALFM.sh test"
+  echo "Please run buildHCALFM with either the 'release' or 'test' option. Example:\n./buildHCALFM.sh test"
   exit 1
 
 fi
-
