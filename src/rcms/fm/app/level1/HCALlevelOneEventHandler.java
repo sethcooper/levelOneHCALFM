@@ -681,6 +681,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			// get PI control sequence to be sent to controlled LVL2 FMs
 			getPIControl();
 
+      // get alarmerURL
+      getAlarmerUrl();
+
+      // start the alarmer watch thread here, now that we have the alarmerURL
+			logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+			AlarmerWatchThread thread4 = new AlarmerWatchThread();
+			thread4.start();
+
+
 			// prepare run mode to be passed to level 2
 			String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 			ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
