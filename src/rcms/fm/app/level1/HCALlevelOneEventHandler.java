@@ -269,8 +269,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           functionManager.goToError( ex.getMessage() );
         }
       }
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
-      pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(RunConfigSelected)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
+      pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
       String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
       //logger.info("[JohnLog2] " + functionManager.FMname + ": Started out with masked resources: " + MaskedResources);
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources);
