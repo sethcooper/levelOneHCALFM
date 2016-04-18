@@ -240,7 +240,24 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			pSet.put(new CommandParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH, new BooleanT(RunInfoPublish)));
 			pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
-			String RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+      String RunConfigSelected = "";
+      if (RunType.equals("local")) {
+			RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+      }
+      else if (RunType.equals("global")) {
+        if (functionManager.FMrole.equals("HCAL")) {
+          RunConfigSelected = "global_HCAL";
+          logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+        }
+        else if (functionManager.FMrole.equals("HF")) {
+          RunConfigSelected = "global_HF";
+          logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+        }
+        else {
+          String errMessage = "[JohnLog3] " + functionManager.FMname + ": This FM is a level1 in global but it has neither the role 'HCAL' nor 'HF'. This is probably bad. Make sure the role is correctly assigned in the configuration.";  
+          functionManager.goToError(errMessage);
+        }
+      }
 			pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
 			String CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
 			pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(RunConfigSelected)));
