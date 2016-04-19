@@ -93,6 +93,40 @@ public class HCALxmlHandler {
     }     
     catch (UserActionException e) {throw e;}
   }
+
+  public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute ) throws UserActionException {
+    try {
+      boolean foundTheRequestedAttributeInNamedElement = false;
+      Element hcalUserXML = getHCALuserXML();
+      if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
+        if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
+          NodeList nodes = hcalUserXML.getElementsByTagName(tag); 
+          logger.warn("[JohnLog3] " + functionManager.FMname + ": the length of the list of nodes with tag name '" + tag + "' is: " + nodes.getLength());
+          for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
+            logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
+            if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
+              foundTheRequestedAttributeInNamedElement = true;
+              return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
+            }
+          }
+          if (!foundTheRequestedAttributeInNamedElement) {
+            String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that attribute did not exist in that element.";
+            throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
+          }
+        }
+        else {
+          throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML.");
+        }
+      }
+      else {
+        throw new UserActionException("[HCAL " + functionManager.FMname + "]: The userXML or the userXML element with tag name '" + tag + "'" + "was null.");
+      }
+    }     
+    catch (UserActionException e) {throw e;}
+    logger.warn("[JohnLog3] " + functionManager.FMname + ": Got to a bad place!");
+    return null;
+  }
+
   public String stripExecXML(String execXMLstring, ParameterSet<FunctionManagerParameter> parameterSet) throws UserActionException{
     try {
 
@@ -184,7 +218,10 @@ public class HCALxmlHandler {
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
             if (xcApplicationClass.equals(ttcci)){
-              if (!functionManager.FMrole.equals("EvmTrig")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+                currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
+                logger.warn("[JohnLog3] " + functionManager.FMname + ": just removed the ttcci context in an executive.");
+              }
             }
             if (xcApplicationClass.equals(ici)){
               newLPMnodeContext = (Element) currentApplicationNode.getParentNode();

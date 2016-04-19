@@ -23,6 +23,7 @@
 		<!-- Central title end -->
 		
 		<td width="50%" align="right" bgcolor="#EEEEEE">
+				<p id="versionSpot"></p>
 				<p>
 				<!-- Version begin -->
 				<font color="#000099" size="1" face="Arial, Helvetica, sans-serif">
@@ -32,7 +33,7 @@
 			</p>
 			<!-- Tag begin -->
 			<%if (request.getRemoteUser() != null) {%>
-			<font size="2" color="#000099" face="Arial, Helvetica, sans-serif">
+			<font size="1" color="#000099" face="Arial, Helvetica, sans-serif">
 				User : &nbsp;
 				<b><%= request.getRemoteUser()%></b>
 			</font>

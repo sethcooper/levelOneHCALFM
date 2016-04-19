@@ -55,7 +55,7 @@ import net.hep.cms.xdaqctl.WSESubscription;
 /**
  * Function Machine base class for HCAL Function Managers
  * 
- * @author Arno Heister
+ *
  *
  */
 
@@ -223,6 +223,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 	public HCALStateNotificationHandler theStateNotificationHandler = null;
 
   public String rcmsStateListenerURL = "";
+
+	public String alarmerURL = "";
 
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
@@ -617,7 +619,9 @@ public class HCALFunctionManager extends UserFunctionManager {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.STOPPING);
         sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
-				sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
+        // need this gone for 904 to work
+        // why was it here for P5 anyway?
+				//sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
         sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
         svCalc.add(sv);
       }
@@ -848,7 +852,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 				Iterator it = containerlpmController.getQualifiedResourceList().iterator();
 				while (it.hasNext()) {
 					lpmApp = (XdaqApplication) it.next();
-          //XXX FIXME use real session ID here eventually
 					lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
 				}
 			}

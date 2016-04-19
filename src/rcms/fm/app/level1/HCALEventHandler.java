@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.lang.Integer;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
 import java.lang.Double;
@@ -22,6 +21,8 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.text.DecimalFormat;
 import java.util.Random;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -211,6 +212,8 @@ public class HCALEventHandler extends UserEventHandler {
   public boolean AllButHCALSuperVisorIsOK = false;
   private List<Thread> TriggerAdapterWatchThreadList = new ArrayList<Thread>();
   public boolean stopTriggerAdapterWatchThread = false;
+  private List<Thread> AlarmerWatchThreadList = new ArrayList<Thread>();
+  public boolean stopAlarmerWatchThread = false;
   public boolean NotifiedControlledFMs = false;
 
   // Switch which indicates whether "special" function managers are controlled, e.g. HCAL_Master or RCT_Master
@@ -343,65 +346,6 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn("[HCAL base] TestMode: " + TestMode + " enabled - ignoring anything which would set the state machine to an error state!");
       }
     }
-
-    //    // XMAS initalization and subscription
-    //    // TODO: is this useful?
-    //    {
-    //      functionManager.RunInfoFlashlistName = GetUserXMLElement("RunInfoFlashlistName");
-    //      if (!functionManager.RunInfoFlashlistName.equals("")) {
-    //        logger.info("[HCAL base] This FM will try to subscribe to a WSE to retrieve a flashlist named: " + functionManager.RunInfoFlashlistName);
-    //
-    //        functionManager.XMASMonitoringEnabled = true;
-    //
-    //        functionManager.wseMap = new HashMap<String,WSESubscription>();
-    //
-    //        WSE_FILTER = "//xmas:sample[(@flashlist='urn:xdaq-flashlist:"+functionManager.RunInfoFlashlistName+"')]";
-    //
-    //        // Get WSEs
-    //        functionManager.wseList = functionManager.getQualifiedGroup().seekQualifiedResourcesOfRole("WSE");
-    //
-    //        logger.info("[HCAL base] WSE subscription: feedback to "+"http://"+qualifiedGroup.getFMURI().getHost()+":"+ qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-    //
-    //    //    // Subscription to the WSEs
-    //        for (QualifiedResource qr : functionManager.wseList) {
-    //          try {
-    //            logger.info("[HCAL base] Start WSE subscription to " + qr.getURI().toASCIIString()+"  --->  "+"http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX);
-    //            functionManager.wsSubscription = new WSESubscription("http://"+qualifiedGroup.getFMURI().getHost() + ":" + qualifiedGroup.getFMURI().getPort() + "/" + RCMSConstants.MONITOR_SERVLET_SUFFIX,qr.getURI().toASCIIString());
-    //            logger.info("[HCAL base] WSE subscription, set filter to  " + WSE_FILTER);
-    //            functionManager.wsSubscription.setFilter(WSE_FILTER);
-    //
-    //            functionManager.wsSubscription.setExpires("PT20S"); // PT20S for 20sec or PT10M for 10min etc.
-    //
-    //            try {
-    //              logger.debug("[HCAL base] wsSubscription.subscribe() called now ...");
-    //              functionManager.wsSubscription.subscribe();
-    //            }
-    //            catch (XDAQTimeoutException e) {
-    //              String errMessage = "[HCAL base] Error! XDAQTimeoutException when subscribing to WSEs ...\n Perhaps this application is dead!?";
-    //              logger.error(errMessage,e);
-    //              functionManager.sendCMSError(errMessage);
-    //            }
-    //            catch (Exception e){
-    //              String errMessage = "[HCAL base] Error! Exception when subscribing to WSEs ...";
-    //              logger.error(errMessage,e);
-    //              functionManager.sendCMSError(errMessage);
-    //            }
-    //
-    //          }
-    //          catch (XDAQMessageException e) {
-    //            String errMessage = "[HCAL base] Error! XDAQMessageException when subscribing to WSEs ...";
-    //            logger.error(errMessage,e);
-    //            functionManager.sendCMSError(errMessage);
-    //          }
-    //
-    //          // Store subscriptions for later use e.g. unsubscriptions, etc.
-    //          functionManager.wseMap.put(qr.getName(),functionManager.wsSubscription);
-    //
-    //          logger.info("[HCAL base] WSE subscription done successfully for: " + qr.getURI().toASCIIString());
-    //        }
-    //      }
-    //    }
-
 
     // Check if the userXML specifies whether the AsyncEnable feature should be used
     {
@@ -601,6 +545,7 @@ public class HCALEventHandler extends UserEventHandler {
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
+		stopAlarmerWatchThread = true;
 
     // Destroy the FM
     super.destroy();
@@ -838,6 +783,22 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
+  // get the alarmer URL from userXML
+  protected void getAlarmerUrl() {
+    String tmpAlarmerURL="";
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Seth log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+        String TagName = "AlarmerURL";
+        tmpAlarmerURL = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
+    }
+    catch ( UserActionException e) {
+          logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
+    }
+    functionManager.alarmerURL = tmpAlarmerURL;
+    logger.info("[Seth log HCAL " + functionManager.FMname + "] The alarmerURL looks like this:\n" + functionManager.alarmerURL);
+  }
+
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
   //protected void getFedEnableMask(){
   //  String FedEnableMask = GetUserXMLElement("FedEnableMask");
@@ -1071,150 +1032,6 @@ public class HCALEventHandler extends UserEventHandler {
       if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
     }
-  }
-
-  protected void setMaskedFMs() {
-
-    // functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_APPLICATIONS,new StringT(MaskedApplications)));
-
-    QualifiedGroup qg = functionManager.getQualifiedGroup();
-    // TODO send all masked applications defined in global parameter 
-    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-    if (MaskedFMs.length() > 0) {
-      MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
-    }
-    List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
-    boolean somebodysHandlingTA = false;
-    boolean itsThisLvl2 = false;
-    boolean itsAdummy = false;
-    String allMaskedResources = "";
-    String ruInstance = "";
-    String lpmSupervisor = "";
-    String EvmTrigsApps = "";
-    for (QualifiedResource qr : level2list) {
-      itsThisLvl2 = false;
-      try {
-        QualifiedGroup level2group = ((FunctionManager)qr).getQualifiedGroup();
-        logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
-        Group fullConfig = level2group.rs.retrieveLightGroup(qr.getResource());
-        // TODO see here
-        List<Resource> fullconfigList = fullConfig.getChildrenResources();
-        if (MaskedFMs.length() > 0) {
-          logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
-          String[] MaskedResourceArray = MaskedFMs.split(";");
-          for (String MaskedFM: MaskedResourceArray) {
-            logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
-            if (qr.getName().equals(MaskedFM)) {
-              logger.debug("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
-              qr.setActive(false);
-
-              //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-              allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-              for (Resource level2resource : fullconfigList) {
-                logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
-                allMaskedResources+=level2resource.getName();
-                allMaskedResources+=";";
-                logger.info("[HCAL " + functionManager.FMname + "]: The new list of all masked resources is: " + allMaskedResources);
-              }
-            }
-          }
-        }
-        for (Resource level2resource : fullconfigList) {
-          logger.debug("[HCAL " + functionManager.FMname + "]: the FM with name: " + qr.getName() + " has a resource named " + level2resource.getName() );
-          if (!MaskedFMs.contains(qr.getName())) { 
-            if (!allMaskedResources.contains(qr.getName()) && (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")))          {
-              if (somebodysHandlingTA ) { 
-                if (level2resource.getName().contains("DummyTriggerAdapter") && !EvmTrigsApps.contains("DummyTriggerAdapter")) {
-                  // itsAdummy=true;
-                  logger.warn("[JohnLog] found a DummyTriggerAdapter in " + qr.getName() + " after somebody else is already handling the TA.");
-                  allMaskedResources += EvmTrigsApps;
-                  qr.getResource().setRole("EvmTrig");
-                  logger.warn("[JohnLog] just set the role EvmTrig for the FM with name: " + qr.getName());
-                  logger.warn("[JohnLog] starting to look for the old EvmTrig to be replaced.");
-                  for (QualifiedResource otherLevel2FM : level2list) {
-                    logger.warn("[JohnLog] found other level2 with name : " + otherLevel2FM.getName() + " and role: " + otherLevel2FM.getRole().toString());
-
-                    if (otherLevel2FM.getRole().toString().equals("EvmTrig") && !qr.getName().equals(otherLevel2FM.getName())) {
-                      otherLevel2FM.getResource().setRole("HCAL");
-                      logger.warn("[JohnLog] just reset the role HCAL for the FM with name: "  + otherLevel2FM.getName());
-                      itsThisLvl2=true;
-                      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                      logger.warn("[JohnLog] just reset the role EVM_TRIG_FM");
-                    }
-                  }
-                }
-                else {
-                  allMaskedResources+=level2resource.getName()+";"; 
-                  logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant trigger adapter " + level2resource.getName());
-                }
-              }
-
-              else {
-                qr.getResource().setRole("EvmTrig");
-                logger.info("[HCAL " + functionManager.FMname + "]: The following FM is handling the trigger adapter: " + qr.getName());
-                somebodysHandlingTA=true;
-                itsThisLvl2=true;
-                // if (qr.getName().contains("DummyTriggerAdapter")){
-                //   itsAdummy = true;
-                //  }
-                logger.debug("[HCAL " + functionManager.FMname + "]: About to set EVM_TRIG_FM.");
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
-                logger.info("[HCAL " + functionManager.FMname + "]: Just set EVM_TRIG_FM.");
-                EvmTrigsApps += level2resource.getName()+";";
-                logger.warn("[JohnLog] filled the list of applications which may need to be masked if a DummyTriggerAdapter is found: " + EvmTrigsApps);
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalTrivialFU"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant TrivialFU " + level2resource.getName());
-              }
-              else {
-                EvmTrigsApps += level2resource.getName()+";";
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalEventBuilder"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                allMaskedResources+=level2resource.getName()+";"; 
-                logger.info("[HCAL " + functionManager.FMname + "]: Just masked the redundant EventBuilder " + level2resource.getName());
-              }
-              else {
-                EvmTrigsApps += level2resource.getName()+";";
-                ruInstance=level2resource.getName();
-                logger.info("[HCAL " + functionManager.FMname + "]: Just found the remaining EventBuilder " + level2resource.getName());
-              }
-            }
-            if (!allMaskedResources.contains(qr.getName()) && level2resource.getName().contains("hcalSupervisor"))          {
-              if (somebodysHandlingTA && !itsThisLvl2) { 
-                logger.debug("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is not handling the LPM." + level2resource.getName());
-              }
-              else if (somebodysHandlingTA && itsThisLvl2) {
-                logger.info("[HCAL " + functionManager.FMname + "]: Found a Supervisor who is handling the LPM." + level2resource.getName());
-                lpmSupervisor=level2resource.getName();
-              }
-              else {
-                logger.info("[HCAL " + functionManager.FMname + "]: Found the Supervisor that is handling the LPM." + level2resource.getName());
-                lpmSupervisor=level2resource.getName();
-              }
-            }
-          }
-        }
-        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the new MASKED_RESOURCES list.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
-        logger.info("[HCAL " + functionManager.FMname + "]: Just set the new MASKED_RESOURCES list.");
-        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
-        logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + ruInstance);
-        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
-        logger.info("[HCAL " + functionManager.FMname + "]: Just set the LPM_SUPERVISOR to " + lpmSupervisor);
-      }
-      catch (DBConnectorException ex) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
-      }
-    }
-    if (!somebodysHandlingTA) logger.warn("[HCAL " + functionManager.FMname + "]: Got through the list of level2's but didn't find anybody to handle the triggeradapter! Bad...");
-
   }
 
 
@@ -2176,35 +1993,6 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
 
-        //        {
-        //          String FullComment = "Preamble:\n";
-        //
-        //          // find comment tag in the userXML
-        //          String CommentuserXML = GetUserXMLElement("Comment");
-        //          if (CommentuserXML.equals("")) { FullComment += "not used"; }
-        //
-        //          FullComment += "\nUser comment:\n";
-        //
-        //          // if there is any user add in the comment field of the FM add this too
-        //          String CommentUserGUI = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_COMMENT).getValue()).getString();
-        //          if (!CommentUserGUI.equals("")) {
-        //            FullComment += CommentUserGUI;
-        //          }
-        //          else {
-        //            FullComment += "not set";
-        //          }
-        //
-        //          Parameter<StringT> Comment = new Parameter<StringT>("Comment",new StringT(FullComment));
-        //          try {
-        //            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Comment:\n" + Comment.getValue().toString());
-        //            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(Comment); }
-        //          }
-        //          catch (RunInfoException e) {
-        //            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the Comment used ...\nProbably this is OK when the FM was destroyed.";
-        //            logger.error(errMessage,e);
-        //          }
-        //        }
-
         /* {
            Date runStop = Calendar.getInstance().getTime();
            Parameter<DateT> StopTime = new Parameter<DateT>("TIME_ON_EXIT",new DateT(runStop));
@@ -2454,7 +2242,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
               else if (actualState.equals(HCALStates.CONFIGURING.getStateString())) { /* do nothing */ }
               else if (actualState.equals(HCALStates.STARTING.getStateString()))    {
-                //logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler actualState is "+actualState+", but SETSTART ...");
                 functionManager.fireEvent(HCALInputs.SETSTART);
               }
               else if (actualState.equals(HCALStates.RESUMING.getStateString()))   { functionManager.fireEvent(HCALInputs.SETRESUME); }
@@ -3861,5 +3649,83 @@ public class HCALEventHandler extends UserEventHandler {
       TriggerAdapterWatchThreadList.remove(this);
     }
   }
-}
 
+  // thread which checks the alarmer state
+  protected class AlarmerWatchThread extends Thread {
+
+    public AlarmerWatchThread() {
+      AlarmerWatchThreadList.add(this);
+    }
+
+    public void run() {
+
+      stopAlarmerWatchThread = false;
+			try {
+				URL alarmerURL = new URL(functionManager.alarmerURL);
+			} catch (MalformedURLException e) {
+        // in case the URL is bogus, just don't run the thread
+				stopAlarmerWatchThread = true;
+				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + functionManager.alarmerURL + "; not checking alarmer status");
+      }
+
+			// poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
+      while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
+
+        // delay between polls
+        try { Thread.sleep(30000); } // check every 30 seconds
+        catch (Exception ignored) { return; }
+
+        Date now = Calendar.getInstance().getTime();
+
+				if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+							functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+					try {
+						// ask for the status of the HCAL alarmer
+						// ("http://hcalmon.cms:9945","hcalAlarmer",0);
+						XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+						// this does a lazy get. do we need to force the update before getting it?
+						//logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
+            pam.select(new String[] {"GlobalStatus"});
+            pam.get();
+            String status = pam.getValue("GlobalStatus");
+
+						if (!status.equals("OK")) {
+							// go to degraded state if needed
+							if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+									logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
+									functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+							}
+              else {
+							  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to stay in RUNNINGDEGRADED state");
+              }
+						}
+            else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+							// if we got back to OK, go back to RUNNING
+							logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+							functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
+						}
+					}
+					catch (Exception e) {
+            // on exceptions, we go to degraded, or stay there
+						if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
+							logger.error(errMessage);
+							functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+						}
+						else {
+							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to stay in RUNNINGDEGRADED state";
+							logger.warn(errMessage);
+						}
+					}
+				}
+			}
+
+			// stop the HCAL supervisor watchdog thread
+			//System.out.println("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+			//logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+			AlarmerWatchThreadList.remove(this);
+
+		}
+	}
+
+}

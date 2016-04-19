@@ -3,7 +3,9 @@
 <project name="statemachine" default="release" basedir=".">
 	
 	<!-- Properties the user needs to modify -->
-	<property name="fm.name" value="HCALFM" />
+  <property name="gitRev" value="${gitRev}" />
+  <echo message="Compiling HCALFM using version ${gitRev}" />
+	<property name="fm.name" value="HCALFM_${gitRev}" />
 	<property name="output.dir" value="./jars" />
 	
 	<property file="../../../tomcat/webapps/rcms/WEB-INF/conf/RCMS.properties" />
@@ -72,6 +74,7 @@
 	<target name="deploy">
 		<mkdir dir="${jakarta.fmdeploy}" />
 		<copy file="${fm.jar}" todir="${jakarta.fmdeploy}" />
+		<delete file="${fm.jar}" />
 	</target>
 	
 	<!-- Compiles and deploys this StateMachine -->
