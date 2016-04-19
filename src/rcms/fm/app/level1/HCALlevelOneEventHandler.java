@@ -82,6 +82,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
+  public HCALMasker masker = null;
 
   public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -92,58 +93,60 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     functionManager = (HCALFunctionManager) getUserFunctionManager();
     qualifiedGroup  = functionManager.getQualifiedGroup();
     xmlHandler = new HCALxmlHandler(this.functionManager);
+    masker = new HCALMasker(this.functionManager);
 
-    super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
+		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
-    logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
-  }
+		logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
+	}
 
-  public void initAction(Object obj) throws UserActionException {
+	public void initAction(Object obj) throws UserActionException {
 
-    if (obj instanceof StateEnteredEvent) {
-      setMaskedFMs();
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
-      List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-      // loop over the executives to strip the connections
+		if (obj instanceof StateEnteredEvent) {
+			masker.pickEvmTrig();
+			masker.setMaskedFMs();
+			QualifiedGroup qg = functionManager.getQualifiedGroup();
+			List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+			// loop over the executives to strip the connections
 
-      String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-      if (MaskedResources.length() > 0) {
-        //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
-        for( QualifiedResource qr : xdaqExecList) {
-          XdaqExecutive exec = (XdaqExecutive)qr;
-          XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-          String oldExecXML = config.getXml();
-          try {
-            String newExecXML = xmlHandler.stripExecXML(oldExecXML, functionManager.getHCALparameterSet());
-            config.setXml(newExecXML);
-            //logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-            logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
-          }
-          catch (UserActionException e) {
-            String errMessage = e.getMessage();
-            logger.info(errMessage);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-          XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-          System.out.println(qr.getName() + " has edited executive xml: " +  configRetrieved.getXml());
-        }
-      }
-      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
+			String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+			if (MaskedResources.length() > 0) {
+				//logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
+				for( QualifiedResource qr : xdaqExecList) {
+					XdaqExecutive exec = (XdaqExecutive)qr;
+					XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
+					String oldExecXML = config.getXml();
+					try {
+						String newExecXML = xmlHandler.stripExecXML(oldExecXML, functionManager.getHCALparameterSet());
+						config.setXml(newExecXML);
+						//logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+						logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
+					}
+					catch (UserActionException e) {
+						String errMessage = e.getMessage();
+						logger.info(errMessage);
+						functionManager.sendCMSError(errMessage);
+						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+						if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+					}
+					XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
+					System.out.println(qr.getName() + " has edited executive xml: " +  configRetrieved.getXml());
+				}
+			}
+			System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
+			logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
 
-      // reset the non-async error state handling
-      functionManager.ErrorState = false;
+			// reset the non-async error state handling
+			functionManager.ErrorState = false;
 
-      // set actions
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Initializing")));
+			// set actions
+			functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
+			functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Initializing")));
 
-      // initialize all XDAQ executives
-      initXDAQ();
+			// initialize all XDAQ executives
+			initXDAQ();
       functionManager.parameterSender.start();
 
       // start the monitor thread
