@@ -302,10 +302,11 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.START, HCALStates.CONFIGURED, HCALStates.STARTING);
 
     // PAUSE Command:
-    // The PAUSE input is allowed only in the RUNNING state, and moves
+    // The PAUSE input is allowed only in the RUNNING  and RUNNINGDEGRADED states, and moves
     // the FSM in the PAUSING state.
     //
     addTransition(HCALInputs.PAUSE, HCALStates.RUNNING, HCALStates.PAUSING);
+    addTransition(HCALInputs.PAUSE, HCALStates.RUNNINGDEGRADED, HCALStates.PAUSING);
 
     // RESUME Command:
     // The RESUME input is allowed only in the PAUSED state, and moves
@@ -314,20 +315,20 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.RESUME, HCALStates.PAUSED, HCALStates.RESUMING);
 
     // HALT Command:
-    // The HALT input is allowed in the RUNNING, CONFIGURED and PAUSED
+    // The HALT input is allowed in the RUNNING, RUNNINGDEGRADED, CONFIGURED and PAUSED
     // state, and moves the FSM in the HALTING state.
     //
     addTransition(HCALInputs.HALT,    HCALStates.RUNNING, HCALStates.HALTING);
+    addTransition(HCALInputs.HALT,    HCALStates.RUNNINGDEGRADED, HCALStates.HALTING);
     addTransition(HCALInputs.HALT,    HCALStates.CONFIGURED, HCALStates.HALTING);
     addTransition(HCALInputs.HALT,    HCALStates.PAUSED, HCALStates.HALTING);
     addTransition(HCALInputs.HALT,    HCALStates.TTSTEST_MODE, HCALStates.HALTING);
 
     // STOP Command:
-    // The STOP input is allowed in the RUNNING
-    // state, and moves the FSM in the STOPPING state.
+    // The STOP input is allowed in the RUNNING and RUNNINGDEGRADED
+    // states, and moves the FSM in the STOPPING state.
     //
     addTransition(HCALInputs.STOP,    HCALStates.RUNNING, HCALStates.STOPPING);
-    // also needed for runningdegraded
     addTransition(HCALInputs.STOP,    HCALStates.RUNNINGDEGRADED, HCALStates.STOPPING);
 
     // RECOVER Command:
@@ -343,6 +344,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     addTransition(HCALInputs.RESET, HCALStates.HALTED , HCALStates.RESETTING);
     addTransition(HCALInputs.RESET, HCALStates.CONFIGURED , HCALStates.RESETTING);
     addTransition(HCALInputs.RESET, HCALStates.RUNNING , HCALStates.RESETTING);
+    addTransition(HCALInputs.RESET, HCALStates.RUNNINGDEGRADED , HCALStates.RESETTING);
     addTransition(HCALInputs.RESET, HCALStates.PAUSED , HCALStates.RESETTING);
     addTransition(HCALInputs.RESET, HCALStates.TTSTEST_MODE , HCALStates.RESETTING);
     addTransition(HCALInputs.RESET, HCALStates.ERROR , HCALStates.RESETTING);
@@ -383,6 +385,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     // RUNNINGDEGRADED
     addTransition(HCALInputs.SETRUNNINGDEGRADED, HCALStates.RUNNING, HCALStates.RUNNINGDEGRADED);
     addTransition(HCALInputs.UNSETRUNNINGDEGRADED, HCALStates.RUNNINGDEGRADED, HCALStates.RUNNING);
+    addTransition(HCALInputs.SETSTART, HCALStates.STARTING, HCALStates.RUNNINGDEGRADED);
 
     // Reach the PAUSED State
     addTransition(HCALInputs.SETPAUSE, HCALStates.PAUSING, HCALStates.PAUSED);
@@ -390,5 +393,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
 
     // Reach the RUNNING from RESUMING State
     addTransition(HCALInputs.SETRESUME, HCALStates.RESUMING, HCALStates.RUNNING);
+    addTransition(HCALInputs.SETRESUME, HCALStates.RESUMING, HCALStates.RUNNINGDEGRADED);
   }
 }
