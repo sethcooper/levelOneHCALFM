@@ -171,12 +171,22 @@ public class HCALMasker {
     //String lpmSupervisor = "";
     //String EvmTrigsApps = "";
     Map<String, Resource> evmTrigResources = pickEvmTrig();
-    String eventBuilder = evmTrigResources.get("hcalEventBuilder").getName();
-    String trivialFU = evmTrigResources.get("hcalTrivialFU").getName();
-    String triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
+
+    String eventBuilder   = "none";
+    String trivialFU      = "none";
+    String triggerAdapter = "none";
+    String EvmTrigFM      = "none";
+
+
+    if (evmTrigResources.get("hcalEventBuilder") != null) {
+      eventBuilder = evmTrigResources.get("hcalEventBuilder").getName();
+      trivialFU = evmTrigResources.get("hcalTrivialFU").getName();
+      triggerAdapter = evmTrigResources.get("TriggerAdapter").getName();
+      EvmTrigFM = evmTrigResources.get("EvmTrigFM").getName();
+    }
 
     for (QualifiedResource qr : level2list) {
-      if (qr.getName().equals(evmTrigResources.get("EvmTrigFM").getName())) { 
+      if (qr.getName().equals(EvmTrigFM)) { 
          qr.getResource().setRole("EvmTrig");
          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
       }
