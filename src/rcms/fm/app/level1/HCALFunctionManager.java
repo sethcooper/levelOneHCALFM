@@ -224,6 +224,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 
   public String rcmsStateListenerURL = "";
 
+	public String alarmerURL = "";
+
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
 
@@ -850,7 +852,6 @@ public class HCALFunctionManager extends UserFunctionManager {
 				Iterator it = containerlpmController.getQualifiedResourceList().iterator();
 				while (it.hasNext()) {
 					lpmApp = (XdaqApplication) it.next();
-          //XXX FIXME use real session ID here eventually
 					lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
 				}
 			}
