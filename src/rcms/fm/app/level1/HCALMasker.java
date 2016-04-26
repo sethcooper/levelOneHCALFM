@@ -165,27 +165,23 @@ public class HCALMasker {
     // It's OK for an maskedapps to call that method too, although maskedapps will be stripped by the stripExecXML() anyway.
     String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
 
-    logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs before is " + MaskedFMs);
-     String userXmlMaskedFM = "not set";
-     try{
-         String localrunkey = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
-         userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
-         logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
-     } catch (UserActionException e){
-         logger.error("[Martin log " + functionManager.FMname + "]: Got an error when getting maskedFM from userXML: " + e);
-     }
+    logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs);
+    String userXmlMaskedFM = "not set";
+    try{
+        String localrunkey = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
+        userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
+        logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
+    } catch (UserActionException e){
+        logger.error("[Martin log " + functionManager.FMname + "]: Got an error when getting maskedFM from userXML: " + e);
+    }
     MaskedFMs  = MaskedFMs + userXmlMaskedFM;
-    //if (MaskedFMs.length() > 0 ) {
-    //  MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
-    //}
-    logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs after is " + MaskedFMs);
+    logger.info("[Martin log "+ functionManager.FMname + "]: The final list of MaskedFMs is " + MaskedFMs);
 
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
     //boolean somebodysHandlingTA = false;
     //boolean itsThisLvl2 = false;
     //boolean itsAdummy = false;
     String allMaskedResources = "";
-    //String allMaskedResources = MaskedFMs;
     //String ruInstance = "";
     //String lpmSupervisor = "";
     //String EvmTrigsApps = "";
@@ -220,7 +216,7 @@ public class HCALMasker {
           logger.info("[HCAL " + functionManager.FMname + "]:: Got MaskedFMs " + MaskedFMs);
           String[] MaskedResourceArray = MaskedFMs.split(";");
           for (String MaskedFM: MaskedResourceArray) {
-            logger.info("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
+            logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM);
             logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Checking this QR:  " +qr.getName());
             if (qr.getName().equals(MaskedFM)) {
               logger.info("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());

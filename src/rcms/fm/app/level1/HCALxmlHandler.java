@@ -105,11 +105,11 @@ public class HCALxmlHandler {
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
             logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
             if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
-              foundTheRequestedNamedElement = true;
+               foundTheRequestedNamedElement = true;
                if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
 		              return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
 							 }else{
-                  logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute "+attribute+" with name="+name+" in tag"+tag+". Empty string will be returned");
+                  logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
                   String emptyString = "";
 									return emptyString;
 							 }
