@@ -1296,11 +1296,11 @@ public class HCALEventHandler extends UserEventHandler {
     }
     catch (Exception e) {
       // failed to init
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace to catalina.out.";
-      functionManager.goToError(errMessage,e);
       StringWriter sw = new StringWriter();
       e.printStackTrace( new PrintWriter(sw) );
       System.out.println(sw.toString());
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
+      functionManager.goToError(errMessage,e);
       //logger.error(errMessage);
       //functionManager.sendCMSError(errMessage);
       //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
