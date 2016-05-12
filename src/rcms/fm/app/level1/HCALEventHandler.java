@@ -33,6 +33,7 @@ import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
@@ -1295,8 +1296,11 @@ public class HCALEventHandler extends UserEventHandler {
     }
     catch (Exception e) {
       // failed to init
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Caught exception message: "+ e.getMessage();
-      functionManager.goToError(errMessage);
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace to catalina.out.";
+      functionManager.goToError(errMessage,e);
+      StringWriter sw = new StringWriter();
+      e.printStackTrace( new PrintWriter(sw) );
+      System.out.println(sw.toString());
       //logger.error(errMessage);
       //functionManager.sendCMSError(errMessage);
       //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
