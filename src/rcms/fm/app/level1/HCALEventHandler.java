@@ -1295,12 +1295,13 @@ public class HCALEventHandler extends UserEventHandler {
     }
     catch (Exception e) {
       // failed to init
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources";
-      logger.error(errMessage,e);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Caught exception message: "+ e.getMessage();
+      functionManager.goToError(errMessage);
+      //logger.error(errMessage);
+      //functionManager.sendCMSError(errMessage);
+      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
     // find xdaq applications
