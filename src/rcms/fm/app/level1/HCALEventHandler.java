@@ -1435,9 +1435,9 @@ public class HCALEventHandler extends UserEventHandler {
 
 
     // find out if this FM controlls applications which talk asynchronous SOAP
-    if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
-      functionManager.asyncSOAP = true;
-    }
+    //if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
+    //  functionManager.asyncSOAP = true;
+    //}
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
@@ -1456,7 +1456,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       XDAQParameter pam = null;
 
-      String dowehaveanasynchcalSupervisor="undefined";
+      //String dowehaveanasynchcalSupervisor="undefined";
 
       // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
@@ -1467,9 +1467,9 @@ public class HCALEventHandler extends UserEventHandler {
           pam.get();
 
           //FIXME SIC set this ourselves!
-          dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
+         // dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
 
-          logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor ReportStateToRCMS results in: " + dowehaveanasynchcalSupervisor);
+         // logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor ReportStateToRCMS results in: " + dowehaveanasynchcalSupervisor);
 
         }
         catch (XDAQTimeoutException e) {
@@ -1491,16 +1491,16 @@ public class HCALEventHandler extends UserEventHandler {
 
         }
 
-        if (dowehaveanasynchcalSupervisor==null || dowehaveanasynchcalSupervisor.equals("undefined")) {
-          logger.warn("[HCAL " + functionManager.FMname + "] could not check if  async SOAP communication with HCAL supervisor is possible ...");
-        }
-        else if (dowehaveanasynchcalSupervisor.equals("true")) {
+        //if (dowehaveanasynchcalSupervisor==null || dowehaveanasynchcalSupervisor.equals("undefined")) {
+        //  logger.warn("[HCAL " + functionManager.FMname + "] could not check if  async SOAP communication with HCAL supervisor is possible ...");
+        //}
+        //else if (dowehaveanasynchcalSupervisor.equals("true")) {
 
-          logger.info("[HCAL " + functionManager.FMname + "] using async SOAP communication with HCAL supervisor ...");
+        //  logger.info("[HCAL " + functionManager.FMname + "] using async SOAP communication with HCAL supervisor ...");
 
-          functionManager.asynchcalSupervisor = true;  // yes we have a hcalSupervisor which can talk async SOAP
-          functionManager.asyncSOAP = true;  // switch on the async HCAL level 2 FM behaviour
-        }
+        //  functionManager.asynchcalSupervisor = true;  // yes we have a hcalSupervisor which can talk async SOAP
+        //  functionManager.asyncSOAP = true;  // switch on the async HCAL level 2 FM behaviour
+        //}
       }
     }
     else {
