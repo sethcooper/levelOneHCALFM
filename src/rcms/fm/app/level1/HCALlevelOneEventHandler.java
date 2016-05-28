@@ -704,6 +704,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // get alarmerURL
       getAlarmerUrl();
 
+      // get alarmerStatus to decide which status to watch
+      getAlarmerStatus();
+
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
       AlarmerWatchThread thread4 = new AlarmerWatchThread();

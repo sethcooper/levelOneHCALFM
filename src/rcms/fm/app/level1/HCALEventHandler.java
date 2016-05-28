@@ -784,7 +784,7 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
-  // get the alarmer URL from userXML
+    // get the alarmer Status from MasterSnippet
   protected void getAlarmerUrl() {
     String tmpAlarmerURL="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
@@ -799,6 +799,23 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.alarmerURL = tmpAlarmerURL;
     logger.info("[Seth log HCAL " + functionManager.FMname + "] The alarmerURL looks like this:\n" + functionManager.alarmerURL);
   }
+// get the alarmer URL from MasterSnippet
+  protected void getAlarmerStatus() {
+    String tmpAlarmerPartition="";
+    String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    try{
+        String TagName = "AlarmerStatus";
+				//Use this line to get multiple info about Alarmer
+        tmpAlarmerPartition = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,"partition");
+    }
+    catch ( UserActionException e) {
+          logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerStatus xml in getAlarmerStatus(): " + e.getMessage());
+    }
+    functionManager.alarmerPartition = tmpAlarmerPartition;
+    logger.info("[Martin log HCAL " + functionManager.FMname + "] The alarmer Partition is: " + functionManager.alarmerPartition);
+  }
+
 
   // Function to "send" the FED_ENABLE_MASK aprameter to the HCAL supervisor application. It gets the info from the userXML.
   //protected void getFedEnableMask(){
@@ -3690,23 +3707,34 @@ public class HCALEventHandler extends UserEventHandler {
 						XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
 						// this does a lazy get. do we need to force the update before getting it?
 						//logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
-            pam.select(new String[] {"GlobalStatus"});
-            pam.get();
-            String status = pam.getValue("GlobalStatus");
+						String alarmerStatusValue = "";
+						String alarmerStatusName  = "GlobalStatus";
+						if(functionManager.alarmerPartition.equals("HBHEHO")){
+							alarmerStatusName = "GlobalStatus";
+						}
+						if(functionManager.alarmerPartition.equals("HF")){
+							alarmerStatusName = "HFStatus";
+						}
+	          pam.select(new String[] {alarmerStatusName});
+	          pam.get();
+	          alarmerStatusValue = pam.getValue(alarmerStatusName);
+						if(alarmerStatusName.equals("")){
+							logger.warn("[Martin Log "+functionManager.FMname +"] Cannot get alarmer parameter with parition name: "+functionManager.alarmerPartition); 
+						}
 
-						if (!status.equals("OK")) {
+						if (!alarmerStatusValue.equals("OK")) {
 							// go to degraded state if needed
 							if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-									logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to RUNNINGDEGRADED state");
+									logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue(alarmerStatusName) + " which is not OK; going to RUNNINGDEGRADED state");
 									functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
 							}
               else {
-							  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which is not OK; going to stay in RUNNINGDEGRADED state");
+							  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue(alarmerStatusName) +" which is not OK; going to stay in RUNNINGDEGRADED state");
               }
 						}
             else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 							// if we got back to OK, go back to RUNNING
-							logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+							logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue(alarmerStatusName) + " which should be OK; going to get out of RUNNINGDEGRADED state now");
 							functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
 						}
 					}
