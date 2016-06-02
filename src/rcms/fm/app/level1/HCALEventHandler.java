@@ -1429,8 +1429,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
 
-    functionManager.containerPeerTransportUTCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportUTCP"));
-
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
 
@@ -1441,9 +1439,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
-    }
-    if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found PeerTransportUTCP applications - will handle them ...");
     }
 
     // find out if HCAL supervisor is ready for async SOAP communication
