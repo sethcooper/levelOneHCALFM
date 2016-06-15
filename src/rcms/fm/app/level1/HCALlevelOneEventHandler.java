@@ -103,6 +103,97 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 	public void initAction(Object obj) throws UserActionException {
 
 		if (obj instanceof StateEnteredEvent) {
+      String RunConfigSelected = "";
+      String CfgSnippetKeySelected = "";
+      // get the parameters of the command
+      ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
+
+      // check parameter set
+      if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
+
+        RunType = "local";
+        // below: this is a hack for testing
+        // RunType = "global";
+
+        // request a session ID
+        getSessionId();
+        // get the Sid from the init command
+        if (functionManager.getParameterSet().get(HCALParameters.SID) != null) {
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
+          Sid = ((IntegerT)functionManager.getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
+          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
+        }
+        else {
+          String warnMessage = "[Martin log HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
+          logger.warn(warnMessage);
+        }
+
+        GlobalConfKey = "not used";
+
+        // set the run type in the function manager parameters
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
+
+        RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+        CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
+      }
+      else {
+
+        RunType = "global";
+
+        // set the run type in the function manager parameters
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
+
+        // get the Sid from the init command
+        if (parameterSet.get(HCALParameters.SID) != null) {
+          Sid = ((IntegerT)parameterSet.get(HCALParameters.SID).getValue()).getInteger();
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
+        }
+        else {
+          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a SID ...";
+          logger.warn(warnMessage);
+        }
+
+        // get the GlobalConfKey from the init command
+        if (parameterSet.get(HCALParameters.GLOBAL_CONF_KEY) != null) {
+          GlobalConfKey = ((StringT)parameterSet.get(HCALParameters.GLOBAL_CONF_KEY).getValue()).getString();
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.INITIALIZED_WITH_GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
+        }
+        else {
+          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a GlobalConfKey ...";
+          logger.warn(warnMessage);
+        }
+        //Set the CfgSnippetKeySelected for global 
+        try {
+          if (functionManager.FMrole.equals("HCAL")) {
+            CfgSnippetKeySelected = "global_HCAL";
+            RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet");
+            logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+          }
+          else if (functionManager.FMrole.equals("HF")) {
+            CfgSnippetKeySelected = "global_HF";
+            RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet");
+            logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
+          }
+          else {
+            String errMessage = "[JohnLog3] " + functionManager.FMname + ": This FM is a level1 in global but it has neither the role 'HCAL' nor 'HF'. This is probably bad. Make sure the role is correctly assigned in the configuration.";  
+            functionManager.goToError(errMessage);
+          }
+        }
+        catch (UserActionException ex) { 
+          functionManager.goToError( ex.getMessage() );
+        }
+      }
+
+      if (!RunConfigSelected.equals("") && !CfgSnippetKeySelected.equals("")){
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
+      }else{
+				logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
+      }
+
 			masker.pickEvmTrig();
 			masker.setMaskedFMs();
 			QualifiedGroup qg = functionManager.getQualifiedGroup();
@@ -164,68 +255,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // don't do this weird stuff for the HCAL supervisor - which is not taking async SOAP - for the level 1 FM
       HCALSuperVisorIsOK = true;
 
-      // get the parameters of the command
-      ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-
-      // check parameter set
-      if (parameterSet.size()==0 || parameterSet.get(HCALParameters.SID) == null )  {
-
-        RunType = "local";
-        // below: this is a hack for testing
-        // RunType = "global";
-
-        // request a session ID
-        getSessionId();
-        // get the Sid from the init command
-        if (functionManager.getParameterSet().get(HCALParameters.SID) != null) {
-          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
-          Sid = ((IntegerT)functionManager.getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
-          //functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
-          //functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
-          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
-        }
-        else {
-          String warnMessage = "[Martin log HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
-          logger.warn(warnMessage);
-        }
-
-
-        GlobalConfKey = "not used";
-
-        // set the run type in the function manager parameters
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
-      }
-      else {
-
-        RunType = "global";
-
-        // set the run type in the function manager parameters
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
-
-        // get the Sid from the init command
-        if (parameterSet.get(HCALParameters.SID) != null) {
-          Sid = ((IntegerT)parameterSet.get(HCALParameters.SID).getValue()).getInteger();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.SID,new IntegerT(Sid)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(HCALParameters.INITIALIZED_WITH_SID,new IntegerT(Sid)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a SID ...";
-          logger.warn(warnMessage);
-        }
-
-        // get the GlobalConfKey from the init command
-        if (parameterSet.get(HCALParameters.GLOBAL_CONF_KEY) != null) {
-          GlobalConfKey = ((StringT)parameterSet.get(HCALParameters.GLOBAL_CONF_KEY).getValue()).getString();
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.INITIALIZED_WITH_GLOBAL_CONF_KEY,new StringT(GlobalConfKey)));
-        }
-        else {
-          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not receive a GlobalConfKey ...";
-          logger.warn(warnMessage);
-        }
-      }
-
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
@@ -245,43 +274,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<BooleanT>(HCALParameters.HCAL_RUNINFOPUBLISH, new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(GlobalConfKey)));
 
-      String RunConfigSelected = "";
-      String CfgSnippetKeySelected = "";
-      if (RunType.equals("local")) {
-        RunConfigSelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-        CfgSnippetKeySelected = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
-      }
-      else if (RunType.equals("global")) {
-        try {
-          if (functionManager.FMrole.equals("HCAL")) {
-            CfgSnippetKeySelected = "global_HCAL";
-            RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet");
-            logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
-          }
-          else if (functionManager.FMrole.equals("HF")) {
-            CfgSnippetKeySelected = "global_HF";
-            RunConfigSelected = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", CfgSnippetKeySelected, "snippet");
-            logger.warn("[JohnLog3] " + functionManager.FMname + ": This level1 with role " + functionManager.FMrole + " thinks we are in global mode and thus picked the RunConfigSelected = " + RunConfigSelected );
-          }
-          else {
-            String errMessage = "[JohnLog3] " + functionManager.FMname + ": This FM is a level1 in global but it has neither the role 'HCAL' nor 'HF'. This is probably bad. Make sure the role is correctly assigned in the configuration.";  
-            functionManager.goToError(errMessage);
-          }
-        }
-        catch (UserActionException ex) { 
-          functionManager.goToError( ex.getMessage() );
-        }
-      }
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
       String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-      //logger.info("[JohnLog2] " + functionManager.FMname + ": Started out with masked resources: " + MaskedResources);
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources);
       try {
         DocumentBuilder docBuilder;
-        //logger.info("[JohnLog2] " + functionManager.FMname + ": The xmlString was: " + xmlString );
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: The xmlString was: " + xmlString );
 
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -292,46 +290,36 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         NodeList nodes = null;
         nodes = userXML.getDocumentElement().getElementsByTagName("RunConfig");
-        //logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: RunConfigSelected was " + RunConfigSelected);
         for (int i=0; i < nodes.getLength(); i++) {
-          //logger.info("[JohnLog2] " + functionManager.FMname + ": In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
-          //logger.info("[JohnLog2] " + functionManager.FMname + "RunConfigSelected was " + RunConfigSelected);
           logger.info("[HCAL LVL1 " + functionManager.FMname + "]:RunConfigSelected was " + RunConfigSelected);
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
             MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
-            //logger.info("[JohnLog2] " + functionManager.FMname + ": From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
             logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
         } 
         MaskedResources+=";";
-        //logger.info("[JohnLog2] " + functionManager.FMname + ": Ended up with the list of masked resources: " + MaskedResources);
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources);
       }
       catch (ParserConfigurationException | SAXException | IOException e) {
-        //logger.error("[JohnLog2] " + functionManager.FMname + ": Got an error when trying to manipulate the userXML: " + e.getMessage());
         logger.error("[HCAL LVL1 " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
       }
-      //logger.info("[JohnLog2] " + functionManager.FMname + ": About to set the initial list of masked resources: " + MaskedResources );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: About to set the initial list of masked resources: " + MaskedResources );
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(MaskedResources)));
 
       String ruInstance =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RU_INSTANCE).getValue()).getString();
-      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the RU_INSTANCE " + ruInstance);
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the RU_INSTANCE " + ruInstance);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(ruInstance)));
 
       String lpmSupervisor =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.LPM_SUPERVISOR).getValue()).getString();
-      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the LPM_SUPERVISOR " + lpmSupervisor);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(lpmSupervisor)));
 
       String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.EVM_TRIG_FM).getValue()).getString();
-      //logger.info("[JohnLog4] " + functionManager.FMname + ": This level1 has the EVM_TRIG_FM " + evmTrigFM);
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the EVM_TRIG_FM " + evmTrigFM);
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(evmTrigFM)));
@@ -1214,7 +1202,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] LVL1 about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
-      functionManager.parameterSender.shutdown();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {

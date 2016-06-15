@@ -30,7 +30,8 @@ elif [ "$1" = "test" ]; then
   ant -DgitRev="${DATE}_v${ITERATION}"
 
 else 
-  echo "Please run buildHCALFM with either the 'release' or 'test' option. Example:\n./buildHCALFM.sh test"
+  echo "Please run buildHCALFM with either the 'release' or 'test' option. Example:"
+  echo "./buildHCALFM.sh test"
   exit 1
 
 fi

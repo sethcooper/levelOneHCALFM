@@ -84,7 +84,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   public XdaqApplicationContainer containerStorageManager      = null;
   public XdaqApplicationContainer containerFEDStreamer         = null;
   public XdaqApplicationContainer containerPeerTransportATCP   = null;
-  public XdaqApplicationContainer containerPeerTransportUTCP   = null;
   public XdaqApplicationContainer containerhcalRunInfoServer   = null;
 
   // string containing details on the setup from where this FM was started
@@ -823,7 +822,8 @@ public class HCALFunctionManager extends UserFunctionManager {
 	 * go to the error state, setting messages and so forth, with exception
 	 */
 	public void goToError(String errMessage, Exception e) {
-		logger.error(errMessage,e);
+    errMessage += " Message from the caught exception is: "+e.getMessage();
+		logger.error(errMessage);
 		sendCMSError(errMessage);
 		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
 		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));

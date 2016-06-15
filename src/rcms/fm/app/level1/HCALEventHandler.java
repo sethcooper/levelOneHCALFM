@@ -33,6 +33,7 @@ import java.util.Scanner;
 import java.util.regex.MatchResult;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
@@ -542,6 +543,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   public void destroy() {
     // Stop all threads
+    functionManager.parameterSender.shutdown();
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
@@ -1246,12 +1248,16 @@ public class HCALEventHandler extends UserEventHandler {
     }
     catch (Exception e) {
       // failed to init
-      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources";
-      logger.error(errMessage,e);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+      StringWriter sw = new StringWriter();
+      e.printStackTrace( new PrintWriter(sw) );
+      System.out.println(sw.toString());
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
+      functionManager.goToError(errMessage,e);
+      //logger.error(errMessage);
+      //functionManager.sendCMSError(errMessage);
+      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
     // find xdaq applications
@@ -1375,8 +1381,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
 
-    functionManager.containerPeerTransportUTCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportUTCP"));
-
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
 
@@ -1387,9 +1391,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
-    }
-    if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found PeerTransportUTCP applications - will handle them ...");
     }
 
     // find out if HCAL supervisor is ready for async SOAP communication

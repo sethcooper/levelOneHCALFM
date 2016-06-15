@@ -96,7 +96,7 @@ public class HCALxmlHandler {
 
   public String getNamedUserXMLelementAttributeValue (String tag, String name, String attribute ) throws UserActionException {
     try {
-      boolean foundTheRequestedAttributeInNamedElement = false;
+      boolean foundTheRequestedNamedElement = false;
       Element hcalUserXML = getHCALuserXML();
       if (!hcalUserXML.equals(null) && !hcalUserXML.getElementsByTagName(tag).equals(null)) {
         if (hcalUserXML.getElementsByTagName(tag).getLength()!=0) {
@@ -105,13 +105,22 @@ public class HCALxmlHandler {
           for (int iNode = 0; iNode < nodes.getLength(); iNode++) {
             logger.warn("[JohnLog3] " + functionManager.FMname + " found a userXML element with tagname '" + tag + "' and name '" + ((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue()  + "'"); 
             if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
-              foundTheRequestedAttributeInNamedElement = true;
-              return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
+               foundTheRequestedNamedElement = true;
+               if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
+		              return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
+							 }else{
+                  logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
+                  String emptyString = "";
+									return emptyString;
+							 }
             }
           }
-          if (!foundTheRequestedAttributeInNamedElement) {
-            String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that attribute did not exist in that element.";
-            throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
+          if (!foundTheRequestedNamedElement) {
+            String errMessage = "[JohnLog3] " + functionManager.FMname + ": this FM requested the value of the attribute '" + attribute + "' from a userXML element with tag '" + tag + "' and name '" + name + "' but that name did not exist in that element. Empty String is returned.";
+            logger.warn(errMessage);
+            String emptyString = "";
+            return emptyString;
+            //throw new UserActionException("[HCAL " + functionManager.FMname + "]: " + errMessage);
           }
         }
         else {
@@ -141,6 +150,13 @@ public class HCALxmlHandler {
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
 
+      // add the magical attribute to the Endpoints
+      NodeList xcEndpointNodes = execXML.getDocumentElement().getElementsByTagName("xc:Endpoint");
+      int NxcEndpointNodes = xcEndpointNodes.getLength();
+      for (int i=0; i < NxcEndpointNodes; i++) {
+        Element currentEndpointElement = (Element) xcEndpointNodes.item(i);
+				currentEndpointElement.setAttribute("connectOnRequest", "true");
+			}
 
       String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
@@ -274,7 +290,7 @@ public class HCALxmlHandler {
     String newExecXMLstring = "";
     try {
 
-      System.out.println(execXMLstring);
+      //System.out.println(execXMLstring);
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       InputSource inputSource = new InputSource();
       inputSource.setCharacterStream(new StringReader(execXMLstring));
