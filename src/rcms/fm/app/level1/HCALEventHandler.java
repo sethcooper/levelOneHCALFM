@@ -84,6 +84,7 @@ import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
@@ -1454,7 +1455,33 @@ public class HCALEventHandler extends UserEventHandler {
       String dowehaveanasynchcalSupervisor="undefined";
 
       // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
+      //XXX SIC PROOF OF CONCEPT
+      boolean setOne=false;
+      //XXX SIC PROOF OF CONCEPT
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+        //XXX SIC PROOF OF CONCEPT
+				if(!setOne) {
+					// let's try to set a supervisor URI
+					logger.warn("[SethLog] Found a supervisor with the URI:"+ qr.getURI());
+					String testURIStr = "http://cmshcaltb02.cern.ch:41111/urn:xdaq-application:lid=99";
+					logger.warn("[SethLog] Now try to set the URI to:"+testURIStr);
+					try {
+						URI testURI = new URI(testURIStr);
+						qr.getResource().setURI(testURI);
+					}
+					catch (URISyntaxException e)
+					{
+						logger.error("[SethLog]: GOT A URISyntaxException:",e);
+					}
+					catch (ResourceException e)
+					{
+						logger.error("[SethLog]: GOT A ResourceException:",e);
+					}
+					logger.warn("[SethLog] Now my supervisor has the URI:"+ qr.getURI());
+          setOne = true;
+				}
+        //XXX SIC END PROOF OF CONCEPT
+        
 
         try {
           pam =((XdaqApplication)qr).getXDAQParameter();
