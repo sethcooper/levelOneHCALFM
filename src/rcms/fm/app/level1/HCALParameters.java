@@ -136,6 +136,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		logger.warn("JohnLog: called isForGUI()");
 		boolean isForGUI=false;
 		if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
+		if (parameterName.equals(ACTION_MSG)) isForGUI=true;
 		return isForGUI;
 	} 
 

@@ -2302,7 +2302,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
-      functionManager.parameterSender.shutdown();
+      //functionManager.parameterSender.shutdown();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
 

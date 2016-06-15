@@ -237,6 +237,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
+                                <td id="newACTION_MSGcheckbox" class="label_center_black" width="155">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Action Message</strong>
+                                </td>
+                                <td id ="newACTION_MSG" class="label_center_black" width="155">
+                                </td>
+                              </tr>
+                              <tr>
                                 <!--Progress bar-->
                                 <td class="label_center_black" colspan="3">
                                   <div class="container"><div class="progressbar"></div></div>

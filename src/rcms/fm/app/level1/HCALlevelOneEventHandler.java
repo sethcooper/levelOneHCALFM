@@ -1202,7 +1202,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] LVL1 about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
-      functionManager.parameterSender.shutdown();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {

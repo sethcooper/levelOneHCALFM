@@ -543,6 +543,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   public void destroy() {
     // Stop all threads
+    functionManager.parameterSender.shutdown();
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;

@@ -140,23 +140,17 @@ public class HCALParameterSender implements Runnable {
 			 * This can be detected on the client side and the JSON can be
 			 * parsed back.
 			 */
-			for (FunctionManagerParameter<?> param : changedParams.getParameters()) {
-				//if (HCALParameters.isForGUI(param.getName())) {
-					if (param.getName().equals("HCAL_EVENTSTAKEN")) {
-            if (!cachedNEvents.equals(param.getValue().toString())){
-              if (param.getValue() instanceof CollectionT) {
-					    	npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
-					    } else {
-					    	npc.addParameter(param.getName(), param.getValue().toString());
-                logger.warn("JohnLog: sent a notification with number of events: " + param.getValue().toString());
-                cachedNEvents = param.getValue().toString();
-                empty=false;
-					    }
-            }
-          }
-				//}
+			 for (FunctionManagerParameter<?> param : changedParams.getParameters()) {
+			 	if (HCALParameters.isForGUI(param.getName())) {
+			 		empty = false;
+			 		if (param.getValue() instanceof CollectionT) {
+			 			npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
+			 		} else {
+			 			npc.addParameter(param.getName(), param.getValue().toString());
+			 		}
+			 	}
 
-			}
+			 }
 			
 			// update the previous snapshot to the current one
 //			this.previousParameterSetSnapshot = parameterSetSnapshot;
