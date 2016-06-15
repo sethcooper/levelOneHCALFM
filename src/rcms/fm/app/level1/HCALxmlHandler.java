@@ -124,7 +124,10 @@ public class HCALxmlHandler {
           }
         }
         else {
-          throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML.");
+          //throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+          logger.warn("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+          String emptyElement="";
+          return  emptyElement;
         }
       }
       else {
