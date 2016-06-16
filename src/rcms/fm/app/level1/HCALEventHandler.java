@@ -736,7 +736,7 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(FullPIControlSequence)));
   }
 
-    // get the alarmer Status from MasterSnippet
+    // get the alarmer URL from MasterSnippet
   protected void getAlarmerUrl() {
     String tmpAlarmerURL="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
@@ -751,7 +751,7 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.alarmerURL = tmpAlarmerURL;
     logger.info("[Seth log HCAL " + functionManager.FMname + "] The alarmerURL looks like this:\n" + functionManager.alarmerURL);
   }
-// get the alarmer URL from MasterSnippet
+// get the alarmer Status from MasterSnippet
   protected void getAlarmerStatus() {
     String tmpAlarmerPartition="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
@@ -3656,6 +3656,7 @@ public class HCALEventHandler extends UserEventHandler {
 						//logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
 						String alarmerStatusValue = "";
 						String alarmerStatusName  = "GlobalStatus";
+					  logger.info("[Martin Log "+functionManager.FMname +"] Going to watch this alarmer status: "+functionManager.alarmerPartition); 
 						if(functionManager.alarmerPartition.equals("HBHEHO")){
 							alarmerStatusName = "GlobalStatus";
 						}
@@ -3666,7 +3667,7 @@ public class HCALEventHandler extends UserEventHandler {
 	          pam.get();
 	          alarmerStatusValue = pam.getValue(alarmerStatusName);
 						if(alarmerStatusName.equals("")){
-							logger.warn("[Martin Log "+functionManager.FMname +"] Cannot get alarmer parameter with parition name: "+functionManager.alarmerPartition); 
+							logger.warn("[Martin Log "+functionManager.FMname +"] Cannot get alarmer status with parition name: "+functionManager.alarmerPartition); 
 						}
 
 						if (!alarmerStatusValue.equals("OK")) {
