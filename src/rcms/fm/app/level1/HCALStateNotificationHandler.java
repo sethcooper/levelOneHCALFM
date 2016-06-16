@@ -59,8 +59,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				return;
 			}
 
-			if ( notification.getToState().equals(HCALStates.ERROR.toString())) {
-
+			if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().equals(HCALStates.FAILED.toString())) {
 				String appName = "";
 				try {
 					appName = fm.findApplicationName( notification.getIdentifier() );
@@ -83,6 +82,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 			}
 
 			//XXX FIXME SIC TODO
+			// GET THE SUPERVISOR ERROR HERE
 			//if ( notification.getToState().equals(HCALStates.XDAQ_ERRORREPORT.toString()) ) {
 			//    fm.setWarning(notification.getReason());
 			//} else if ( notification.getToState().equals(HCALStates.XDAQ_CRASHED.toString()) ) {

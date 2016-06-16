@@ -133,14 +133,12 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	//public static final ParameterSet<FunctionManagerParameter> GLOBAL_PARAMETER_SET = new ParameterSet<FunctionManagerParameter>();
 
 	public static boolean isForGUI(String parameterName) {
-		logger.warn("JohnLog: called isForGUI()");
 		boolean isForGUI=false;
 		if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
 		return isForGUI;
 	} 
 
 	public static HCALParameters getInstance() {
-		logger.warn("JohnLog: called HCALParameters.getInstance()");
 		if (instance == null) {
 			synchronized (HCALParameters.class) {
 				if (instance == null) {
@@ -155,7 +153,6 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.logger = new RCMSLogger(HCALFunctionManager.class);
 		try {
 			this.initializeParameters();
-			logger.warn("JohnLog: initialized HCALParameters object.");
 		} catch (ParameterException ex) {
 			logger.error("Encountered ParameterException while initializing parameter set.", ex);
 		}
@@ -321,7 +318,6 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	//    return cloned;
 	//  }
 	public synchronized ParameterSet<FunctionManagerParameter> getChanged( ParameterSet<FunctionManagerParameter> earlier) {
-		logger.warn("JohnLog: called getChanged()");
 		ParameterSet<FunctionManagerParameter> changed = new ParameterSet<FunctionManagerParameter>();
 		for (Map.Entry<String, FunctionManagerParameter> pair : this.getMap().entrySet()) {
 			try {
