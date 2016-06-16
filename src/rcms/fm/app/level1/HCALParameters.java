@@ -136,6 +136,10 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		boolean isForGUI=false;
 		if (parameterName.equals(HCAL_EVENTSTAKEN)) isForGUI=true;
 		if (parameterName.equals(ACTION_MSG)) isForGUI=true;
+		if (parameterName.equals(SUPERVISOR_ERROR)) isForGUI=true;
+		if (parameterName.equals(RUN_NUMBER)) isForGUI=true;
+		if (parameterName.equals(CONFIGURED_WITH_RUN_NUMBER)) isForGUI=true;
+		if (parameterName.equals(STARTED_WITH_RUN_NUMBER)) isForGUI=true;
 		return isForGUI;
 	} 
 
