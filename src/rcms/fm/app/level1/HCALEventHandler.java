@@ -764,7 +764,12 @@ public class HCALEventHandler extends UserEventHandler {
     catch ( UserActionException e) {
           logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerStatus xml in getAlarmerStatus(): " + e.getMessage());
     }
-    functionManager.alarmerPartition = tmpAlarmerPartition;
+    if( !tmpAlarmerPartition.equals(""){
+         functionManager.alarmerPartition = tmpAlarmerPartition;
+    }else{
+         functionManager.alarmerPartition = "HBHEHO";
+         logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in mastersnippet, going to use default HBHEHO. ");
+    }
     logger.info("[Martin log HCAL " + functionManager.FMname + "] The alarmer Partition is: " + functionManager.alarmerPartition);
   }
 
@@ -3666,8 +3671,11 @@ public class HCALEventHandler extends UserEventHandler {
 	          pam.select(new String[] {alarmerStatusName});
 	          pam.get();
 	          alarmerStatusValue = pam.getValue(alarmerStatusName);
-						if(alarmerStatusName.equals("")){
-							logger.warn("[Martin Log "+functionManager.FMname +"] Cannot get alarmer status with parition name: "+functionManager.alarmerPartition); 
+
+						if( alarmerStatusValue.equals("")){
+              String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue with parition name: "+functionManager.alarmerPartition;
+							logger.error(errMessage); 
+              funtionManager.goToError(errMessage);
 						}
 
 						if (!alarmerStatusValue.equals("OK")) {
