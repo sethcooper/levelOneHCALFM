@@ -543,6 +543,7 @@ public class HCALEventHandler extends UserEventHandler {
 
   public void destroy() {
     // Stop all threads
+    functionManager.parameterSender.shutdown();
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
@@ -595,92 +596,43 @@ public class HCALEventHandler extends UserEventHandler {
   protected void getCfgScript() {
     // TODO HCALFM mastersnippeting
 
-    try {
+    String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+    logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);
 
-      NodeList nodes = null;
-      nodes = xmlHandler.getHCALuserXML().getElementsByTagName("RunConfig");
+    String CommonMasterSnippetFile = "not set";
+    String CommonConfigString = "not set";
+    String MainConfigString = "not set";
 
-      for (int i=0; i < nodes.getLength(); i++) {
-        logger.debug("[HCAL " + functionManager.FMname + "]: Item " + i + " has node name: " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() 
-            + " and snippet name: " + nodes.item(i).getAttributes().getNamedItem("snippet").getNodeValue());
-      }
-      String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-      logger.info("[HCAL " + functionManager.FMname + "]: The selected snippet was: " + selectedRun);
-      HCALFunctionManager fmChild = null;
+    // Try to find a common masterSnippet from UserXML
+    try{
+			CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
 
-      try {
-        // Load the master snippet from the found file and parse it.
-
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        if (selectedRun == "not set" ) {
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM did not get the selected run. It will now look for one from the LVL1");
-          ParameterSet<FunctionManagerParameter> parameterSet = getUserFunctionManager().getParameterSet();
-          selectedRun = ((StringT)parameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-          logger.info("[HCAL " + functionManager.FMname + "]: This FM looked for the selected run from the LVL1 and got: " + selectedRun);
-          if (selectedRun == "not set") {
-            ParameterSet<CommandParameter> commandParameterSet = getUserFunctionManager().getLastInput().getParameterSet();
-            selectedRun = ((StringT)commandParameterSet.get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-            logger.info("[HCAL " + functionManager.FMname + "]: This FM looked again for the selected run from the LVL1 and got: " + selectedRun);
-          }
-        } 
-        //Document masterSnippet = docBuilder.parse(new File("/data/cfgcvs/cvs/RevHistory/" + selectedRun + "/pro"));
-        Document masterSnippet = docBuilder.parse(new File( CfgCVSBasePath + selectedRun + "/pro"));
-
-        masterSnippet.getDocumentElement().normalize();
-        DOMSource domSource = new DOMSource(masterSnippet);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-
-        logger.info("[HCAL " + functionManager.FMname + "]: ===========================");
-        logger.info("[HCAL " + functionManager.FMname + "]: ===========================");
-        logger.info("[HCAL " + functionManager.FMname + "]: XML loaded from the master snippet is:");
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        logger.info(writer.toString());
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-
-        NodeList CfgScripts =  masterSnippet.getDocumentElement().getElementsByTagName("CfgScript");
-        logger.info("[HCAL " + functionManager.FMname + "]: The CfgScript has this in it:");
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        ConfigDoc = CfgScripts.item(0).getTextContent();
-        logger.info(ConfigDoc);
-        logger.info("[HCAL " + functionManager.FMname + "]: ---------------------------");
-
-
-
-        CfgScripts.item(0).getParentNode().removeChild(CfgScripts.item(0));        
-
-        domSource = new DOMSource(masterSnippet);
-        writer = new StringWriter();
-        result = new StreamResult(writer);
-        transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
-        String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-        xmlString = writer.toString();
-        xmlString = xmlString.replace("<mastersnippet>\n","").replace("\n</mastersnippet>\n","");
-        xmlString = xmlString.replace("&amp;","&");
-        logger.debug("[HCAL " + functionManager.FMname + "]: XML with CfgScript element removed and root element tags removed is now:");
-        logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        logger.debug(xmlString);
-        logger.debug("[HCAL " + functionManager.FMname + "]: ---------------------------");
-        //configString = xmlString;
-        configString = ConfigDoc;
-      }
-      catch (TransformerException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a TransformerException when trying to transform modified mastersnippet xml: " + e.getMessage());
-      }
+			if (CommonMasterSnippetFile.equals("")){
+			    logger.info("[Martin log " + functionManager.FMname + "] No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
+			}else{
+					CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
+          logger.info("[Martin log " + functionManager.FMname + "] found CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
+			}
+    }catch(UserActionException e){
+            logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CommonMasterSnippet" + e.getMessage());
     }
-    catch (DOMException | ParserConfigurationException | SAXException | IOException  | UserActionException e) {
-      logger.error("[HCAL " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
+
+
+    // Parse the CfgScript in MasterSnippet
+    try{
+       MainConfigString = xmlHandler.getHCALMasterSnippetTag(selectedRun, CfgCVSBasePath, "CfgScript");
+       logger.info("[Martin log " + functionManager.FMname + "] found CfgScript in MasterSnippet. Here it is:\n"+ MainConfigString);
+			 if( !(CommonConfigString.equals("not set")) ){
+					  configString = CommonConfigString + MainConfigString;
+			 }else{
+					  configString = MainConfigString;
+       }
     }
-    FullCfgScript=configString;
-    logger.debug("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
+    catch( UserActionException e){
+      logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CfgScript in MasterSnippet" + e.getMessage());
+    }
+    FullCfgScript = configString ;
+    logger.info("[HCAL " + functionManager.FMname + "] The FullCfgScript which was successfully compiled for this FM.\nIt looks like this:\n" + FullCfgScript);
 
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(FullCfgScript)));
   }
@@ -1446,8 +1398,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     functionManager.containerPeerTransportATCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportATCP"));
 
-    functionManager.containerPeerTransportUTCP = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("pt::atcp::PeerTransportUTCP"));
-
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
 
@@ -1458,9 +1408,6 @@ public class HCALEventHandler extends UserEventHandler {
 
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
-    }
-    if (!functionManager.containerPeerTransportUTCP.isEmpty()) {
-      logger.info("[HCAL " + functionManager.FMname + "] Found PeerTransportUTCP applications - will handle them ...");
     }
 
     // find out if HCAL supervisor is ready for async SOAP communication

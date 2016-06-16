@@ -217,7 +217,6 @@ ul {
   -moz-columns: 3;
 }
 
-/* Specific Hardcoded Stuff */
 #newCFGSNIPPET_KEY_SELECTEDcheckbox input[type=checkbox],
 #newRUN_CONFIG_SELECTEDcheckbox input[type=checkbox],
 #newMASKED_RESOURCEScheckbox input[type=checkbox]{
@@ -225,4 +224,10 @@ ul {
 }
 #masked_resourses_td{
 	display: none;
+}
+#hcalmaintable {
+  border: 0px solid black;
+}
+td {
+  border: 0px solid black;
 }

@@ -41,7 +41,7 @@ public class HCALParameterSender implements Runnable {
   String cachedNEvents = "";
 
 	@SuppressWarnings("rawtypes")
-//	private ParameterSet<FunctionManagerParameter> previousParameterSetSnapshot;
+	private ParameterSet<FunctionManagerParameter> previousParameterSetSnapshot;
 
 	/**
 	 * Creates a new {@link ChangedParameterSender} instance. Also creates an
@@ -51,12 +51,9 @@ public class HCALParameterSender implements Runnable {
 	 */
 	public HCALParameterSender(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
-    logger.warn("JohnLog: Constructing HCALParameterSender");
 		this.functionManager = parentFunctionManager;
-    logger.warn("JohnLog: About to call functionManager.getHCALparameterSet()");
     HCALParameters test = parentFunctionManager.getHCALparameterSet();
-    logger.warn("JohnLog: about to sett this previous parameter snapshot.");
-//		this.previousParameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
+		this.previousParameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
 		this.executorService = Executors.newSingleThreadScheduledExecutor();
 	}
 
@@ -65,7 +62,6 @@ public class HCALParameterSender implements Runnable {
 	 * the next scheduled run.
 	 */
 	public void requireParameterUpdate() {
-    logger.warn("JohnLog: called requireParameterUpdate()");
 		this.parameterUpdateRequired = true;
 	}
 
@@ -73,7 +69,6 @@ public class HCALParameterSender implements Runnable {
 	 * Starts this instance. Every instance can only be started once.
 	 */
 	public void start() {
-    logger.warn("JohnLog: called HCALParameterSender.start()");
 		if (!this.isRunning) {
 			this.isRunning = true;
 			this.executorService.scheduleAtFixedRate(this, 0, intervalInMs, TimeUnit.MILLISECONDS);
@@ -88,7 +83,6 @@ public class HCALParameterSender implements Runnable {
 		this.executorService.shutdownNow();
 		try {
 			if (!this.executorService.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
-				logger.warn("Executor Service did not terminate in time.");
 			}
 		} catch (InterruptedException intEx) {
 			logger.error("Thread was interrupted while awaiting Executor Service termination.", intEx);
@@ -101,7 +95,7 @@ public class HCALParameterSender implements Runnable {
 		if (!this.parameterUpdateRequired) {
 			return;
 		}
-		this.parameterUpdateRequired = true;
+		//this.parameterUpdateRequired = true;
 
 		/*
 		 * copied from LV0 and adapted
@@ -124,12 +118,10 @@ public class HCALParameterSender implements Runnable {
 			 * work with a copy to avoid Concurrent Modification Exceptions and
 			 * to ensure no updates are missed
 			 */
-			//HCALParameters parameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
+			HCALParameters parameterSetSnapshot = this.functionManager.getHCALparameterSet().getClonedParameterSet();
 
 			// get the parameters that have changed
-			ParameterSet<FunctionManagerParameter> changedParams = this.functionManager.getHCALparameterSet();
-			//ParameterSet<FunctionManagerParameter> changedParams = parameterSetSnapshot
-		  //	.getChanged(this.previousParameterSetSnapshot);
+			ParameterSet<FunctionManagerParameter> changedParams = parameterSetSnapshot.getChanged(this.previousParameterSetSnapshot);
 
 			/*
 			 * Check all changed parameters, filtering out those that are meant
@@ -140,26 +132,20 @@ public class HCALParameterSender implements Runnable {
 			 * This can be detected on the client side and the JSON can be
 			 * parsed back.
 			 */
-			for (FunctionManagerParameter<?> param : changedParams.getParameters()) {
-				//if (HCALParameters.isForGUI(param.getName())) {
-					if (param.getName().equals("HCAL_EVENTSTAKEN")) {
-            if (!cachedNEvents.equals(param.getValue().toString())){
-              if (param.getValue() instanceof CollectionT) {
-					    	npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
-					    } else {
-					    	npc.addParameter(param.getName(), param.getValue().toString());
-                logger.warn("JohnLog: sent a notification with number of events: " + param.getValue().toString());
-                cachedNEvents = param.getValue().toString();
-                empty=false;
-					    }
-            }
-          }
-				//}
+			 for (FunctionManagerParameter<?> param : changedParams.getParameters()) {
+			 	if (HCALParameters.isForGUI(param.getName())) {
+			 		empty = false;
+			 		if (param.getValue() instanceof CollectionT) {
+			 			npc.addParameter("JSON_" + param.getName(), ParameterUtil.toJSON(param.getValue()));
+			 		} else {
+			 			npc.addParameter(param.getName(), param.getValue().toString());
+			 		}
+			 	}
 
-			}
+			 }
 			
 			// update the previous snapshot to the current one
-//			this.previousParameterSetSnapshot = parameterSetSnapshot;
+			this.previousParameterSetSnapshot = parameterSetSnapshot;
 
 			/*
 			 * XXX: This is the relevant code required to send notifications to
@@ -177,7 +163,6 @@ public class HCALParameterSender implements Runnable {
 				ne.setContent(xml);
 				ne.setType(NotificationHelper.PARAMETER_TYPE);
 				this.functionManager.sendNotificationEvent(ne);
-        logger.warn("JohnLog: just sent parameter notification");
 			}
 		} catch (Exception ex) {
 			logger.error("Parameter update failed.", ex);

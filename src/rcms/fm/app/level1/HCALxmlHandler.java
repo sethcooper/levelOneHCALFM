@@ -124,7 +124,10 @@ public class HCALxmlHandler {
           }
         }
         else {
-          throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML.");
+          //throw new UserActionException("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+          logger.warn("[HCAL " + functionManager.FMname + "]: A userXML element with tag name '" + tag + "'" + "was not found in the userXML. Empty String will be returned.");
+          String emptyElement="";
+          return  emptyElement;
         }
       }
       else {
@@ -147,6 +150,13 @@ public class HCALxmlHandler {
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
 
+      // add the magical attribute to the Endpoints
+      NodeList xcEndpointNodes = execXML.getDocumentElement().getElementsByTagName("xc:Endpoint");
+      int NxcEndpointNodes = xcEndpointNodes.getLength();
+      for (int i=0; i < NxcEndpointNodes; i++) {
+        Element currentEndpointElement = (Element) xcEndpointNodes.item(i);
+				currentEndpointElement.setAttribute("connectOnRequest", "true");
+			}
 
       String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");

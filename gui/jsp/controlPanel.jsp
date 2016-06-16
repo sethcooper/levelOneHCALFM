@@ -159,10 +159,10 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                       <tr>
                         <td align="center" valign="top">
                           <!--New main table-->
-                            <table width="720" border="1" cellpadding="10" cellspacing="0">
+                            <table id="hcalmaintable" width="720" border="1" cellpadding="10" cellspacing="0">
                               <tr>
-                                <td class="title_center_black_yellow_bg" width="155">
-                                  Enable user control
+                                <td class="title_center_black_yellow_bg" width="60">
+                                  Modify
                                 </td>
                                 <td class="title_center_black_yellow_bg">
                                   Parameter
@@ -172,7 +172,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black" width="155">
+                                <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Local Run Key</strong><div id="dropdowndiv"></div>
@@ -181,7 +181,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black" width="155">
+                                <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Mastersnippet</strong>
@@ -190,7 +190,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black" width="155">
+                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Masked Resources</strong>
@@ -199,7 +199,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" width="155">
+                                <td id="newNUMBER_OF_EVENTScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Number of Events</strong>
@@ -208,7 +208,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td class="label_center_black" width="155">
+                                <td class="label_center_black">
                                   &nbsp;
                                 </td>
                                 <td class="label_left_black">
@@ -218,7 +218,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newRUN_NUMBERcheckbox" class="label_center_black" width="155">
+                                <td id="newRUN_NUMBERcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Run Number</strong>
@@ -227,13 +227,22 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
-                                <td class="label_center_black" width="155">
+                                <td class="label_center_black">
                                   &nbsp;
                                 </td>
                                 <td class="label_left_black">
                                   <strong>FM Start Time</strong>
                                 </td>
                                 <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black" width="155">
+                                </td>
+                              </tr>
+                              <tr>
+                                <td id="newACTION_MSGcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Action Message</strong>
+                                </td>
+                                <td id ="newACTION_MSG" class="label_center_black" width="155">
                                 </td>
                               </tr>
                               <tr>
