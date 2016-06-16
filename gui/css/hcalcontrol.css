@@ -231,3 +231,6 @@ ul {
 td {
   border: 0px solid black;
 }
+#hcalmaintable > input { 
+  width: 450px
+}

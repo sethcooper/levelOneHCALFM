@@ -30,8 +30,8 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <meta Http-Equiv="Expires" Content="0">
 
   <title>Run Control and Monitoring System</title>
-  <link rel="StyleSheet" href="../css/common.css" type="text/css"/>
   <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
+  <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
@@ -167,7 +167,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="title_center_black_yellow_bg">
                                   Parameter
                                 </td>
-                                <td class="title_center_black_yellow_bg" width="155">
+                                <td class="title_center_black_yellow_bg" width="450px">
                                   Value
                                 </td>
                               </tr>
@@ -177,7 +177,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Local Run Key</strong><div id="dropdowndiv"></div>
                                 </td>
-                                <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black" width="155">
+                                <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -186,7 +186,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Mastersnippet</strong>
                                 </td>
-                                <td id ="newRUN_CONFIG_SELECTED" class="label_center_black" width="155">
+                                <td id ="newRUN_CONFIG_SELECTED" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -195,7 +195,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Masked Resources</strong>
                                 </td>
-                                <td id ="newMASKED_RESOURCES" class="label_center_black" width="155">
+                                <td id ="newMASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -204,7 +204,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Number of Events</strong>
                                 </td>
-                                <td id ="newNUMBER_OF_EVENTS" class="label_center_black" width="155">
+                                <td id ="newNUMBER_OF_EVENTS" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -214,7 +214,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Events Taken</strong>
                                 </td>
-                                <td id ="newHCAL_EVENTSTAKEN" class="label_center_black" width="155">
+                                <td id ="newHCAL_EVENTSTAKEN" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -223,7 +223,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Run Number</strong>
                                 </td>
-                                <td id ="newRUN_NUMBER" class="label_center_black" width="155">
+                                <td id ="newRUN_NUMBER" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -233,7 +233,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>FM Start Time</strong>
                                 </td>
-                                <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black" width="155">
+                                <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -242,7 +242,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_left_black">
                                   <strong>Action Message</strong>
                                 </td>
-                                <td id ="newACTION_MSG" class="label_center_black" width="155">
+                                <td id ="newACTION_MSG" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>

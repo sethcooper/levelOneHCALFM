@@ -105,3 +105,8 @@
 	font-weight: bold;
 	text-align : center;
 }
+.parameterInputField {
+  font-family: Arial, sans-serif;
+  font-size 100%;
+  width: 400px;
+}

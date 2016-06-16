@@ -72,7 +72,9 @@ function setProgress(progress) {
         containerWidth = $(".container").width();
     var progressPercent = 100 * progress / numberOfEvents;
     var progressBarWidth = progressPercent * (containerWidth / 100);
-    // $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").width(progressBarWidth);
+    console.log("progressPercent is: " + progressPercent);
+    //$(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {
