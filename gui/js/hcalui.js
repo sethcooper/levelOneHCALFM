@@ -195,6 +195,7 @@ function hcalOnLoad() {
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
+    makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
     copyContents(ACTION_MSG, newACTION_MSG);
     copyContents(HCAL_EVENTSTAKEN, newHCAL_EVENTSTAKEN);
     copyContents(RUN_NUMBER, newRUN_NUMBER);
