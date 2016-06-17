@@ -3675,8 +3675,7 @@ public class HCALEventHandler extends UserEventHandler {
 
 					      	if( alarmerStatusValue.equals("")){
                     String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue with parition name: "+functionManager.alarmerPartition;
-					      		logger.error(errMessage); 
-                    functionManager.goToError(errMessage);
+					      		logger.warn(errMessage); 
 					      	}
 					      	if( alarmerStatusValue.equals("OK")){
 					           logger.info("[Martin Log "+functionManager.FMname +"] The alarmerStatus of partition "+functionManager.alarmerPartition+" with name "+alarmerStatusName+" is OK"); 
