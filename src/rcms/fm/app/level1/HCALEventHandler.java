@@ -2406,10 +2406,7 @@ public class HCALEventHandler extends UserEventHandler {
             logger.debug("[HCAL LVL1 " + functionManager.FMname + "] current fmChild is: " + fmChild.getName().toString());
             if ( fmChild.isInitialized() && fmChild.refreshState().toString().equals(HCALStates.ERROR.toString())) {
               String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! state of the LVL2 FM with role: " + fmChild.getRole().toString() + "\nPlease check the chainsaw logs, jobcontrol, etc. The name of this FM is: " + fmChild.getName().toString() +"\nThe URI is: " + fmChild.getURI().toString();
-              logger.error(errMessage);
               try {
-                // update error message from supervisor
-                ((HCALlevelTwoFunctionManager)functionManager).getSupervisorErrorMessage();
                 errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Level 2 FM with name " + fmChild.getName().toString() + " has received an xdaq error from the hcalSupervisor: " + ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
                 logger.error(errMessage);
                 if (!((StringT)functionManager.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString().contains(((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString())){
@@ -3129,10 +3126,11 @@ public class HCALEventHandler extends UserEventHandler {
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("running like hell ...")));
         }
 
-        // check the LVL2 health
-        if (icount%10==0) {
-          pollLVL2FMhealth();
-        }
+        // should always report async
+        //// check the LVL2 health
+        //if (icount%10==0) {
+        //  pollLVL2FMhealth();
+        //}
 
         // from time to time report the progress in some transitional states
         if (icount%120==0) {
