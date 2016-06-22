@@ -750,10 +750,30 @@ public class HCALEventHandler extends UserEventHandler {
   protected void getAlarmerUrl() {
     String tmpAlarmerURL="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[Seth log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    String CommonMasterSnippetFile ="not set";
+    //Try to get the CommonMasterSnippetFile
     try{
-        String TagName = "AlarmerURL";
-        tmpAlarmerURL = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
+			String TagName="CommonMasterSnippet";
+      String attribute="file";
+			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
+    }catch(UserActionException e){
+      logger.warn("[HCAL "+functionManager.FMname+"]:Got an error when parsing AlarmerURL from CommonMasterSnippet: "+e.getMessage());
+    }
+
+    // Try to get the alarmerURL from CommonMasterSnippetFile
+    try{
+      String TagName = "AlarmerURL";
+      if (CommonMasterSnippetFile.equals("")){
+			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Will look for alarmerURL in MasterSnippet will be used.");
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+          tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
+          logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in CommonMasterSnippet. Here it is:\n"+ tmpAlarmerURL);
+			}else{
+			    logger.info("[Martin log " + functionManager.FMname + "]: CommonMasterSnippet was found. Will look for alarmerURL in CommonMasterSnippet will be used.");
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ CommonMasterSnippetFile+"/pro");    
+          tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile,CfgCVSBasePath,TagName);
+          logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in MasterSnippet. Here it is:\n"+ tmpAlarmerURL);
+			}
     }
     catch ( UserActionException e) {
           logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
@@ -765,11 +785,30 @@ public class HCALEventHandler extends UserEventHandler {
   protected void getAlarmerStatus() {
     String tmpAlarmerPartition="";
     String selectedRun = ((StringT)functionManager.getParameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+    logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ selectedRun+"/pro");   
+    String CommonMasterSnippetFile ="not set";
+    //Try to get the CommonMasterSnippetFile
     try{
-        String TagName = "AlarmerStatus";
-				//Use this line to get multiple info about Alarmer
-        tmpAlarmerPartition = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,"partition");
+			String TagName="CommonMasterSnippet";
+      String attribute="file";
+			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
+    }catch(UserActionException e){
+      logger.warn("[HCAL "+functionManager.FMname+"]:Got an error when parsing AlarmerStatus from CommonMasterSnippet: "+e.getMessage());
+    }
+
+    try{
+			String TagName = "AlarmerStatus";
+      if (CommonMasterSnippetFile.equals("")){
+			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Will look for AlarmerStatus in MasterSnippet will be used.");
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ selectedRun+"/pro");    
+          tmpAlarmerPartition      = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
+          logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerPartition in MasterSnippet. Here it is:\n"+ tmpAlarmerPartition);
+			}else{
+			    logger.info("[Martin log " + functionManager.FMname + "]: CommonMasterSnippet was found. Will look for AlarmerStatus in CommonMasterSnippet will be used.");
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ CommonMasterSnippetFile+"/pro");    
+          tmpAlarmerPartition      = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile,CfgCVSBasePath,TagName);
+          logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerPartition in CommonMasterSnippet. Here it is:\n"+ tmpAlarmerPartition);
+			}
     }
     catch ( UserActionException e) {
           logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerStatus xml in getAlarmerStatus(): " + e.getMessage());
