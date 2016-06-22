@@ -3712,7 +3712,7 @@ public class HCALEventHandler extends UserEventHandler {
 					      	if( alarmerStatusValue_HBHEHO.equals("")|| alarmerStatusValue_HF.equals("") ){
                     String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue in local mode";
 					      		logger.error(errMessage); 
-                    functionManager.goToError(errMessage);
+                    functionManager.goToError(errMessage); // TODO: this is not appropriate
 					      	}
 
 					      	if (!alarmerStatusValue_HBHEHO.equals("OK") || !alarmerStatusValue_HF.equals("OK") ) {
@@ -3722,12 +3722,12 @@ public class HCALEventHandler extends UserEventHandler {
 					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
 					      		}
                     else {
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state");
+					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state"); // TODO: this is confusing
                     }
 					      	}
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 					      		// if we got back to OK, go back to RUNNING
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to RUNNINGDEGRADED state");
+					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to RUNNINGDEGRADED state"); // TODO: this is also confusing
 					      		functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
 					      	}
 
