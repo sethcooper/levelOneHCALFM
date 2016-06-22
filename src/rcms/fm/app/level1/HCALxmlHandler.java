@@ -361,7 +361,7 @@ public class HCALxmlHandler {
            }
 				}
     }
-    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
     }
     String FullCtrlSequence = tmpCtrlSequence;
@@ -390,7 +390,7 @@ public class HCALxmlHandler {
            TagContent = TagNodeList.item(0).getTextContent();
 				}
     }
-    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
     }
     return TagContent;
