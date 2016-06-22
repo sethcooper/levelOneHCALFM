@@ -88,12 +88,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 						}
           }
 				}
-				logger.error(errMsg);
-				fm.setAction(actionMsg);
-				fm.fireEvent(HCALInputs.SETERROR);
-				fm.sendCMSError(errMsg);
-				taskSequence = null;
-				setTimeoutThread(false);
+        handleError(errMsg,actionMsg);
 				return;
 			}
       //INFO [SethLog HCAL HCAL_HO] 2 received id: http://hcalvme05.cms:16601/urn:xdaq-application:lid=50, ToState: Ready
@@ -113,7 +108,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is initializing ";
 					fm.setAction(msg);
-					//logger.info(msg);
 					setTimeoutThread(true);
 					return;
 			  }
@@ -137,7 +131,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is halting ";
 					fm.setAction(msg);
-					//logger.info(msg);
 					setTimeoutThread(true);
 					return;
 				}
@@ -177,11 +170,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
 						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
 					}
-					logger.error(errMsg);
-					fm.setAction(actionMsg);
-					fm.fireEvent(HCALInputs.SETERROR);
-					fm.sendCMSError(errMsg);
-					setTimeoutThread(false);
+					handleError(errMsg,actionMsg);
 					return;
 				}
 			}
@@ -213,11 +202,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
 						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
 					}
-					logger.error(errMsg);
-					fm.setAction(actionMsg);
-					fm.fireEvent(HCALInputs.SETERROR);
-					fm.sendCMSError(errMsg);
-					setTimeoutThread(false);
+					handleError(errMsg,actionMsg);
 					return;
 				}
 		  }
@@ -305,10 +290,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 		} catch (Exception e){
 			taskSequence = null;
 			String errmsg = "Exception while stepping to the next task: "+e.getMessage();
-			fm.sendCMSError(errmsg);
-			fm.setAction(" ");
-			setTimeoutThread(false);
-			fm.fireEvent(HCALInputs.SETERROR);
+      handleError(errmsg," ");
 		}
 }
  
@@ -327,10 +309,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                 "\n while taskSequence is for state = " + taskSequence.getState();
  
             taskSequence = null;
-            fm.sendCMSError(errmsg);
-            fm.setAction(" ");
-            fm.fireEvent(HCALInputs.SETERROR);
-            setTimeoutThread(false);
+            handleError(errmsg," ");
             return;
         }
  
@@ -350,9 +329,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         } catch (Exception e){
             taskSequence = null;
             String errmsg = "process notice error: "+e.getMessage();
-            fm.sendCMSError(errmsg);
-            fm.setAction(" ");
-            fm.fireEvent(HCALInputs.SETERROR);
+            handleError(errmsg," ");
         }
     }
  
@@ -434,5 +411,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             return;
         }
     }
+
+    /*--------------------------------------------------------------------------------
+     *
+     */
+    protected void handleError(String errMsg, String actionMsg) {
+    	  fm.setAction(actionMsg);
+    	  setTimeoutThread(false);
+    	  fm.goToError(errMsg);
+		}
  
 }
