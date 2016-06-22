@@ -616,7 +616,7 @@ public class HCALEventHandler extends UserEventHandler {
 			    logger.info("[Martin log " + functionManager.FMname + "] No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
 			}else{
 					CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
-          logger.info("[Martin log " + functionManager.FMname + "] found CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
+          logger.info("[Martin log " + functionManager.FMname + "] Found CfgScript in CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
 			}
     }catch(UserActionException e){
             logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CommonMasterSnippet" + e.getMessage());
