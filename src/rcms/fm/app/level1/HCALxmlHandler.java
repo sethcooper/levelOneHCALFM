@@ -407,7 +407,10 @@ public class HCALxmlHandler {
         masterSnippet.getDocumentElement().normalize();
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
         if (TagNodeList.getLength()>1){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. Only the first one will be used ");
+            String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
+            logger.warn(errMessage);
+            throw new UserActionException(errMessage);
+
         }else if (TagNodeList.getLength()==0){
             logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
             return tmpAttribute;

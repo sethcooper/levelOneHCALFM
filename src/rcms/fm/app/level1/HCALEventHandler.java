@@ -611,12 +611,17 @@ public class HCALEventHandler extends UserEventHandler {
 			String TagName="CommonMasterSnippet";
       String attribute="file";
 			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+    }catch(UserActionException e){
+      logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+      functionManager.goToError(e.getMessage());
+    }
 
+    try{
 			if (CommonMasterSnippetFile.equals("")){
-			    logger.info("[Martin log " + functionManager.FMname + "] No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
+			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
 			}else{
 					CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
-          logger.info("[Martin log " + functionManager.FMname + "] Found CfgScript in CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
+          logger.info("[Martin log " + functionManager.FMname + "]: Found CfgScript in CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
 			}
     }catch(UserActionException e){
             logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CommonMasterSnippet" + e.getMessage());
