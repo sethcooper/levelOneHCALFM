@@ -3242,7 +3242,6 @@ public class HCALEventHandler extends UserEventHandler {
                 try {
                   pam =((XdaqApplication)qr).getXDAQParameter();
                   pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "stateName"});
-                  pam.select(new String[] {});
                   pam.get();
 
                   status = pam.getValue("PartitionState");
