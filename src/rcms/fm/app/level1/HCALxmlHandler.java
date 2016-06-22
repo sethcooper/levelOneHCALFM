@@ -331,6 +331,7 @@ public class HCALxmlHandler {
     }
   }
 
+  // From MasterSnippet, get the CtrlSequenceTagName, loop over all the "include" sub-tags, read all the content in "file" with the "pro" version.
   public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
     String tmpCtrlSequence ="";
     try{
@@ -339,14 +340,6 @@ public class HCALxmlHandler {
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
-        DOMSource domSource = new DOMSource(masterSnippet);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
@@ -368,12 +361,14 @@ public class HCALxmlHandler {
            }
 				}
     }
-    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
     }
     String FullCtrlSequence = tmpCtrlSequence;
     return FullCtrlSequence;
   }
+
+  // Return the Tag content of TagName in MasterSnippet
   public String getHCALMasterSnippetTag(String selectedRun, String CfgCVSBasePath, String TagName) throws UserActionException{
     String TagContent ="";
     try{
@@ -382,14 +377,6 @@ public class HCALxmlHandler {
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
-        DOMSource domSource = new DOMSource(masterSnippet);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        transformer.transform(domSource, result);
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
@@ -403,11 +390,13 @@ public class HCALxmlHandler {
            TagContent = TagNodeList.item(0).getTextContent();
 				}
     }
-    catch (TransformerException | DOMException | ParserConfigurationException | SAXException | IOException e) {
+    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
     }
     return TagContent;
   }
+  
+  // Return the attribute value of TagName in MasterSnippet
   public String getHCALMasterSnippetTagAttribute(String selectedRun, String CfgCVSBasePath, String TagName,String attribute) throws UserActionException{
     String tmpAttribute ="";
     try{

@@ -605,13 +605,18 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Try to find a common masterSnippet from UserXML
     try{
-			CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
+			//CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
+			//CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,"CommonMS");
+			//
+			String TagName="CommonMasterSnippet";
+      String attribute="file";
+			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
 
 			if (CommonMasterSnippetFile.equals("")){
 			    logger.info("[Martin log " + functionManager.FMname + "] No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
 			}else{
 					CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
-          logger.info("[Martin log " + functionManager.FMname + "] found CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
+          logger.info("[Martin log " + functionManager.FMname + "] Found CfgScript in CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
 			}
     }catch(UserActionException e){
             logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CommonMasterSnippet" + e.getMessage());
@@ -3706,8 +3711,7 @@ public class HCALEventHandler extends UserEventHandler {
 
 					      	if( alarmerStatusValue_HBHEHO.equals("")|| alarmerStatusValue_HF.equals("") ){
                     String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue in local mode";
-					      		logger.error(errMessage); 
-                    functionManager.goToError(errMessage); // TODO: this is not appropriate
+					      		logger.warn(errMessage); 
 					      	}
 
 					      	if (!alarmerStatusValue_HBHEHO.equals("OK") || !alarmerStatusValue_HF.equals("OK") ) {
@@ -3717,12 +3721,12 @@ public class HCALEventHandler extends UserEventHandler {
 					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
 					      		}
                     else {
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state"); // TODO: this is confusing
+					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to stay in RUNNINGDEGRADED state"); 
                     }
 					      	}
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 					      		// if we got back to OK, go back to RUNNING
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to RUNNINGDEGRADED state"); // TODO: this is also confusing
+					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to get out of RUNNINGDEGRADED state"); 
 					      		functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
 					      	}
 
