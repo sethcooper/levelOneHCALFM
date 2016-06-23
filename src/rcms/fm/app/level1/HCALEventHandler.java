@@ -3695,13 +3695,11 @@ public class HCALEventHandler extends UserEventHandler {
 					      		if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
 					      				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+ alarmerStatusName +" is " + alarmerStatusValue + " which is not OK; going to RUNNINGDEGRADED state");
 					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-												if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("HCAL is in RunningDegraded, please contact HCAL DOC !!!");
-												if(functionManager.alarmerPartition.equals("HF")    ) functionManager.setAction("HF is in RunningDegraded, please contact HCAL DOC !!!");
+												functionManager.setAction("DAQ Shifter: please call the HCAL DOC at 76090 first, and if there is no answer please call the HCAL DAQ at 71930.");
 					      		}
                     else {
-					      		  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
-											if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("HCAL is in RunningDegraded, please contact HCAL DOC !!!");
-											if(functionManager.alarmerPartition.equals("HF")    ) functionManager.setAction("HF is in RunningDegraded, please contact HCAL DOC !!!");
+						      		  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
+												functionManager.setAction("DAQ Shifter: please call the HCAL DOC at 76090 first, and if there is no answer please call the HCAL DAQ at 71930.");
                     }
 					      	}
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
