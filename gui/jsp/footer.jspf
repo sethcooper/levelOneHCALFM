@@ -1,20 +1,18 @@
 <!-- T1_Row4 begin -->
 <tr>
   <!-- References begin -->
-  <td width="17%" align="left" valign="top" bgcolor="#EEEEEE">
-    <font color="#000099" size="1" face="Arial, Helvetica, sans-serif">
-      HCAL Online Software 
-      <br>
-      CERN 2015
-      <br>
-      <a href="mailto:cms-hcal-onlinesw@cern.ch ">
-        cms-hcal-onlinesw@cern.ch 
-      </a>
-      <br>
-    </font>
+  <td id="footer" align="left" valign="top">
+    HCAL Online Software 
+    <br>
+    CERN 2016
+    <br>
+    <a href="mailto:cms-hcal-onlinesw@cern.ch ">
+      cms-hcal-onlinesw@cern.ch 
+    </a>
+    <br>
   </td>
   <!-- References end -->
-  <td height="17%" colspan="2" valign="bottom">&nbsp;</td>
+  <td colspan="2" valign="bottom">&nbsp;</td>
 </tr>
 <!-- T1_Row4 end -->
 <div id='hcalfmVersion'>HCALFM version: 06-24-16_v2</div>

@@ -1,5 +1,7 @@
 package rcms.fm.app.level1;
 
+import java.net.URI;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -7,12 +9,16 @@ import java.util.Arrays;
 
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserFunctionManager;
+import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.statemachine.definition.Input;
 import rcms.statemachine.definition.State;
 import rcms.statemachine.definition.StateMachineDefinitionException;
@@ -415,16 +421,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
       }
     }
-
-    // find all XDAQ executives and kill them
-    if (qualifiedGroup!=null) {
-      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      Iterator it = listExecutive.iterator();
-      while (it.hasNext()) {
-        XdaqExecutive ex = (XdaqExecutive) it.next();
-        ex.destroy();
-      }  
-    }
+    destroyXDAQ();
 
     destroyed = true;
 
@@ -867,4 +864,39 @@ public class HCALFunctionManager extends UserFunctionManager {
 			}
 		}
 	}
+
+	/**----------------------------------------------------------------------
+	 * get all XDAQ executives and kill them
+	 */
+  protected void destroyXDAQ() {
+    // see if there is an exec with a supervisor and kill it first
+    URI supervExecURI = null;
+		if (containerhcalSupervisor != null) {
+			for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
+				Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
+				XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
+				supervExecURI = qrSupervParentExec.getURI();
+				QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
+				XdaqExecutive ex = (XdaqExecutive) qrExec;
+				ex.destroy();
+			}
+		}
+
+    // find all XDAQ executives and kill them
+		if (qualifiedGroup != null) {
+			List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+			Iterator it = listExecutive.iterator();
+			while (it.hasNext()) {
+				XdaqExecutive ex = (XdaqExecutive) it.next();
+				if (!ex.getURI().equals(supervExecURI)) {
+					ex.destroy();
+				}
+			}
+		}
+
+    // reset the qualified group so that the next time an init is sent all resources will be initialized again
+		QualifiedGroup qg = getQualifiedGroup();
+		if (qg != null) { qg.reset(); }
+  }
+
 }
