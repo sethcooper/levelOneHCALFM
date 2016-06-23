@@ -28,6 +28,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <meta Http-Equiv="Cache-Control" Content="no-cache">
   <meta Http-Equiv="Pragma" Content="no-cache">
   <meta Http-Equiv="Expires" Content="0">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700" rel="stylesheet" type="text/css">
 
   <title>Run Control and Monitoring System</title>
   <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
@@ -81,13 +82,63 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 
   <!-- Header fragment -->
-  <jsp:include page="./header.jsp"/>
+	<!-- T1_Row1 begin -->
+	<tr> 
+		<td height="97" align="center" class="header">
+			<!-- Logo begin-->
+      <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
+      <br />
+			<a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
+			</a>
+			<!-- Logo end -->
+			<br />
+      <div id="hostport">
+			<!-- Host : Port begin -->
+				<%=request.getLocalName()%>:<%=request.getLocalPort()%>
+			<!-- Host : Port end -->
+      </div>
+		</td>
+
+		<!-- Central title begin -->
+		<th id="hcaltitle" width="50%" height="49" align="left" valign="central" bordercolor="#CC6600" class="header">
+		  HCAL Run Control
+		</th>
+		<!-- Central title end -->
+		
+		<td width="50%" align="right" class="header">
+			<!-- Version begin -->
+			Tag : <b><%=getServletContext().getAttribute("version")%></b>
+			<!-- Version end -->
+		  </p>
+			<!-- Tag begin -->
+			<%if (request.getRemoteUser() != null) {%>
+			  User : &nbsp;
+			<b><%= request.getRemoteUser()%></b>
+			<%}%>
+			<!-- Tag end -->
+			<p id="versionSpot"></p>
+      <p>
+			<!-- Bug-report link begin -->
+			  <a href="https://github.com/HCALRunControl/levelOneHCALFM/issues"> File a bug report </a>
+			<!-- Bug-report link  end -->
+		  </p>
+		</td>
+	</tr>
+	<!-- T1_Row1 end -->
+	
+	<!-- T1_Row2 begin -->
+	<tr> 
+		<td height="21" class="header">&nbsp;</td>
+		<td height="21" colspan="2">&nbsp;</td>
+	</tr>
+	<!-- T1_Row2 end -->
 
   <!-- T1_Row3 begin -->
   <tr>
     <!-- Menu begin -->
-    <td width="17%" valign="top" bgcolor="#EEEEEE">
-      <br>
+    <td id="sidebar" valign="top">
+      
+      <br />
       <rcms.menu:menuRenderer indentation="3"/>
     </td>
     <!-- Menu end -->
@@ -117,11 +168,11 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                 <tr>
                   <td>
                     <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
-                    <br><br>
+                    <br /><br />
                     <div id="fullPath">
                       <rcms.control:configurationPathRenderer titleClass="control_label1" label="Full Path:&nbsp;" contentClass="control_label2" indentation="10"/>
                     </div>
-                     <br><br>
+                     <br /><br />
                     <rcms.control:configurationNameRenderer titleClass="control_label1" label="Group Name:&nbsp;" contentClass="control_label2" indentation="10"/>
                   </td>
                 </tr>
@@ -131,18 +182,18 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                     <rcms.control:attachButtonRenderer cssClass="button1" onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
                     <rcms.control:detachButtonRenderer cssClass="button1" onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
                     <rcms.control:destroyButtonRenderer cssClass="button1" onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
-                    <br><br>
+                    <br /><br />
                     <rcms.control:refreshButtonRenderer cssClass="button1" onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
                     <rcms.control:showTreeButtonRenderer cssClass="button1" onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/>
                     <rcms.control:showStatusTableButtonRenderer cssClass="button1" onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" bgcolor="#cccccc">
+                  <td align="center">
                     <div id="commandSection">
                       <rcms.control:commandButtonsRenderer cssClass="button1" indentation="11"/>
                     </div>
-                    <br>
+                    <br />
                     <div id="commandParameterCheckBoxSection" class="control_label1">
                       <input id="commandParameterCheckBox" type="checkbox" onclick="onClickCommandParameterCheckBox(); toggle_visibility('Blork');" value="" name="commandParameterCheckBox ">  &nbsp; Show Command Parameter Section
                     </div>
@@ -159,7 +210,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                       <tr>
                         <td align="center" valign="top">
                           <!--New main table-->
-                            <table id="hcalmaintable" width="720" border="1" cellpadding="10" cellspacing="0">
+                            <table id="hcalmaintable" width="720" border="0" cellpadding="10" cellspacing="0">
                               <tr>
                                 <td class="title_center_black_yellow_bg" width="60">
                                   Modify
@@ -262,7 +313,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
                                     <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
-                                    <br>
+                                    <br />
                                       Masked resources: <span id="maskTest"></span>
                                     <div id="masks" class="tbl"></div>
                                   </div>
@@ -273,14 +324,14 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_center_black" colspan="3">
                                   <div>
                                     <strong>Quick Info</strong>
-                                    <br>
+                                    <br />
                                     <div id="elogInfo"></div>
                                   </div>
                                 </td>
                               </tr>
                             </table>
-                          <br>
-                          <br>
+                          <br />
+                          <br />
                           <!--Buttons for main table -->
                           <center>
                             <input id="setGlobalParametersButton" class="button1" type="button" onclick="onClickSetGlobalParameters()" value="Set Enabled Parameters" name="setGlobalParametersButton">
@@ -289,12 +340,12 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                         </td>
                       </tr>
 
-                      <tr><td><br><br></td></tr>
+                      <tr><td><br /><br /></td></tr>
 
                       <tr>
                         <td align="center" class="label_center_black">
                           <input type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
-                          <br><br>
+                          <br /><br />
                           <table id="GlobalParamsTable" class="tbl">
                             <tr>
                               <td align="center">
@@ -312,7 +363,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                             <table id="Blork" class="tbl">
                               <tr>
                                 <td>
-                                  <br>
+                                  <br />
                                   <table width="100%" border="1" cellpadding="10" cellspacing="0">
                                     <tr>
                                       <td class="title_center_black_yellow_bg">
