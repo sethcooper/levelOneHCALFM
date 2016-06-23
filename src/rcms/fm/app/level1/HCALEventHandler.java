@@ -97,6 +97,8 @@ import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.ResourceException;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -1502,54 +1504,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("")));
   }
 
-  // get all XDAQ executives and kill them
-  protected void destroyXDAQ() {
-    if (functionManager.HCALRunInfo!=null) {
-      {
-        Date date = new Date();
-        Parameter<DateT> stoptime = new Parameter<DateT>("TIME_ON_EXIT",new DateT(date));
-        /*try {
-          logger.debug("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB TIME_ONE_EXIT: " + date.toString());
-          if (functionManager.HCALRunInfo != null) { functionManager.HCALRunInfo.publish(stoptime); }
-          }
-          catch (RunInfoException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run time on exit ...\nProbably this is OK when the FM was destroyed.";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          }*/
-      }
-      {
-        Parameter<StringT> StateOnExit = new Parameter<StringT>("STATE_ON_EXIT",new StringT(functionManager.getState().getStateString()));
-        /*try {
-          logger.debug("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo STATE_ON_EXIT: " + functionManager.getState().getStateString());
-          if (functionManager.HCALRunInfo != null) { functionManager.HCALRunInfo.publish(StateOnExit); }
-          }
-          catch (RunInfoException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run state on exit ...\nProbably this is OK when the FM was destroyed.";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          }*/
-      }
-
-      functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
-    }
-
-    // find all XDAQ executives and kill them
-    {
-      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      Iterator it = listExecutive.iterator();
-      while (it.hasNext()) {
-        XdaqExecutive ex = (XdaqExecutive) it.next();
-        ex.destroy();
-      }
-    }
-
-    // reset the qualified group so that the next time an init is sent all resources will be initialized again
-    if (functionManager != null) {
-      QualifiedGroup qg = functionManager.getQualifiedGroup();
-      if (qg != null) { qg.reset(); }
-    }
-  }
 
   // prepare SOAP bag for sTTS test
   protected XDAQMessage getTTSBag(String TTSMessage, int sourceid, int cycle, int value) throws XDAQMessageException {

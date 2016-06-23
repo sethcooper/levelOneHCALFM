@@ -407,7 +407,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR,new StringT("")));
 
       // kill all XDAQ executives
-      destroyXDAQ();
+      functionManager.destroyXDAQ();
 
       // init all XDAQ executives
       // also halt all LPM applications inside here
