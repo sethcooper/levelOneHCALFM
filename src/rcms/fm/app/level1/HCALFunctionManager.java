@@ -869,22 +869,26 @@ public class HCALFunctionManager extends UserFunctionManager {
   protected void destroyXDAQ() {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
-		for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
-			Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
-			XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
-      supervExecURI = qrSupervParentExec.getURI();
-      QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
-      XdaqExecutive ex = (XdaqExecutive) qrExec;
-      ex.destroy();
+		if (containerhcalSupervisor != null) {
+			for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
+				Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
+				XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
+				supervExecURI = qrSupervParentExec.getURI();
+				QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
+				XdaqExecutive ex = (XdaqExecutive) qrExec;
+				ex.destroy();
+			}
 		}
 
     // find all XDAQ executives and kill them
-		List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-		Iterator it = listExecutive.iterator();
-		while (it.hasNext()) {
-			XdaqExecutive ex = (XdaqExecutive) it.next();
-			if (!ex.getURI().equals(supervExecURI)) {
-				ex.destroy();
+		if (qualifiedGroup != null) {
+			List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+			Iterator it = listExecutive.iterator();
+			while (it.hasNext()) {
+				XdaqExecutive ex = (XdaqExecutive) it.next();
+				if (!ex.getURI().equals(supervExecURI)) {
+					ex.destroy();
+				}
 			}
 		}
 
