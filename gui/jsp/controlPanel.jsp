@@ -164,7 +164,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
           <tr>
             <td align="center" valign="top">
               <!-- Control Console begin -->
-              <table border="1" cellpadding="10" cellspacing="1" align="left" width="280">
+              <table border="1" cellpadding="10" cellspacing="1" align="left" width="280" style="border: 1px solid black;">
                 <tr>
                   <td>
                     <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
