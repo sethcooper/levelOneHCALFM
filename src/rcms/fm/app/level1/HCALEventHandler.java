@@ -3348,6 +3348,13 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
 
+				// Set the action message if we are in RunningDegraded
+				if(icount%15==0){
+          if ((functionManager != null) && (functionManager.isDestroyed() == false) && functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+						functionManager.setAction("><))),> : DAQ shifter, please contact HCAL DOC now!");
+					}
+        }
+
         // no fishys for the LVL2s give static message to the LVL2 action box
         Boolean noticedonce = false;
         if ((functionManager != null) && (functionManager.isDestroyed() == false) && (!functionManager.FMrole.equals("HCAL")) && (!noticedonce) && (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()))) {
