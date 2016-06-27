@@ -224,7 +224,7 @@ public class HCALEventHandler extends UserEventHandler {
   protected boolean SpecialFMsAreControlled = false;
 
   // Switch to enable the AsyncEnable feature of the HCAL supervisor
-  protected boolean HCALSupervisorAsyncEnable = false;
+  protected boolean HCALSupervisorAsyncEnable = true;
 
   // Switch to enable multiple hcalSupervisors controlled by means of one FM plus a TriggerAdapter
   protected boolean LocalMultiPartitionReadOut = false;
