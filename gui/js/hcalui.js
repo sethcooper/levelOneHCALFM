@@ -72,7 +72,9 @@ function setProgress(progress) {
         containerWidth = $(".container").width();
     var progressPercent = 100 * progress / numberOfEvents;
     var progressBarWidth = progressPercent * (containerWidth / 100);
-    $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").width(progressBarWidth);
+    console.log("progressPercent is: " + progressPercent);
+    //$(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {
@@ -173,8 +175,8 @@ function hideinitializebutton() {
 function moveversionnumber() {
 
     $('#hcalfmVersion').css('font-size', '12');
-    $('#hcalfmVersion').css('color', '#000099');
-    $('#hcalfmVersion').css('font-family', 'Arial, Helvetica, sans-serif');
+    $('#hcalfmVersion').css('color', '#dddddd');
+    $('#hcalfmVersion').css('font-family', 'Open Sans, sans-serif');
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
@@ -186,6 +188,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
+    removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
     copyContents(CFGSNIPPET_KEY_SELECTED, newCFGSNIPPET_KEY_SELECTED);
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
@@ -195,6 +198,7 @@ function hcalOnLoad() {
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
     makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
+    copyContents(ACTION_MSG, newACTION_MSG);
     copyContents(HCAL_EVENTSTAKEN, newHCAL_EVENTSTAKEN);
     copyContents(RUN_NUMBER, newRUN_NUMBER);
     makecheckbox('newRUN_NUMBERcheckbox', 'RUN_NUMBER');
@@ -205,6 +209,7 @@ function hcalOnLoad() {
     hideduplicatefield('RUN_CONFIG_SELECTED');
     hideduplicatefield('MASKED_RESOURCES');
     hideduplicatefield('NUMBER_OF_EVENTS');
+    hideduplicatefield('ACTION_MSG');
     hideduplicatefield('RUN_NUMBER');
     hideduplicatefield('HCAL_EVENTSTAKEN');
     hideduplicatefield('HCAL_TIME_OF_FM_START');

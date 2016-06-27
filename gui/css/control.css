@@ -1,33 +1,33 @@
 .control_label1 {
-	font-family : arial, helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : small;
 	text-align : left;
 }
 
 .control_label2 {
-	font-family : arial, helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : #666666;
 	font-size : small;
 	text-align : left;
 }
 
 .control_label3{
-	font-family : arial, helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : #000099;
 	font-size : small;
 	text-align : left;
 }
 
 .control_label4{
-	font-family : arial, helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : large;
 	text-align : left;
 }
 
 .control_button1 {
-	font-family : arial, helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : small;
 	text-align : center;

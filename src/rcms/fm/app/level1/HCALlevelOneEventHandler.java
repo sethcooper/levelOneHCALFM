@@ -704,6 +704,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // get alarmerURL
       getAlarmerUrl();
 
+      // get alarmerStatus to decide which status to watch
+      getAlarmerStatus();
+
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
       AlarmerWatchThread thread4 = new AlarmerWatchThread();
@@ -1194,7 +1197,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] LVL1 about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
-      functionManager.parameterSender.shutdown();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {

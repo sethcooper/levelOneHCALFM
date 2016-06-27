@@ -1,10 +1,16 @@
 package rcms.fm.app.level1;
  
+import java.util.Iterator;
+import java.util.List;
+
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
+import rcms.fm.resource.QualifiedResource;
+import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.stateFormat.StateNotification;
 import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
@@ -54,49 +60,41 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
       //logger.warn("["+fm.FMname+"]: FM is in state: "+actualState);
 
 			if ( fm.getState().equals(HCALStates.ERROR) ) {
-				//XXX SIC FIXME TODO add this?
-				//fm.forceParameterUpdate();
 				return;
 			}
 
-			if ( notification.getToState().equals(HCALStates.ERROR.toString())) {
-
+			if ( notification.getToState().equals(HCALStates.ERROR.toString()) || notification.getToState().equals(HCALStates.FAILED.toString())) {
 				String appName = "";
 				try {
 					appName = fm.findApplicationName( notification.getIdentifier() );
 				} catch(Exception e){}
-				String actionMsg = appName+"["+notification.getIdentifier()+"] is in Error";
-				String errMsg =  actionMsg+"\nReported reason:\n "+notification.getReason();
-				String errDetail = notification.getReason();
-				//XXX FIXME SIC TODO
-				//fm.addMsgToConsole(actionMsg);
-				//                if ( _taskSequence != null ) actionMsg = "Stuck in "+_taskSequence.getDescription();
-				fm.setAction(actionMsg);
-				fm.fireEvent(HCALInputs.SETERROR);
-				//XXX SIC FIXME TODO add this
-				//fm.forceParameterUpdate();
-				fm.sendCMSError(errMsg);
-				//fm.setErrorDetail(errDetail);
-				taskSequence = null;
-				setTimeoutThread(false);
+				String actionMsg = appName+"["+notification.getIdentifier()+"] is in ERROR";
+				String errMsg =  actionMsg;
+        if (!fm.containerhcalSupervisor.isEmpty()) {
+					((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+					errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+				}
+        else if (!fm.containerFMChildren.isEmpty()) {
+					Iterator it = fm.containerFMChildren.getQualifiedResourceList().iterator();
+					while (it.hasNext()) {
+						FunctionManager fmChild = (FunctionManager) it.next();
+						errMsg = "[HCAL LVL1 " + fm.FMname + "] Error! state of the LVL2 FM with role: " + fmChild.getRole().toString() + "\nPlease check the chainsaw logs";
+						if ( fmChild.isInitialized() && fmChild.refreshState().toString().equals(HCALStates.ERROR.toString())) {
+							try {
+                String superErr = ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+								errMsg = "[HCAL LVL1 " + fm.FMname + "]: The Level 2 FM with name " + fmChild.getName().toString() + " is in ERROR and has received an xdaq error from the hcalSupervisor: " +superErr ;
+								fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(superErr)));
+                
+							} catch (ParameterServiceException e) {
+								errMsg = "[HCAL LVL1 " + fm.FMname + "] Level 2 FM with name " + fmChild.getName().toString() + " is in error, but the hcalSupervisor was unable to report an error message from xdaq.";
+							}
+						}
+          }
+				}
+        handleError(errMsg,actionMsg);
 				return;
 			}
-
-			//XXX FIXME SIC TODO
-			//if ( notification.getToState().equals(HCALStates.XDAQ_ERRORREPORT.toString()) ) {
-			//    fm.setWarning(notification.getReason());
-			//} else if ( notification.getToState().equals(HCALStates.XDAQ_CRASHED.toString()) ) {
-			//    String errMsg = "Application Crash detected:\n";
-			//            errMsg += "URI: "+notification.getIdentifier()+"\n";
-			//            errMsg += "Reason: "+notification.getReason();
-			//            fm.setError(errMsg);
-			//    if ( notification.getIdentifier().contains("urn:xdaq-application:lid=0"))
-			//            try {
-			//                    fm.getExecManager().runPostMortemCheck(notification.getIdentifier());
-			//            } catch ( Exception e ) {
-			//                    logger.error("PostMortem check failed",e);
-			//            }
-			//    }
+      //INFO [SethLog HCAL HCAL_HO] 2 received id: http://hcalvme05.cms:16601/urn:xdaq-application:lid=50, ToState: Ready
 
 			// process the notification from the FM when initializing
 			if ( fm.getState().equals(HCALStates.INITIALIZING) ) {
@@ -113,7 +111,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is initializing ";
 					fm.setAction(msg);
-					//logger.info(msg);
 					setTimeoutThread(true);
 					return;
 			  }
@@ -137,7 +134,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				if ( notification.getToState().equals(HCALStates.HALTING.toString()) ) {
 					String msg = "HCAL is halting ";
 					fm.setAction(msg);
-					//logger.info(msg);
 					setTimeoutThread(true);
 					return;
 				}
@@ -148,7 +144,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					return;
 				}
 			}
-
 
 
 			// process the notification from the FM when configuring
@@ -164,27 +159,24 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					//fm.addConfiguredServices(services);
 					String msg = "HCAL is configuring "+services;
 					fm.setAction(msg);
-					//logger.info(msg);
-					//XXX FIXME SIC TODO
-					//fm.addMsgToConsole(msg);
 
 					setTimeoutThread(true);
 					return;
-					//XXX SIC FIXME TODO ADD ERROR STATE
-					//} else if ( notification.getToState().equals(HCALStates.XDAQ_CRASHED.toString()) ) {
-					//        String errMsg = "Application Crash detected:\n";
-					//        errMsg += "URI: "+notification.getIdentifier()+"\n";
-					//        errMsg += "Reason: "+notification.getReason();
-					//    fm.sendCMSError(errMsg,logger);
-					//    fm.setAction(" ");
-					//    setTimeoutThread(false);
-					//    fm.forceParameterUpdate();
-					//    fm.fireEvent(HCALInputs.SETERROR);
-					// 
-					//        return;
-					//}
-			  }
-		  }
+				} else if ( notification.getToState().equals(HCALStates.FAILED.toString()) ) {
+					String appName = "";
+					try {
+						appName = fm.findApplicationName( notification.getIdentifier() );
+					} catch(Exception e){}
+					String actionMsg = appName+"["+notification.getIdentifier()+"] is in Error";
+					String errMsg =  actionMsg;
+					if (!fm.containerhcalSupervisor.isEmpty()) {
+						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+					}
+					handleError(errMsg,actionMsg);
+					return;
+				}
+			}
 
 			// process the notification from the FM when starting
 			if ( fm.getState().equals(HCALStates.STARTING) ) {
@@ -199,26 +191,23 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					//fm.addConfiguredServices(services);
 					String msg = "HCAL is starting "+services;
 					fm.setAction(msg);
-					//logger.info(msg);
-					//XXX FIXME SIC TODO
-					//fm.addMsgToConsole(msg);
 
 					setTimeoutThread(true);
 					return;
-					//XXX SIC FIXME TODO ADD ERROR STATE
-					//} else if ( notification.getToState().equals(HCALStates.XDAQ_CRASHED.toString()) ) {
-					//        String errMsg = "Application Crash detected:\n";
-					//        errMsg += "URI: "+notification.getIdentifier()+"\n";
-					//        errMsg += "Reason: "+notification.getReason();
-					//    fm.sendCMSError(errMsg,logger);
-					//    fm.setAction(" ");
-					//    setTimeoutThread(false);
-					//    fm.forceParameterUpdate();
-					//    fm.fireEvent(HCALInputs.SETERROR);
-					// 
-					//        return;
-					//}
-			  }
+				} else if ( notification.getToState().equals(HCALStates.FAILED.toString()) ) {
+					String appName = "";
+					try {
+						appName = fm.findApplicationName( notification.getIdentifier() );
+					} catch(Exception e){}
+					String actionMsg = appName+"["+notification.getIdentifier()+"] is in Error";
+					String errMsg =  actionMsg;
+					if (!fm.containerhcalSupervisor.isEmpty()) {
+						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
+						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+					}
+					handleError(errMsg,actionMsg);
+					return;
+				}
 		  }
 
 			if(taskSequence == null) {
@@ -304,11 +293,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 		} catch (Exception e){
 			taskSequence = null;
 			String errmsg = "Exception while stepping to the next task: "+e.getMessage();
-			fm.sendCMSError(errmsg);
-			fm.setAction(" ");
-			setTimeoutThread(false);
-			//fm.forceParameterUpdate();
-			fm.fireEvent(HCALInputs.SETERROR);
+      handleError(errmsg," ");
 		}
 }
  
@@ -327,11 +312,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                 "\n while taskSequence is for state = " + taskSequence.getState();
  
             taskSequence = null;
-            fm.sendCMSError(errmsg);
-            fm.setAction(" ");
-            fm.fireEvent(HCALInputs.SETERROR);
-            //fm.forceParameterUpdate();
-            setTimeoutThread(false);
+            handleError(errmsg," ");
             return;
         }
  
@@ -344,21 +325,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                 fm.getParameterSet().get(HCALParameters.ACTION_MSG)
                     .setValue(new StringT(""+taskSequence.getDescription()));
  
-                //XXX SIC FIXME TODO add this
-                //fm.getParameterSet().get(HCALParameters.COMPLETION)
-                //    .setValue(new StringT(""+taskSequence.completion()));
- 
             } catch (Exception e) {
-                logger.warn("failed to set action or completion info parameter");
+                logger.warn("failed to set action parameter");
             }
  
         } catch (Exception e){
             taskSequence = null;
             String errmsg = "process notice error: "+e.getMessage();
-            fm.sendCMSError(errmsg);
-            fm.setAction(" ");
-            //fm.forceParameterUpdate();
-            fm.fireEvent(HCALInputs.SETERROR);
+            handleError(errmsg," ");
         }
     }
  
@@ -369,26 +343,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
  
         State FMState = fm.getState();
  
-				//XXX SIC FIXME TODO add this
-        //fm.getParameterSet().get(HCALParameters.COMPLETION).setValue(new StringT(""));
         fm.setAction("Transition Completed");
-				//XXX SIC FIXME TODO add this
-        //fm.forceParameterUpdate();
  
-        //if in this state, execute a function to get Key Vector
-        //if (taskSequence.getCompletionEvent().equals(HCALInputs.SETHALT)
-        //        && ( FMState.equals(HCALStates.INITIALIZING) || FMState.equals(HCALStates.RESETTING)) )
-        //    fm.getEventHandler().fetchSupervisorPars();
-       
         if (taskSequence.getCompletionEvent().equals(HCALInputs.SETCONFIGURE) ) {
             //String transMsg = String.format( "services configured ["+fm.getConfiguredServices()+"]");
             //fm.setTransitionMessage( transMsg );
         }
  
         //fm.setTransitionEndTime();
-        //fm.getEventHandler().updateCompletedAction();
-				//XXX SIC FIXME TODO add this
-        //fm.forceParameterUpdate();
         setTimeoutThread(false);
 				logger.info("completeTransition: fire taskSequence completion event "+taskSequence.getCompletionEvent().toString());
         fm.fireEvent(taskSequence.getCompletionEvent());
@@ -418,7 +380,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         } else {
             isTimeoutActive = true;
             timeoutThread = new Thread( new Runnable()
-            //Thread watchThread = new Thread( new Runnable()
                 {
                     //int milliSecondSleepTime = 1000*fm.getEventHandler().getTimeout();
                     int milliSecondSleepTime = 1000*240; // 4 mins timeout
@@ -431,8 +392,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                                 String errmsg = "Application transition timeout error";
                                 fm.sendCMSError(errmsg);
                                 fm.setAction(" ");
-																//XXX SIC FIXME TODO add this
-                                //fm.forceParameterUpdate();
                                 fm.fireEvent(HCALInputs.SETERROR);
                                 taskSequence = null;
                                 isTimeoutActive=false;
@@ -455,5 +414,14 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             return;
         }
     }
+
+    /*--------------------------------------------------------------------------------
+     *
+     */
+    protected void handleError(String errMsg, String actionMsg) {
+    	  fm.setAction(actionMsg);
+    	  setTimeoutThread(false);
+    	  fm.goToError(errMsg);
+		}
  
 }

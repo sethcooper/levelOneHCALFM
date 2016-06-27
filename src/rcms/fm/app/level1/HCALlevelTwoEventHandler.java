@@ -407,7 +407,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR,new StringT("")));
 
       // kill all XDAQ executives
-      destroyXDAQ();
+      functionManager.destroyXDAQ();
 
       // init all XDAQ executives
       // also halt all LPM applications inside here
@@ -2200,7 +2200,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
-      functionManager.parameterSender.shutdown();
+      //functionManager.parameterSender.shutdown();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
 
