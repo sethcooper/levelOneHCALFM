@@ -1206,18 +1206,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // starting HCAL
         if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
         try {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting i.e. sending Enable to the HCAL supervisor ...");
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting i.e. sending Enable to the HCAL supervisor ...");
 
           // define start time
           StartTime = new Date();
 
           if (HCALSupervisorAsyncEnable) {
             functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCSTART);
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending ASYNCSTART to supervisor");
           }
           else {
             functionManager.containerhcalSupervisor.execute(HCALInputs.HCALSTART);
+            logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending START to supervisor");
           }
-
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (HCAL=Enable) failed ...";
@@ -1445,6 +1446,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
           functionManager.fireEvent( HCALInputs.SETSTART );
         }
+      }else{
+				// Fire start when we're in Async mode
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
+          functionManager.fireEvent( HCALInputs.SETSTART );
       }
 
       // set action
