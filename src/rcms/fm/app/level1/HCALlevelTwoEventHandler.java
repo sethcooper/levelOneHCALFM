@@ -1206,7 +1206,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // starting HCAL
         if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
         try {
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting i.e. sending Enable to the HCAL supervisor ...");
 
           // define start time
           StartTime = new Date();
