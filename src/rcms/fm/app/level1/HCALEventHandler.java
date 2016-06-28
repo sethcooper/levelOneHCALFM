@@ -997,7 +997,7 @@ public class HCALEventHandler extends UserEventHandler {
         }
       }
       // send SOAP configure to the HCAL supervisor
-      if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
+      //if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
       try {
         functionManager.containerhcalSupervisor.execute(HCALInputs.CONFIGURE);
       }

@@ -473,7 +473,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 			functionManager.haltLPMControllers();
 
       // leave intermediate state directly only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+      if  (!functionManager.ErrorState)  {
 
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
@@ -1204,7 +1204,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         // starting HCAL
-        if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
+        //if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
         try {
 
           // define start time
@@ -1937,7 +1937,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // leave intermediate state only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+      if ( !functionManager.ErrorState)  {
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
 
@@ -1971,7 +1971,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //
 
       // leave intermediate state only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+      if ( !functionManager.ErrorState) {
         functionManager.fireEvent( HCALInputs.SETCOLDRESET );
       }
 
@@ -2055,7 +2055,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.debug(debugMessage);
         }
 
-        if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
+        //if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
         try {
 
           // define stop time
@@ -2194,7 +2194,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // leave intermediate state only when not talking to asynchronous applications
-      if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
+      if (  !functionManager.ErrorState)  {
         if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
           functionManager.fireEvent(HCALInputs.SETCONFIGURE);
         }
