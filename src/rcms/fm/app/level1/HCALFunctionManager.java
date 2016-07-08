@@ -394,7 +394,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     }*/
 
     // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs
-    if (RunType.equals("local")) { closeSessionId(); }
+    if (RunType.equals("local") && !Level2FM) { closeSessionId(); }
 
     // unsubscribe from retrieving XMAS info
     if (XMASMonitoringEnabled) { unsubscribeWSE(); }  
