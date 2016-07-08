@@ -175,8 +175,8 @@ function hideinitializebutton() {
 function moveversionnumber() {
 
     $('#hcalfmVersion').css('font-size', '12');
-    $('#hcalfmVersion').css('color', '#000099');
-    $('#hcalfmVersion').css('font-family', 'Arial, Helvetica, sans-serif');
+    $('#hcalfmVersion').css('color', '#dddddd');
+    $('#hcalfmVersion').css('font-family', 'Open Sans, sans-serif');
     $('#hcalfmVersion').appendTo('#versionSpot');
 }
 
