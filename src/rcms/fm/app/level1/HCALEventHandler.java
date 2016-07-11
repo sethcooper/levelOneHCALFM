@@ -768,13 +768,11 @@ public class HCALEventHandler extends UserEventHandler {
       String TagName = "AlarmerURL";
       if (CommonMasterSnippetFile.equals("")){
 					// Look for AlarmerURL in Main MasterSnippet
-			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Will look for alarmerURL in MasterSnippet");
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
           tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in CommonMasterSnippet. Here it is:\n"+ tmpAlarmerURL);
 			}else{
 					// Look for AlarmerURL in CommonMasterSnippet
-			    logger.info("[Martin log " + functionManager.FMname + "]: CommonMasterSnippet was found. Will look for alarmerURL in CommonMasterSnippet");
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ CommonMasterSnippetFile+"/pro");    
           tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile,CfgCVSBasePath,TagName);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in MasterSnippet. Here it is:\n"+ tmpAlarmerURL);
@@ -784,7 +782,6 @@ public class HCALEventHandler extends UserEventHandler {
           logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
     }
     functionManager.alarmerURL = tmpAlarmerURL;
-    logger.info("[Seth log HCAL " + functionManager.FMname + "] The alarmerURL looks like this:\n" + functionManager.alarmerURL);
   }
 // get the alarmer Status from MasterSnippet
   protected void getAlarmerStatus() {
