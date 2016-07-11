@@ -547,6 +547,7 @@ public class HCALEventHandler extends UserEventHandler {
   public void destroy() {
     // Stop all threads
     functionManager.parameterSender.shutdown();
+	  logger.info("[Martin log HCAL "+ functionManager.FMname + "]: Going to stop the watchthreads from EventHandler");
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
