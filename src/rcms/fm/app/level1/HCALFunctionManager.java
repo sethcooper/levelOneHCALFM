@@ -421,6 +421,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
       }
     }
+    logger.info("[Martin log HCAL " +FMname+"]: Going to call destroyXDAQ from functionManger");
     destroyXDAQ();
 
     destroyed = true;
@@ -724,7 +725,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         logger.warn("[HCAL " + FMname + "] Could not get sessionId for closing session.\nNot closing session.\nThis is OK if no sessionId was requested from within HCAL land, i.e. global runs.",e);
       }
       try {
-        logger.debug("[HCAL " + FMname + "] Trying to close log sessionId = " + sessionId );
+        logger.info("[HCAL " + FMname + "] Trying to close log sessionId = " + sessionId );
         logSessionConnector.closeSession(sessionId);
         logger.debug("[HCAL " + FMname + "] ... closed log sessionId = " + sessionId );
       }
@@ -872,6 +873,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
 		if (containerhcalSupervisor != null) {
+			logger.info("[Martin log HCAL "+FMname+"]: Going to kill supervisor");
 			for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
 				Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
 				XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
