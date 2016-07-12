@@ -359,7 +359,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     // This method is called by the framework when the Function Manager is destroyed.
 
     System.out.println("[HCAL " + FMname + "] destroyAction called");
-    logger.debug("[HCAL " + FMname + "] destroyAction called");
+    logger.info("[HCAL " + FMname + "] destroyAction called");
 
 
     // if RunInfo database is connected try to report the destroying of this FM
