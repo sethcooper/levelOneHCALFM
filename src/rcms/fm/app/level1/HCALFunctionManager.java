@@ -730,7 +730,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         logger.warn("[HCAL " + FMname + "] Could not get sessionId for closing session.\nNot closing session.\nThis is OK if no sessionId was requested from within HCAL land, i.e. global runs.",e);
       }
       try {
-        logger.info("[HCAL " + FMname + "] Trying to close log sessionId = " + sessionId );
+        logger.debug("[HCAL " + FMname + "] Trying to close log sessionId = " + sessionId );
         logSessionConnector.closeSession(sessionId);
         logger.debug("[HCAL " + FMname + "] ... closed log sessionId = " + sessionId );
       }
