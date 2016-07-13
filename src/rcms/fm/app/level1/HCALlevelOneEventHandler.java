@@ -253,7 +253,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread3.start();
 
       // don't do this weird stuff for the HCAL supervisor - which is not taking async SOAP - for the level 1 FM
-      HCALSuperVisorIsOK = true;
+      //HCALSuperVisorIsOK = true;
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;

@@ -406,20 +406,20 @@ public class HCALEventHandler extends UserEventHandler {
 
 
     // Check if the userXML specifies that the async communication is disabled
-    {
-      String doForceNotToUseAsyncCommunication = "";
-      try { doForceNotToUseAsyncCommunication=xmlHandler.getHCALuserXMLelementContent("ForceNotToUseAsyncCommunication"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!doForceNotToUseAsyncCommunication.equals("")) {
-        functionManager.ForceNotToUseAsyncCommunication = true;
-      }
-      if (functionManager.ForceNotToUseAsyncCommunication) {
-        logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means all async communication is swichted off completely!!");
-      }
-      else {
-        logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means async communication is possible if async XDAQ apps were detected, configured ...");
-      }
-    }
+    //{
+    //  String doForceNotToUseAsyncCommunication = "";
+    //  try { doForceNotToUseAsyncCommunication=xmlHandler.getHCALuserXMLelementContent("ForceNotToUseAsyncCommunication"); }
+    //  catch (UserActionException e) { logger.warn(e.getMessage()); }
+    //  if (!doForceNotToUseAsyncCommunication.equals("")) {
+    //    functionManager.ForceNotToUseAsyncCommunication = true;
+    //  }
+    //  if (functionManager.ForceNotToUseAsyncCommunication) {
+    //    logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means all async communication is swichted off completely!!");
+    //  }
+    //  else {
+    //    logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means async communication is possible if async XDAQ apps were detected, configured ...");
+    //  }
+    //}
 
 
     // Get the default number of events requested specified in the userXML
@@ -1438,7 +1438,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       XDAQParameter pam = null;
 
-      //String dowehaveanasynchcalSupervisor="undefined";
+      String dowehaveanasynchcalSupervisor="undefined";
 
       // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
       for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
@@ -1449,9 +1449,9 @@ public class HCALEventHandler extends UserEventHandler {
           pam.get();
 
           //FIXME SIC set this ourselves!
-         // dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
+          dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
 
-         // logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor ReportStateToRCMS results in: " + dowehaveanasynchcalSupervisor);
+          logger.info("[HCAL " + functionManager.FMname + "] initXDAQ(): asking for the HCAL supervisor ReportStateToRCMS results is: " + dowehaveanasynchcalSupervisor);
 
         }
         catch (XDAQTimeoutException e) {
@@ -1491,10 +1491,10 @@ public class HCALEventHandler extends UserEventHandler {
 
 
     // here all async communication is switched off
-    if (functionManager.ForceNotToUseAsyncCommunication) {
-      functionManager.asynchcalSupervisor = false;
-      functionManager.asyncSOAP = false;
-    }
+    //if (functionManager.ForceNotToUseAsyncCommunication) {
+    //  functionManager.asynchcalSupervisor = false;
+    //  functionManager.asyncSOAP = false;
+    //}
 
     // finally, halt all LPM apps
     functionManager.haltLPMControllers();
@@ -2476,80 +2476,80 @@ public class HCALEventHandler extends UserEventHandler {
 
   // check the status of the HCAL supervisor and wait until it is in the "Ready" or "Failed" state
   // This method is needed when _not_ talking to applications which talk asynchronous SOAP
-  protected void waitforHCALsupervisor() {
-    if (!functionManager.containerhcalSupervisor.isEmpty()) {
+  //protected void waitforHCALsupervisor() {
+  //  if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
-      {
-        String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking its state - good!";
-        logger.debug(debugMessage);
-      }
+  //    {
+  //      String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking its state - good!";
+  //      logger.debug(debugMessage);
+  //    }
 
-      XDAQParameter pam = null;
-      String status   = "undefined";
-      String progress = "undefined";
-      String supervisorError = "";
-      int elapsedseconds = 0;
-      int timetosleep    = 1000;
+  //    XDAQParameter pam = null;
+  //    String status   = "undefined";
+  //    String progress = "undefined";
+  //    String supervisorError = "";
+  //    int elapsedseconds = 0;
+  //    int timetosleep    = 1000;
 
-      // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-        while ((!status.equals("Ready")) && (!status.equals("Failed"))) {
-          try {
-            logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState after sending the RunType, which is: " + status + " (still to go: " + progress + ")");
+  //    // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
+  //    for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+  //      while ((!status.equals("Ready")) && (!status.equals("Failed"))) {
+  //        try {
+  //          logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState after sending the RunType, which is: " + status + " (still to go: " + progress + ")");
 
-            elapsedseconds +=(1*timetosleep/1000);
-            try { Thread.sleep(timetosleep); }
-            catch (Exception ignored) {}
-            logger.debug("[HCAL " + functionManager.FMname + "] ... slept for " + elapsedseconds + " sec");
+  //          elapsedseconds +=(1*timetosleep/1000);
+  //          try { Thread.sleep(timetosleep); }
+  //          catch (Exception ignored) {}
+  //          logger.debug("[HCAL " + functionManager.FMname + "] ... slept for " + elapsedseconds + " sec");
 
-            pam =((XdaqApplication)qr).getXDAQParameter();
-            pam.select(new String[] {"PartitionState", "InitializationProgress"});
-            pam.get();
-            status = pam.getValue("PartitionState");
-            progress = pam.getValue("InitializationProgress");
+  //          pam =((XdaqApplication)qr).getXDAQParameter();
+  //          pam.select(new String[] {"PartitionState", "InitializationProgress"});
+  //          pam.get();
+  //          status = pam.getValue("PartitionState");
+  //          progress = pam.getValue("InitializationProgress");
 
-            localcompletion = Double.parseDouble(progress);
+  //          localcompletion = Double.parseDouble(progress);
 
-            if (status.equals("Cold-Init")) {
-              logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + " , which means that the configuring takes longer because of e.g. firmware uploads, LUTs changes, etc. (still to go: " + progress + ")");
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
-              timetosleep = 10000;
-            }
+  //          if (status.equals("Cold-Init")) {
+  //            logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + " , which means that the configuring takes longer because of e.g. firmware uploads, LUTs changes, etc. (still to go: " + progress + ")");
+  //            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
+  //            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
+  //            timetosleep = 10000;
+  //          }
 
-          }
-          catch (XDAQTimeoutException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforHCALsupervisor()\n Perhaps this application is dead!?";
-            functionManager.goToError(errMessage,e);
-          }
-          catch (XDAQException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforHCALsupervisor()";
-            functionManager.goToError(errMessage,e);
-          }
-        }
-      }
+  //        }
+  //        catch (XDAQTimeoutException e) {
+  //          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforHCALsupervisor()\n Perhaps this application is dead!?";
+  //          functionManager.goToError(errMessage,e);
+  //        }
+  //        catch (XDAQException e) {
+  //          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforHCALsupervisor()";
+  //          functionManager.goToError(errMessage,e);
+  //        }
+  //      }
+  //    }
 
-      if (status.equals("Failed")) {
-        supervisorError = ((HCALlevelTwoFunctionManager)functionManager).getSupervisorErrorMessage();
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + "; " + supervisorError;
-        functionManager.goToError(errMessage);
-      }
+  //    if (status.equals("Failed")) {
+  //      supervisorError = ((HCALlevelTwoFunctionManager)functionManager).getSupervisorErrorMessage();
+  //      String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + "; " + supervisorError;
+  //      functionManager.goToError(errMessage);
+  //    }
 
-      logger.info("[HCAL " + functionManager.FMname + "] Supervisor did his job in about: " + elapsedseconds + " sec");
+  //    logger.info("[HCAL " + functionManager.FMname + "] Supervisor did his job in about: " + elapsedseconds + " sec");
 
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(elapsedseconds)));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
+  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(elapsedseconds)));
+  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
 
-    }
-    else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
-      String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
-      logger.error(errMessage);
-      functionManager.sendCMSError(errMessage);
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-    }
-  }
+  //  }
+  //  else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
+  //    String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
+  //    logger.error(errMessage);
+  //    functionManager.sendCMSError(errMessage);
+  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+  //    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+  //  }
+  //}
 
   // checks if the TriggerAdapter is stopped
   protected Boolean isTriggerAdapterStopped() {
