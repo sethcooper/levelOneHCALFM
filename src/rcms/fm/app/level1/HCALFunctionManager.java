@@ -878,7 +878,6 @@ public class HCALFunctionManager extends UserFunctionManager {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
 		if (containerhcalSupervisor != null) {
-			logger.info("[Martin log HCAL "+FMname+"]: Going to kill supervisor");
 			for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
 				Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
 				XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
