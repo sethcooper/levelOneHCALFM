@@ -1260,7 +1260,7 @@ public class HCALEventHandler extends UserEventHandler {
       String hostName = qr.getResource().getHostName();
       // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
       // TODO This needs to be moved out into userXML or a snippet!!!
-      if (hostName.equals("tcds-control-hcal.cms")) {
+      if (hostName.equals("tcds-control-hcal.cms") || hostName.equals("tcds-control-904.cms904") ) {
         usingTCDS = true;
         logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
         qr.setInitialized(true);
@@ -1269,7 +1269,7 @@ public class HCALEventHandler extends UserEventHandler {
 
     List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr: jobControlList) {
-      if (qr.getResource().getHostName().equals("tcds-control-hcal.cms")) {
+      if (qr.getResource().getHostName().equals("tcds-control-hcal.cms") || qr.getResource().getHostName().equals("tcds-control-904.cms904") ) {
         logger.info("[HCAL " + functionManager.FMname + "] Masking the  application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() );
         qr.setActive(false);
       }
@@ -2981,10 +2981,6 @@ public class HCALEventHandler extends UserEventHandler {
 
         icount++;
 
-        // delay between polls
-        try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
-
         Date now = Calendar.getInstance().getTime();
 
         // always update the completion status by looping over FM's and Subsystems and update the paramter set
@@ -3127,6 +3123,9 @@ public class HCALEventHandler extends UserEventHandler {
             System.out.println(Message);
           }
         }
+        // delay between polls
+        try { Thread.sleep(1000); }
+        catch (Exception ignored) { return; }
 
       }
 
@@ -3154,10 +3153,6 @@ public class HCALEventHandler extends UserEventHandler {
       while ((stopHCALSupervisorWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
 
         icount++;
-
-        // delay between polls
-        try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
 
         Date now = Calendar.getInstance().getTime();
 
@@ -3221,6 +3216,10 @@ public class HCALEventHandler extends UserEventHandler {
             }
           }
         }
+        // delay between polls
+        try { Thread.sleep(1000); }
+        catch (Exception ignored) { return; }
+
       }
 
       // stop the HCAL supervisor watchdog thread
@@ -3247,10 +3246,6 @@ public class HCALEventHandler extends UserEventHandler {
       while ((stopTriggerAdapterWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
 
         icount++;
-
-        // delay between polls
-        try { Thread.sleep(1000); }
-        catch (Exception ignored) { return; }
 
         Date now = Calendar.getInstance().getTime();
 
@@ -3342,6 +3337,10 @@ public class HCALEventHandler extends UserEventHandler {
             }
           }
         }
+        // delay between polls
+        try { Thread.sleep(1000); }
+        catch (Exception ignored) { return; }
+
       }
 
       // stop the TriggerAdapter watchdog thread
@@ -3371,10 +3370,6 @@ public class HCALEventHandler extends UserEventHandler {
 
 			// poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
-
-        // delay between polls
-        try { Thread.sleep(30000); } // check every 30 seconds
-        catch (Exception ignored) { return; }
 
         Date now = Calendar.getInstance().getTime();
 
@@ -3473,6 +3468,10 @@ public class HCALEventHandler extends UserEventHandler {
 						}
 					}
 				}
+        // delay between polls
+        try { Thread.sleep(30000); } // check every 30 seconds
+        catch (Exception ignored) { return; }
+
 			}
 
 			// stop the HCAL supervisor watchdog thread
