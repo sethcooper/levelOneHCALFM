@@ -665,6 +665,28 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullLPMControlSequence   = "not set";
       FullPIControlSequence = "not set";
 
+			// Parse the mastersnippet:
+			String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+		  String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+
+			// Try to find a common masterSnippet from MasterSnippet
+			String CommonMasterSnippetFile ="";
+   		try{
+	 			String TagName="CommonMasterSnippet";
+   		  String attribute="file";
+	 			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+   		}catch(UserActionException e){
+   		  logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+   		  functionManager.goToError(e.getMessage());
+   		}
+
+			if(!CommonMasterSnippetFile.equals("")){    
+					//parse and set HCAL parameters from CommonMasterSnippet
+					xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
+			}
+			//Parse and set HCAL parameters from MasterSnippet
+			xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+
       // compile CfgScript from UserXML to be sent to controlled LVL2 FMs
       getCfgScript();
 
@@ -685,7 +707,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           logger.error("[HCAL LVL1 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
         }
       }
-
+			
       // get TTCci control sequence to be sent to controlled LVL2 FMs
       getTTCciControl();
 
@@ -714,7 +736,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
       // prepare run mode to be passed to level 2
-      String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+      //String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
       pSet.put(new CommandParameter<IntegerT>(HCALParameters.RUN_NUMBER, new IntegerT(functionManager.RunNumber)));
       pSet.put(new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(RunType)));
