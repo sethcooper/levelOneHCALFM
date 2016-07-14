@@ -441,7 +441,7 @@ public class HCALxmlHandler {
 				
 				masterSnippet.getDocumentElement().normalize();
 
-				if (functionManger.RunType.equals("local"){
+				if (functionManager.RunType.equals("local")){
 					String FedEnableMask = getTagTextContent( masterSnippet.getDocumentElement().getElementsByTagName("FedEnableMask"), "FedEnableMask");
 					functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
 				}
