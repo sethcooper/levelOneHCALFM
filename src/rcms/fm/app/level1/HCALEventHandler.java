@@ -992,18 +992,17 @@ public class HCALEventHandler extends UserEventHandler {
               pam.select(new String[] {"RunType", "ConfigurationDoc", "Partition", "RunSessionNumber", "hardwareConfigurationStringTCDS", "hardwareConfigurationStringLPM", "hardwareConfigurationStringPI", "fedEnableMask", "usePrimaryTCDS"});
               pam.setValue("RunType",functionManager.FMfullpath);
               logger.info("[HCAL " + functionManager.FMname + "]: the ConfigurationDoc to be sent to the supervisor is: " + CfgScript);
-              //pam.setValue("ConfigurationDoc",ConfigDoc);
               pam.setValue("ConfigurationDoc",CfgScript);
               pam.setValue("Partition",functionManager.FMpartition);
               pam.setValue("RunSessionNumber",Sid.toString());
-              pam.setValue("hardwareConfigurationStringTCDS", FullTCDSControlSequence);
-              pam.setValue("hardwareConfigurationStringLPM", FullLPMControlSequence);
-              pam.setValue("hardwareConfigurationStringPI", FullPIControlSequence);
+              pam.setValue("hardwareConfigurationStringTCDS", TCDSControlSequence);
+              pam.setValue("hardwareConfigurationStringLPM", LPMControlSequence);
+              pam.setValue("hardwareConfigurationStringPI", PIControlSequence);
               pam.setValue("fedEnableMask", FedEnableMask);
               pam.setValue("usePrimaryTCDS", new Boolean(UsePrimaryTCDS).toString());
-              logger.debug("[HCAL " + functionManager.FMname + "] sending TCDSControl sequence:\n" + FullTCDSControlSequence);
-              logger.debug("[HCAL " + functionManager.FMname + "] sending LPMControl sequence:\n" + FullLPMControlSequence);
-              logger.debug("[HCAL " + functionManager.FMname + "] sending PIControl sequence:\n" + FullPIControlSequence);
+              logger.debug("[HCAL " + functionManager.FMname + "] sending TCDSControl sequence:\n" + TCDSControlSequence);
+              logger.debug("[HCAL " + functionManager.FMname + "] sending LPMControl sequence:\n" + LPMControlSequence);
+              logger.debug("[HCAL " + functionManager.FMname + "] sending PIControl sequence:\n" + PIControlSequence);
               logger.debug("[HCAL " + functionManager.FMname + "] sending FedEnableMask sequence:\n" + FedEnableMask);
               logger.debug("[HCAL " + functionManager.FMname + "] sending UsePrimaryTCDS value:\n" + UsePrimaryTCDS);
               if (RunType.equals("undefined"))
