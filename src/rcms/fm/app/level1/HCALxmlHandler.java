@@ -441,6 +441,11 @@ public class HCALxmlHandler {
 				
 				masterSnippet.getDocumentElement().normalize();
 
+				if (functionManger.RunType.equals("local"){
+					String FedEnableMask = getTagTextContent( masterSnippet.getDocumentElement().getElementsByTagName("FedEnableMask"), "FedEnableMask");
+					functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+				}
+
 				//Parse CfgScript
 				String tmpCfgScript =""; 
 				if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
@@ -453,18 +458,20 @@ public class HCALxmlHandler {
 				}
 				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
 
+				//Parse ControlSequences
 				String TCDSControlSequence  = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("TCDSControl"), CfgCVSBasePath ,"TCDSControl" );
 				String LPMControlSequence   = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("LPMControl"), CfgCVSBasePath ,"LPMControl" );
 				String PIControlSequence    = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("PIControl"), CfgCVSBasePath ,"PIControl" );
 				String TTCciControlSequence = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl"), CfgCVSBasePath ,"TTCciControl" );
 				String LTCControlSequence   = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("LTCControl"), CfgCVSBasePath ,"LTCControl" );
 
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TCDSCONTROL,new StringT(TCDSControlSequence)));
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LPMCONTROL,new StringT(LPMControlSequence)));
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_PICONTROL,new StringT(PIControlSequence)));
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TCDSCONTROL ,new StringT(TCDSControlSequence)));
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LPMCONTROL  ,new StringT(LPMControlSequence)));
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_PICONTROL   ,new StringT(PIControlSequence)));
 				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(TTCciControlSequence)));
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL,new StringT(LTCControlSequence)));
+				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL  ,new StringT(LTCControlSequence)));
 	
+				//Parse Alarmer info
 				functionManager.alarmerURL				= getTagTextContent(masterSnippet.getDocumentElement().getElementsByTagName("AlarmerURL"), "AlarmerURL" );
 				functionManager.alarmerPartition  = getTagAttribute(masterSnippet.getDocumentElement().getElementsByTagName("AlarmerStatus"),"AlarmerStatus","partition" );
 

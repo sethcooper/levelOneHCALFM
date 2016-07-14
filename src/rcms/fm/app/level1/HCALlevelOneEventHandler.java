@@ -489,9 +489,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       if (parameterSet.size()==0)  {
         RunType = "local";
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_RUN_TYPE,new StringT(RunType)));
-        getFedEnableMask();
-        FedEnableMask = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK retrieved by the level-1 is: " + FedEnableMask);
+        //getFedEnableMask();
       }
       else {
         RunType = "global";
@@ -657,15 +655,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       CachedRunKey = RunKey;
       CachedTpgKey = TpgKey;
 
-      // reset previously computed config scripts to force a re-compute for each new "Configuring" transition
-      FullCfgScript            = "not set";
-      FullTTCciControlSequence = "not set";
-      FullLTCControlSequence   = "not set";
-      FullTCDSControlSequence   = "not set";
-      FullLPMControlSequence   = "not set";
-      FullPIControlSequence = "not set";
-
-			// Parse the mastersnippet:
+      			// Parse the mastersnippet:
 			String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
 		  String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 
@@ -687,9 +677,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 			//Parse and set HCAL parameters from MasterSnippet
 			xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
-      // compile CfgScript from UserXML to be sent to controlled LVL2 FMs
+           //compile CfgScript from UserXML to be sent to controlled LVL2 FMs
       getCfgScript();
 
+      FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
       if (TpgKey!=null && TpgKey!="NULL") {
 
         FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
@@ -707,27 +698,26 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           logger.error("[HCAL LVL1 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
         }
       }
-			
-      // get TTCci control sequence to be sent to controlled LVL2 FMs
-      getTTCciControl();
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript is like this: \n" + FullCfgScript);
 
-      // get LTC control sequence to be sent to controlled LVL2 FMs
-      getLTCControl();
 
-      // get TCDS control sequence to be sent to controlled LVL2 FMs
-      getTCDSControl();
+      FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_TCDSCONTROL ).getValue()).getString();
+      FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_LPMCONTROL  ).getValue()).getString();
+      FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_PICONTROL   ).getValue()).getString();
+      FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
+      FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_LTCCONTROL  ).getValue()).getString();
+			FedEnableMask = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
 
-      // get LPM control sequence to be sent to controlled LVL2 FMs
-      getLPMControl();
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence     );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +FullTTCciControlSequence  );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence    );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "   + functionManager.AlarmerURL    );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "   + functionManager.AlarmerPartition    );
 
-      // get PI control sequence to be sent to controlled LVL2 FMs
-      getPIControl();
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: " + FedEnableMask);
 
-      // get alarmerURL
-      getAlarmerUrl();
-
-      // get alarmerStatus to decide which status to watch
-      getAlarmerStatus();
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
