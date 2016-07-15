@@ -95,14 +95,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     xmlHandler = new HCALxmlHandler(this.functionManager);
     masker = new HCALMasker(this.functionManager);
 
-		super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
+    super.init();  // this method calls the base class init and has to be called _after_ the getting of the functionManager
 
-		logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
-	}
+    logger.debug("[HCAL LVL1] HCALlevelOneEventHandler::init() called: functionManager = " + functionManager );
+  }
 
-	public void initAction(Object obj) throws UserActionException {
+  public void initAction(Object obj) throws UserActionException {
 
-		if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       String RunConfigSelected = "";
       String CfgSnippetKeySelected = "";
       // get the parameters of the command
@@ -188,56 +188,56 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
 
       if (!RunConfigSelected.equals("") && !CfgSnippetKeySelected.equals("")){
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
-				functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(RunConfigSelected)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(CfgSnippetKeySelected)));
       }else{
-				logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
+        logger.warn("[Martin log] "+functionManager.FMname + ": Did not get mastersnippet info from GUI (for local run) or from LV0(for global).");
       }
 
-			masker.pickEvmTrig();
-			masker.setMaskedFMs();
-			QualifiedGroup qg = functionManager.getQualifiedGroup();
-			List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-			// loop over the executives to strip the connections
+      masker.pickEvmTrig();
+      masker.setMaskedFMs();
+      QualifiedGroup qg = functionManager.getQualifiedGroup();
+      List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+      // loop over the executives to strip the connections
 
-			String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
-			if (MaskedResources.length() > 0) {
-				//logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
-				logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
-				for( QualifiedResource qr : xdaqExecList) {
-					XdaqExecutive exec = (XdaqExecutive)qr;
-					XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
-					String oldExecXML = config.getXml();
-					try {
-						String newExecXML = xmlHandler.stripExecXML(oldExecXML, functionManager.getHCALparameterSet());
-						config.setXml(newExecXML);
-						//logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
-						logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
-					}
-					catch (UserActionException e) {
-						String errMessage = e.getMessage();
-						logger.info(errMessage);
-						functionManager.sendCMSError(errMessage);
-						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-						functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-						if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-					}
-					XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
-					System.out.println(qr.getName() + " has edited executive xml: " +  configRetrieved.getXml());
-				}
-			}
-			System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
-			logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
+      String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+      if (MaskedResources.length() > 0) {
+        //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
+        for( QualifiedResource qr : xdaqExecList) {
+          XdaqExecutive exec = (XdaqExecutive)qr;
+          XdaqExecutiveConfiguration config =  exec.getXdaqExecutiveConfiguration();
+          String oldExecXML = config.getXml();
+          try {
+            String newExecXML = xmlHandler.stripExecXML(oldExecXML, functionManager.getHCALparameterSet());
+            config.setXml(newExecXML);
+            //logger.info("[JohnLog2] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
+            logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
+          }
+          catch (UserActionException e) {
+            String errMessage = e.getMessage();
+            logger.info(errMessage);
+            functionManager.sendCMSError(errMessage);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          }
+          XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
+          System.out.println(qr.getName() + " has edited executive xml: " +  configRetrieved.getXml());
+        }
+      }
+      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
+      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing initAction");
 
-			// reset the non-async error state handling
-			functionManager.ErrorState = false;
+      // reset the non-async error state handling
+      functionManager.ErrorState = false;
 
-			// set actions
-			functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
-			functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Initializing")));
+      // set actions
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("calculating state")));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("Initializing")));
 
-			// initialize all XDAQ executives
-			initXDAQ();
+      // initialize all XDAQ executives
+      initXDAQ();
       functionManager.parameterSender.start();
 
       // start the monitor thread
@@ -655,29 +655,29 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       CachedRunKey = RunKey;
       CachedTpgKey = TpgKey;
 
-      			// Parse the mastersnippet:
-			String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
-		  String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
+            // Parse the mastersnippet:
+      String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
+      String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 
-			// Try to find a common masterSnippet from MasterSnippet
-			String CommonMasterSnippetFile ="";
-   		try{
-	 			String TagName="CommonMasterSnippet";
-   		  String attribute="file";
-	 			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
-   		}catch(UserActionException e){
-   		  logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
-   		  functionManager.goToError(e.getMessage());
-   		}
+      // Try to find a common masterSnippet from MasterSnippet
+      String CommonMasterSnippetFile ="";
+       try{
+         String TagName="CommonMasterSnippet";
+         String attribute="file";
+         CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+       }catch(UserActionException e){
+         logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+         functionManager.goToError(e.getMessage());
+       }
 
-			if(!CommonMasterSnippetFile.equals("")){    
-					//parse and set HCAL parameters from CommonMasterSnippet
-					logger.info("[Martin log "+ functionManager.FMname +"] Going to read CommonMasterSnippet : "+ CommonMasterSnippet);
-					xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
-			}
-			//Parse and set HCAL parameters from MasterSnippet
-			logger.info("[Martin log "+ functionManager.FMname +"] Going to read MasterSnippet : "+ selectedRun);
-			xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+      if(!CommonMasterSnippetFile.equals("")){    
+          //parse and set HCAL parameters from CommonMasterSnippet
+          logger.info("[Martin log "+ functionManager.FMname +"] Going to read CommonMasterSnippet : "+ CommonMasterSnippet);
+          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
+      }
+      //Parse and set HCAL parameters from MasterSnippet
+      logger.info("[Martin log "+ functionManager.FMname +"] Going to read MasterSnippet : "+ selectedRun);
+      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
 
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
@@ -707,7 +707,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_PICONTROL   ).getValue()).getString();
       FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_LTCCONTROL  ).getValue()).getString();
-			FedEnableMask = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
+      FedEnableMask = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
@@ -937,10 +937,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
     }
     // FIXME SIC IS THIS NEEDED?
     //else {
-    //	if (!functionManager.ErrorState) {
-    //		logger.info("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
-    //		functionManager.fireEvent(HCALInputs.SETSTART);
-    //	}
+    //  if (!functionManager.ErrorState) {
+    //    logger.info("[HCAL LVL1 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
+    //    functionManager.fireEvent(HCALInputs.SETSTART);
+    //  }
     //}
 
     // set action

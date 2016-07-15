@@ -233,14 +233,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
                 pam.send();
                 logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the HandleLPM for " + qr.getName() + " to true");
               }
-							////XXX SIC TODO FIXME WHY DOES THIS CRASH?
-							//if (pamName.equals("usePrimaryTCDS")) {
-							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-							//  pam.select(new String[] {"usePrimaryTCDS"});
-							//  pam.setValue("usePrimaryTCDS", "false");
-							//  pam.send();
-							//  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
-							//}
+              ////XXX SIC TODO FIXME WHY DOES THIS CRASH?
+              //if (pamName.equals("usePrimaryTCDS")) {
+              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Found an xdaqparameter named ReportStateToRCMS (actually usePrimaryTCDS); try to set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+              //  pam.select(new String[] {"usePrimaryTCDS"});
+              //  pam.setValue("usePrimaryTCDS", "false");
+              //  pam.send();
+              //  logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set ReportStateToRCMS (actually usePrimaryTCDS) for " + qr.getName() + " to true");
+              //}
             }
           }
           catch (XDAQTimeoutException e) {
@@ -267,13 +267,13 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       LevelOneMonitorThread thread1 = new LevelOneMonitorThread();
       thread1.start();
 
-			// start the HCALSupervisor watchdog thread
-			System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-			logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-			if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
-				HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
-				thread2.start();
-			} 
+      // start the HCALSupervisor watchdog thread
+      System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
+      if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
+        HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+        thread2.start();
+      } 
 
       // start the TriggerAdapter watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting TriggerAdapter watchdog thread ...");
@@ -284,7 +284,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
 
       // check run type passed from Level-1
-			if(((StringT)parameterSet.get(HCALParameters.HCAL_RUN_TYPE).getValue()).getString().equals("local")) {
+      if(((StringT)parameterSet.get(HCALParameters.HCAL_RUN_TYPE).getValue()).getString().equals("local")) {
 
         RunType = "local";
 
@@ -374,7 +374,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // go to HALT
       if (!functionManager.ErrorState) {
-				logger.info("[SethLog HCAL LVL2 " + functionManager.FMname + "] Fire the SETHALT since we're done initializing");
+        logger.info("[SethLog HCAL LVL2 " + functionManager.FMname + "] Fire the SETHALT since we're done initializing");
         functionManager.fireEvent( HCALInputs.SETHALT );
       }
       // set actions
@@ -469,8 +469,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
         if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
       }
-			// halt LPM
-			functionManager.haltLPMControllers();
+      // halt LPM
+      functionManager.haltLPMControllers();
 
       // leave intermediate state directly only when not talking to asynchronous applications
       if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
@@ -605,7 +605,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         if (parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH) != null) {
           CfgCVSBasePath = ((StringT)parameterSet.get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
-					functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
+          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGCVSBASEPATH,new StringT(CfgCVSBasePath)));
         }
         else {
           logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
@@ -830,43 +830,43 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           //TODO do here
           Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
           logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
-					XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
+          XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
           logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
           List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
           logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
           if (taResource.getName().contains("DummyTriggerAdapter")) { 
-						for (XdaqApplicationResource taSibling : taSiblingsList) {
-							logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
-							if (taSibling.getName().contains("DTCReadout")) { 
-								try {
-									XDAQParameter pam = null;
-									XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
-									pam =taSiblingApp.getXDAQParameter();
+            for (XdaqApplicationResource taSibling : taSiblingsList) {
+              logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+              if (taSibling.getName().contains("DTCReadout")) { 
+                try {
+                  XDAQParameter pam = null;
+                  XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
+                  pam =taSiblingApp.getXDAQParameter();
 
-									pam.select(new String[] {"PollingReadout"});
-									pam.setValue("PollingReadout", "true");
-									pam.send();
-								}
-								catch (XDAQTimeoutException e) {
-									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
-									logger.error(errMessage,e);
-									functionManager.sendCMSError(errMessage);
-									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                  pam.select(new String[] {"PollingReadout"});
+                  pam.setValue("PollingReadout", "true");
+                  pam.send();
+                }
+                catch (XDAQTimeoutException e) {
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
-								}
-								catch (XDAQException e) {
-									String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
-									logger.error(errMessage,e);
-									functionManager.sendCMSError(errMessage);
-									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-									functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-									if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                }
+                catch (XDAQException e) {
+                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+                  logger.error(errMessage,e);
+                  functionManager.sendCMSError(errMessage);
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
+                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
-								}
-							}
-						}
+                }
+              }
+            }
           }
         }
       }
@@ -1129,16 +1129,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //  //TODO do here
         //  // determine run number and run sequence number and overwrite what was set before
         //  try {
-				//		Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
-				//		Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
-				//		List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
-				//		for (Resource taSibling : taSiblingsList) {
-				//			logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
-				//		}
+        //    Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+        //    Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
+        //    List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
+        //    for (Resource taSibling : taSiblingsList) {
+        //      logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+        //    }
         //  }
-				//  catch (DBConnectorException ex) {
-				//  	logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
-				//  }
+        //  catch (DBConnectorException ex) {
+        //    logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
+        //  }
             
 
           if (OfficialRunNumbers) {
