@@ -550,7 +550,7 @@ public class HCALEventHandler extends UserEventHandler {
     stopMonitorThread = true;
     stopHCALSupervisorWatchThread = true;
     stopTriggerAdapterWatchThread = true;
-		stopAlarmerWatchThread = true;
+    stopAlarmerWatchThread = true;
 
     // Destroy the FM
     super.destroy();
@@ -608,24 +608,24 @@ public class HCALEventHandler extends UserEventHandler {
 
     // Try to find a common masterSnippet from UserXML
     try{
-			//CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
-			//CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,"CommonMS");
-			//
-			String TagName="CommonMasterSnippet";
+      //CommonMasterSnippetFile = xmlHandler.getNamedUserXMLelementAttributeValue("Common","MasterSnippet","snippet");
+      //CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,"CommonMS");
+      //
+      String TagName="CommonMasterSnippet";
       String attribute="file";
-			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+      CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
     }catch(UserActionException e){
       logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
       functionManager.goToError(e.getMessage());
     }
 
     try{
-			if (CommonMasterSnippetFile.equals("")){
-			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
-			}else{
-					CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
+      if (CommonMasterSnippetFile.equals("")){
+          logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Only the <CfgScript> content in MasterSnippet will be used.");
+      }else{
+          CommonConfigString = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile, CfgCVSBasePath, "CfgScript");
           logger.info("[Martin log " + functionManager.FMname + "]: Found CfgScript in CommonMasterSnippet. Here it is:\n"+ CommonConfigString);
-			}
+      }
     }catch(UserActionException e){
             logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing CommonMasterSnippet" + e.getMessage());
     }
@@ -635,10 +635,10 @@ public class HCALEventHandler extends UserEventHandler {
     try{
        MainConfigString = xmlHandler.getHCALMasterSnippetTag(selectedRun, CfgCVSBasePath, "CfgScript");
        logger.info("[Martin log " + functionManager.FMname + "] found CfgScript in MasterSnippet. Here it is:\n"+ MainConfigString);
-			 if( !(CommonConfigString.equals("not set")) ){
-					  configString = CommonConfigString + MainConfigString;
-			 }else{
-					  configString = MainConfigString;
+       if( !(CommonConfigString.equals("not set")) ){
+            configString = CommonConfigString + MainConfigString;
+       }else{
+            configString = MainConfigString;
        }
     }
     catch( UserActionException e){
@@ -756,9 +756,9 @@ public class HCALEventHandler extends UserEventHandler {
     String CommonMasterSnippetFile ="not set";
     //Try to get the CommonMasterSnippetFile
     try{
-			String TagName="CommonMasterSnippet";
+      String TagName="CommonMasterSnippet";
       String attribute="file";
-			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
+      CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
     }catch(UserActionException e){
       logger.warn("[HCAL "+functionManager.FMname+"]:Got an error when parsing AlarmerURL from CommonMasterSnippet: "+e.getMessage());
     }
@@ -767,16 +767,16 @@ public class HCALEventHandler extends UserEventHandler {
     try{
       String TagName = "AlarmerURL";
       if (CommonMasterSnippetFile.equals("")){
-					// Look for AlarmerURL in Main MasterSnippet
+          // Look for AlarmerURL in Main MasterSnippet
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ selectedRun+"/pro");    
           tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(selectedRun,CfgCVSBasePath,TagName);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in CommonMasterSnippet. Here it is:\n"+ tmpAlarmerURL);
-			}else{
-					// Look for AlarmerURL in CommonMasterSnippet
+      }else{
+          // Look for AlarmerURL in CommonMasterSnippet
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerURL from : " +CfgCVSBasePath+ CommonMasterSnippetFile+"/pro");    
           tmpAlarmerURL      = xmlHandler.getHCALMasterSnippetTag(CommonMasterSnippetFile,CfgCVSBasePath,TagName);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerURL in MasterSnippet. Here it is:\n"+ tmpAlarmerURL);
-			}
+      }
     }
     catch ( UserActionException e) {
           logger.error("[Seth log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerURL xml in getAlarmerUrl(): " + e.getMessage());
@@ -790,29 +790,29 @@ public class HCALEventHandler extends UserEventHandler {
     String CommonMasterSnippetFile ="not set";
     //Try to get the CommonMasterSnippetFile
     try{
-			String TagName="CommonMasterSnippet";
+      String TagName="CommonMasterSnippet";
       String attribute="file";
-			CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
+      CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);   
     }catch(UserActionException e){
       logger.warn("[HCAL "+functionManager.FMname+"]:Got an error when parsing AlarmerStatus from CommonMasterSnippet: "+e.getMessage());
     }
 
     try{
-			String TagName = "AlarmerStatus";
-			String TagAttribute = "partition";
+      String TagName = "AlarmerStatus";
+      String TagAttribute = "partition";
       if (CommonMasterSnippetFile.equals("")){
-					// Look for AlarmerStatus in Main MasterSnippet
-			    logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Will look for AlarmerStatus in MasterSnippet.");
+          // Look for AlarmerStatus in Main MasterSnippet
+          logger.info("[Martin log " + functionManager.FMname + "]: No CommonMasterSnippet was found. Will look for AlarmerStatus in MasterSnippet.");
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ selectedRun+"/pro");    
           tmpAlarmerPartition      = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,TagAttribute);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerPartition in MasterSnippet. Here it is:\n"+ tmpAlarmerPartition);
-			}else{
-					// Look for AlarmerStatus in CommonMasterSnippet
-			    logger.info("[Martin log " + functionManager.FMname + "]: CommonMasterSnippet was found. Will look for AlarmerStatus in CommonMasterSnippet");
+      }else{
+          // Look for AlarmerStatus in CommonMasterSnippet
+          logger.info("[Martin log " + functionManager.FMname + "]: CommonMasterSnippet was found. Will look for AlarmerStatus in CommonMasterSnippet");
           logger.info("[Martin log HCAL " + functionManager.FMname + "]: This FM is going to parse AlarmerStatus from : " +CfgCVSBasePath+ CommonMasterSnippetFile+"/pro");    
           tmpAlarmerPartition      = xmlHandler.getHCALMasterSnippetTagAttribute(CommonMasterSnippetFile,CfgCVSBasePath,TagName,TagAttribute);
           logger.info("[Martin log " + functionManager.FMname + "]: Found AlarmerPartition in CommonMasterSnippet. Here it is:\n"+ tmpAlarmerPartition);
-			}
+      }
     }
     catch ( UserActionException e) {
           logger.error("[Martin log HCAL " + functionManager.FMname + "]: Got a error when parsing the AlarmerStatus xml in getAlarmerStatus(): " + e.getMessage());
@@ -3092,11 +3092,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
 
-				// Set the action message if we are in RunningDegraded
-				if(icount%15==0){
+        // Set the action message if we are in RunningDegraded
+        if(icount%15==0){
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
-						functionManager.setAction("><))),> : DAQ shifter, please contact HCAL DOC now!");
-					}
+            functionManager.setAction("><))),> : DAQ shifter, please contact HCAL DOC now!");
+          }
         }
 
         // no fishys for the LVL2s give static message to the LVL2 action box
@@ -3400,126 +3400,126 @@ public class HCALEventHandler extends UserEventHandler {
     public void run() {
 
       stopAlarmerWatchThread = false;
-			try {
-				URL alarmerURL = new URL(functionManager.alarmerURL);
-			} catch (MalformedURLException e) {
+      try {
+        URL alarmerURL = new URL(functionManager.alarmerURL);
+      } catch (MalformedURLException e) {
         // in case the URL is bogus, just don't run the thread
-				stopAlarmerWatchThread = true;
-				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + functionManager.alarmerURL + "; not checking alarmer status");
+        stopAlarmerWatchThread = true;
+        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmerURL is not valid: " + functionManager.alarmerURL + "; not checking alarmer status");
       }
 
-			// poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
+      // poll alarmer status in the Running/RunningDegraded states every 30 sec to see if it is still OK/alive
       while ((stopAlarmerWatchThread == false) && (functionManager != null) && (functionManager.isDestroyed() == false)) {
 
         Date now = Calendar.getInstance().getTime();
 
-				if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
-							functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
-					try {
-						// ask for the status of the HCAL alarmer
-						// ("http://hcalmon.cms:9945","hcalAlarmer",0);
-						XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
-						// this does a lazy get. do we need to force the update before getting it?
-						//logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
-						String alarmerStatusValue = "";
-						String alarmerStatusName  = "GlobalStatus";
+        if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
+              functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
+          try {
+            // ask for the status of the HCAL alarmer
+            // ("http://hcalmon.cms:9945","hcalAlarmer",0);
+            XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
+            // this does a lazy get. do we need to force the update before getting it?
+            //logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
+            String alarmerStatusValue = "";
+            String alarmerStatusName  = "GlobalStatus";
             if (functionManager.RunType.equals("global") ){
-					        logger.info("[Martin Log "+functionManager.FMname +"] Going to watch this alarmer status: "+functionManager.alarmerPartition); 
-					      	if(functionManager.alarmerPartition.equals("HBHEHO")){
-					      		alarmerStatusName = "GlobalStatus";
-					      	}
-					      	if(functionManager.alarmerPartition.equals("HF")){
-					      		alarmerStatusName = "HFStatus";
-					      	}
-	                pam.select(new String[] {alarmerStatusName});
-	                pam.get();
-	                alarmerStatusValue = pam.getValue(alarmerStatusName);
-
-					      	if( alarmerStatusValue.equals("")){
-                    String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue with parition name: "+functionManager.alarmerPartition;
-					      		logger.warn(errMessage); 
-					      	}
-					      	if( alarmerStatusValue.equals("OK")){
-					           logger.info("[Martin Log "+functionManager.FMname +"] The alarmerStatus of partition "+functionManager.alarmerPartition+" with name "+alarmerStatusName+" is OK"); 
+                  logger.info("[Martin Log "+functionManager.FMname +"] Going to watch this alarmer status: "+functionManager.alarmerPartition); 
+                  if(functionManager.alarmerPartition.equals("HBHEHO")){
+                    alarmerStatusName = "GlobalStatus";
                   }
-					      	if (!alarmerStatusValue.equals("OK")) {
-					      		// go to degraded state if needed
-					      		if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-					      				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+ alarmerStatusName +" is " + alarmerStatusValue + " which is not OK; going to RUNNINGDEGRADED state");
-					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-												if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
-												if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
-					      		}
-                    else {
-						      		  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
-												if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
-												if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
+                  if(functionManager.alarmerPartition.equals("HF")){
+                    alarmerStatusName = "HFStatus";
+                  }
+                  pam.select(new String[] {alarmerStatusName});
+                  pam.get();
+                  alarmerStatusValue = pam.getValue(alarmerStatusName);
+
+                  if( alarmerStatusValue.equals("")){
+                    String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue with parition name: "+functionManager.alarmerPartition;
+                    logger.warn(errMessage); 
+                  }
+                  if( alarmerStatusValue.equals("OK")){
+                     logger.info("[Martin Log "+functionManager.FMname +"] The alarmerStatus of partition "+functionManager.alarmerPartition+" with name "+alarmerStatusName+" is OK"); 
+                  }
+                  if (!alarmerStatusValue.equals("OK")) {
+                    // go to degraded state if needed
+                    if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+                        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+ alarmerStatusName +" is " + alarmerStatusValue + " which is not OK; going to RUNNINGDEGRADED state");
+                        functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                        if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+                        if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
                     }
-					      	}
+                    else {
+                        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
+                        if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+                        if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
+                    }
+                  }
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-					      		// if we got back to OK, go back to RUNNING
-					      		logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName+" is " + alarmerStatusValue + " which should be OK; going to get out of RUNNINGDEGRADED state now");
-					      		functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
-					      	}
+                    // if we got back to OK, go back to RUNNING
+                    logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName+" is " + alarmerStatusValue + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+                    functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
+                  }
              }else {
 
                   // Assume we're in local if the RunType is not global. Watch both HBHEHO and HF status.
-					        logger.info("[Martin Log "+functionManager.FMname +"] We are in local, going to watch both HBHEHO and HF status "); 
-	                pam.select(new String[] {"GlobalStatus","HFStatus"});
-	                pam.get();
-	                String alarmerStatusValue_HBHEHO = pam.getValue("GlobalStatus");
-	                String alarmerStatusValue_HF     = pam.getValue("HFStatus");
+                  logger.info("[Martin Log "+functionManager.FMname +"] We are in local, going to watch both HBHEHO and HF status "); 
+                  pam.select(new String[] {"GlobalStatus","HFStatus"});
+                  pam.get();
+                  String alarmerStatusValue_HBHEHO = pam.getValue("GlobalStatus");
+                  String alarmerStatusValue_HF     = pam.getValue("HFStatus");
 
-					      	if( alarmerStatusValue_HBHEHO.equals("")|| alarmerStatusValue_HF.equals("") ){
+                  if( alarmerStatusValue_HBHEHO.equals("")|| alarmerStatusValue_HF.equals("") ){
                     String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue in local mode";
-					      		logger.warn(errMessage); 
-					      	}
+                    logger.warn(errMessage); 
+                  }
 
-					      	if (!alarmerStatusValue_HBHEHO.equals("OK") || !alarmerStatusValue_HF.equals("OK") ) {
-					      		// go to degraded state if needed
-					      		if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-					      				logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state");
-					      				functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-												functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
-					      		}
-                    else {
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to stay in RUNNINGDEGRADED state"); 
-											functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
+                  if (!alarmerStatusValue_HBHEHO.equals("OK") || !alarmerStatusValue_HF.equals("OK") ) {
+                    // go to degraded state if needed
+                    if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+                        logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state");
+                        functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                        functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
                     }
-					      	}
+                    else {
+                      logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to stay in RUNNINGDEGRADED state"); 
+                      functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
+                    }
+                  }
                   else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-					      		// if we got back to OK, go back to RUNNING
-					      			logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to get out of RUNNINGDEGRADED state"); 
-					      		functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
-					      	}
+                    // if we got back to OK, go back to RUNNING
+                      logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to get out of RUNNINGDEGRADED state"); 
+                    functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
+                  }
 
              }
-					}
-					catch (Exception e) {
+          }
+          catch (Exception e) {
             // on exceptions, we go to degraded, or stay there
-						if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
-							logger.error(errMessage);
-							functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-						}
-						else {
-							String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to stay in RUNNINGDEGRADED state";
-							logger.warn(errMessage);
-						}
-					}
-				}
+            if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to change to RUNNINGDEGRADED state";
+              logger.error(errMessage);
+              functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+            }
+            else {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! Got an exception: AlarmerWatchThread()\n...\nHere is the exception: " +e+"\n...going to stay in RUNNINGDEGRADED state";
+              logger.warn(errMessage);
+            }
+          }
+        }
         // delay between polls
         try { Thread.sleep(30000); } // check every 30 seconds
         catch (Exception ignored) { return; }
 
-			}
+      }
 
-			// stop the HCAL supervisor watchdog thread
-			//System.out.println("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
-			//logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
-			AlarmerWatchThreadList.remove(this);
+      // stop the HCAL supervisor watchdog thread
+      //System.out.println("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+      //logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+      AlarmerWatchThreadList.remove(this);
 
-		}
-	}
+    }
+  }
 
 }
