@@ -359,9 +359,9 @@ public class HCALFunctionManager extends UserFunctionManager {
     // This method is called by the framework when the Function Manager is destroyed.
 
     System.out.println("[HCAL " + FMname + "] destroyAction called");
-    logger.debug("[HCAL " + FMname + "] destroyAction called");
+    logger.info("[HCAL " + FMname + "] destroyAction called");
 
-
+		
     // if RunInfo database is connected try to report the destroying of this FM
     /*if ((HCALRunInfo!=null) && (RunWasStarted)) {
       {
@@ -393,8 +393,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
     }*/
 
-    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs
-    if (RunType.equals("local")) { closeSessionId(); }
+    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs and if it's a LV1FM
+    if (RunType.equals("local") && !containerFMChildren.isEmpty()) { closeSessionId(); }
 
     // unsubscribe from retrieving XMAS info
     if (XMASMonitoringEnabled) { unsubscribeWSE(); }  
@@ -421,6 +421,12 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
       }
     }
+    //Stop watchthreads before destroying
+    theEventHandler.stopMonitorThread = true;
+    theEventHandler.stopHCALSupervisorWatchThread = true;
+    theEventHandler.stopTriggerAdapterWatchThread = true;
+    theEventHandler.stopAlarmerWatchThread = true; 
+
     destroyXDAQ();
 
     destroyed = true;
