@@ -99,8 +99,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     HCALInputs.SETRESET.setVisualizable(false);
     HCALInputs.SETTTSTEST_MODE.setVisualizable(false);
     HCALInputs.SETCOLDRESET.setVisualizable(false);
-		HCALInputs.SETRUNNINGDEGRADED.setVisualizable(true);
-		HCALInputs.UNSETRUNNINGDEGRADED.setVisualizable(true);
+		HCALInputs.SETRUNNINGDEGRADED.setVisualizable(false);
+		HCALInputs.UNSETRUNNINGDEGRADED.setVisualizable(false);
 
     //
     // Define command parameters.
