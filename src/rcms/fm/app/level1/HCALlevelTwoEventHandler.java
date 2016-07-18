@@ -193,11 +193,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // we also halt the LPM applications inside here
       initXDAQ();
 
-      String ruInstance = "";
+      String ruInstance = ""; // this is actually the name of the app_instance, e.g.: hcalEventBuilder_0. So this is not the instance number itself!
       if (parameterSet.get(HCALParameters.RU_INSTANCE) != null) {
         ruInstance = ((StringT)parameterSet.get(HCALParameters.RU_INSTANCE).getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE,new StringT(ruInstance)));
       }
+      String myRUInstance = ruInstance;
+      if(!ruInstance.equals("none"))
+        myRUInstance = ruInstance.split("_")[1];
+      else
+        myRUInstance = "0";
       String lpmSupervisor = "";
       if (parameterSet.get(HCALParameters.LPM_SUPERVISOR) != null) {
         lpmSupervisor = ((StringT)parameterSet.get(HCALParameters.LPM_SUPERVISOR).getValue()).getString();
@@ -207,25 +212,30 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (qr.isActive()) {
           try {
             XDAQParameter pam = null;
+						//logger.info("[HCAL LVL2 " + functionManager.FMname + "] looking at " + qr.getName());
             pam = ((XdaqApplication)qr).getXDAQParameter();
             for (String pamName : pam.getNames()){
+							//logger.info("    [HCAL LVL2 " + functionManager.FMname + "] looking at " + pamName + " for app: " + qr.getName());
               if (pamName.equals("RUinstance")) {
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: 1) Try to set the RUinstance for " + qr.getName() + "; ruInstance=" + ruInstance);
                 pam.select(new String[] {"RUinstance"});
-                pam.setValue("RUinstance", ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: 2) Try to set the RUinstance for " + qr.getName() + " to " + myRUInstance );
+                pam.setValue("RUinstance", myRUInstance);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: 3) Try to set the RUinstance for " + qr.getName() + " to " + myRUInstance );
                 pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the RUinstance for " + qr.getName() + " to " + myRUInstance );
               }
               if (pamName.equals("BUInstance")) {
                 pam.select(new String[] {"BUInstance"});
                 pam.setValue("BUInstance", ruInstance.split("_")[1]);
                 pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the BUInstance for " + qr.getName() + " to " + myRUInstance );
               }
               if (pamName.equals("EVMinstance")) {
                 pam.select(new String[] {"EVMinstance"});
                 pam.setValue("EVMinstance", ruInstance.split("_")[1]);
                 pam.send();
-                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " +  ruInstance.split("_")[1]);
+                logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the EVMinstance for " + qr.getName() + " to " + myRUInstance );
               }
               if (pamName.equals("HandleLPM")) {
                 pam.select(new String[] {"HandleLPM"});
@@ -261,6 +271,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] done looking at xdaq apps...");
       // start the monitor thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting Monitor thread ...");

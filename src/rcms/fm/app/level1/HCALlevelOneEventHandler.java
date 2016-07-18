@@ -47,6 +47,7 @@ import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.user.UserActionException;
+import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
@@ -736,6 +737,31 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
       configureInput.setParameters( pSet );
+
+			//XXX SIC proof of concept
+			List<QualifiedResource> fmChildrenListTest = functionManager.containerFMChildren.getQualifiedResourceList();
+			List<FunctionManager> normalFMsListTest = new ArrayList<FunctionManager>();
+			for(QualifiedResource qr : fmChildrenListTest)
+				if(qr.getName().equals("HCALFM_hcalVME"))
+        {
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] SethLog -- Found FM child named HCALFM_hcalVME: will now mask it and destroy it!" );
+          // kill all XDAQ executives
+          //FunctionManager fm = (FunctionManager)qr;
+          //UserFunctionManager myFM = fm.getUserFunctionManager();
+          //UserFunctionManager myFM = UserFunctionManager(qr);
+          //logger.warn("[HCAL LVL1 " + functionManager.FMname + "] SethLog -- Found FM child named "+ ((HCALFunctionManager)(((FunctionManager)qr).getUserFunctionManager())).FMname+": will now mask it and kill its xdaqs!" );
+          //((HCALFunctionManager)((FunctionManager)qr).getUserFunctionManager()).destroyXDAQ();
+          qr.setActive(false);
+          try {
+            ((FunctionManager)qr).destroy();
+          }
+          //XXX FIXME: should be changed to the proper exception type
+          catch (Exception e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Exception: destroy failed ...";
+            functionManager.goToError(errMessage);
+          }
+        }
+			//XXX SIC proof of concept
 
       if (!functionManager.containerFMChildren.isEmpty()) {
         logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Found FM childs - good! fireEvent: " + configureInput);
