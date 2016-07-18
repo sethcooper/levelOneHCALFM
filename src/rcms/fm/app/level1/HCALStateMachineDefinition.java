@@ -99,8 +99,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     HCALInputs.SETRESET.setVisualizable(false);
     HCALInputs.SETTTSTEST_MODE.setVisualizable(false);
     HCALInputs.SETCOLDRESET.setVisualizable(false);
-		HCALInputs.SETRUNNINGDEGRADED.setVisualizable(false);
-		HCALInputs.UNSETRUNNINGDEGRADED.setVisualizable(false);
+		HCALInputs.SETRUNNINGDEGRADED.setVisualizable(true);
+		HCALInputs.UNSETRUNNINGDEGRADED.setVisualizable(true);
 
     //
     // Define command parameters.
@@ -385,7 +385,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     // RUNNINGDEGRADED
     addTransition(HCALInputs.SETRUNNINGDEGRADED, HCALStates.RUNNING, HCALStates.RUNNINGDEGRADED);
     addTransition(HCALInputs.UNSETRUNNINGDEGRADED, HCALStates.RUNNINGDEGRADED, HCALStates.RUNNING);
-    addTransition(HCALInputs.SETSTART, HCALStates.STARTING, HCALStates.RUNNINGDEGRADED);
 
     // Reach the PAUSED State
     addTransition(HCALInputs.SETPAUSE, HCALStates.PAUSING, HCALStates.PAUSED);
@@ -393,6 +392,5 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
 
     // Reach the RUNNING from RESUMING State
     addTransition(HCALInputs.SETRESUME, HCALStates.RESUMING, HCALStates.RUNNING);
-    addTransition(HCALInputs.SETRESUME, HCALStates.RESUMING, HCALStates.RUNNINGDEGRADED);
   }
 }
