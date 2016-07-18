@@ -380,15 +380,7 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
-        if (TagNodeList.getLength()>1){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ TagName+ " in mastersnippet. Only the first one will be used ");
-        }else if (TagNodeList.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
-            return TagContent;
-        }else if (TagNodeList.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. "); 
-           TagContent = TagNodeList.item(0).getTextContent();
-        }
+        TagContent = getTagTextContent( TagNodeList, TagName );
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
@@ -400,31 +392,13 @@ public class HCALxmlHandler {
   public String getHCALMasterSnippetTagAttribute(String selectedRun, String CfgCVSBasePath, String TagName,String attribute) throws UserActionException{
     String tmpAttribute ="";
     try{
-        // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
-        if (TagNodeList.getLength()>1){
-            String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
-            logger.warn(errMessage);
-            throw new UserActionException(errMessage);
-
-        }else if (TagNodeList.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
-            return tmpAttribute;
-        }else if (TagNodeList.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. "); 
-           Element TagElement = (Element) TagNodeList.item(0);
-           if (TagElement.hasAttribute(attribute)){
-               logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found attribute "+attribute+ " in Tag named "+ TagName+ " in mastersnippet."); 
-               tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
-           }else{
-               logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+" in tag='"+TagName+"'. Empty string will be returned");
-               return tmpAttribute;
-           }
-        }
+        
+        tmpAttribute = getTagAttribute( TagNodeList, TagName, attribute);
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());

@@ -655,7 +655,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       CachedRunKey = RunKey;
       CachedTpgKey = TpgKey;
 
-            // Parse the mastersnippet:
+      // Parse the mastersnippet:
       String selectedRun = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.RUN_CONFIG_SELECTED).getValue()).getString();
       String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
 
@@ -672,11 +672,11 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[Martin log "+ functionManager.FMname +"] Going to read CommonMasterSnippet : "+ CommonMasterSnippet);
+          logger.info("[Martin log "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
           xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
       }
       //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[Martin log "+ functionManager.FMname +"] Going to read MasterSnippet : "+ selectedRun);
+      logger.info("[Martin log "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
 
@@ -701,7 +701,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript is like this: \n" + FullCfgScript);
 
-
+      //Get the results from parseMasterSnippet
       FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_TCDSCONTROL ).getValue()).getString();
       FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_LPMCONTROL  ).getValue()).getString();
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_PICONTROL   ).getValue()).getString();
