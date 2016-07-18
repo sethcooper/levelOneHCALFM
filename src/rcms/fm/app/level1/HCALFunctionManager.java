@@ -4,6 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserFunctionManager;
@@ -29,6 +33,7 @@ import rcms.fm.resource.CommandException;
 
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.RSConnectorIF;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 
 import rcms.utilities.runinfo.RunInfo;
@@ -865,4 +870,31 @@ public class HCALFunctionManager extends UserFunctionManager {
 			}
 		}
 	}
+
+	/**----------------------------------------------------------------------
+	 * get properties matching a regex
+	 */
+  public Map<String,String> getProperties( String regex ) throws Exception {
+    List<ConfigProperty> propertiesList = getGroup().getThisResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+    Map<String,String> properties = new HashMap<String,String>();
+
+    Pattern p = Pattern.compile(regex);
+
+    for( ConfigProperty prop : propertiesList ) {
+      Matcher m = p.matcher(prop.getName());
+      if ( m.matches() ) {
+        logger.info("match count "+m.groupCount());
+        if (m.groupCount() > 0 )
+          properties.put(m.group(1),prop.getValue());
+        else
+          properties.put(m.group(),prop.getValue());
+      }
+    }
+    return properties;
+  }
+
 }

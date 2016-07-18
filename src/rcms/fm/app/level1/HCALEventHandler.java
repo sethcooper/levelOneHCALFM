@@ -1289,8 +1289,21 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-
     // Now if we are using TCDS, give all of the TCDS applications the URN that they need.
+    Map<String,String> tcdsAppURNsMap = null;
+    try {
+       tcdsAppURNsMap = functionManager.getProperties("TCDS_.*");
+    }
+    catch (Exception e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " threw an exception when getting the ConfigProperties matching TCDS_*";
+      functionManager.goToError(errMessage,e);
+    }
+    if (tcdsAppURNsMap != null) {
+      for (Map.Entry<String,String> entry : tcdsAppURNsMap.entrySet()) {
+        String appName = entry.getKey();
+      }
+    }
+
 
     try {
       qg.init();
@@ -1302,11 +1315,6 @@ public class HCALEventHandler extends UserEventHandler {
       System.out.println(sw.toString());
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
       functionManager.goToError(errMessage,e);
-      //logger.error(errMessage);
-      //functionManager.sendCMSError(errMessage);
-      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-      //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
     // find xdaq applications
