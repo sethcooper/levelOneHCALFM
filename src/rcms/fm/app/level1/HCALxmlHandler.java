@@ -448,35 +448,35 @@ public class HCALxmlHandler {
     return emptyString;
   }
 
-  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTag ,String CfgCVSBasePath){
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
     try{
       if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
-          String ControlSequence  = getIncludeFiles( NodeListOfTag, CfgCVSBasePath ,TagName );
+          String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
       }
       if(TagName.equals("AlarmerURL")){
-          functionManager.alarmerURL        = getTagTextContent(NodeListOfTag, TagName );
+          functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
       }
       if(TagName.equals("AlarmerStatus")) {
-          functionManager.alarmerPartition  = getTagAttribute(NodeListOfTag,TagName,"partition" );
+          functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
           if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
             //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
             tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
-            tmpCfgScript  += getTagTextContent( NodeListOfTag, TagName);
+            tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
           }
           else{
             //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
-            tmpCfgScript   = getTagTextContent( NodeListOfTag, TagName);
+            tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
           }
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
       }
       if(TagName.equals("FedEnableMask")){
         if (functionManager.RunType.equals("local")){
-            String tmpFedEnableMask = getTagTextContent( NodeListOfTag, TagName);
+            String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(tmpFedEnableMask)));
           }
       }

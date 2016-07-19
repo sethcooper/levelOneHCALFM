@@ -681,7 +681,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final CfgScript from mastersnippet is like this: \n" + FullCfgScript);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
       if (TpgKey!=null && TpgKey!="NULL") {
 
         FullCfgScript += "\n### BEGIN TPG key add from HCAL FM named: " + functionManager.FMname + "\n";
@@ -707,7 +707,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_PICONTROL   ).getValue()).getString();
       FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_TTCCICONTROL).getValue()).getString();
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_LTCCONTROL  ).getValue()).getString();
-      FedEnableMask = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK).getValue()).getString();
+      FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.FED_ENABLE_MASK  ).getValue()).getString();
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
@@ -716,7 +716,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "   + functionManager.alarmerURL    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "   + functionManager.alarmerPartition    );
-
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: " + FedEnableMask);
 
 
