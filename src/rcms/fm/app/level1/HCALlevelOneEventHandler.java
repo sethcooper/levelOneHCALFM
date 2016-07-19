@@ -722,6 +722,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+      if( functionManager.alarmerPartition.equals("")){
+          functionManager.alarmerPartition = "HBHEHO";
+          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
+      }
       AlarmerWatchThread thread4 = new AlarmerWatchThread();
       thread4.start();
 

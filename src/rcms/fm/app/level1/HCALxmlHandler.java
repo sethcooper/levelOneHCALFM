@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Scanner;
+import java.util.Arrays;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -48,6 +49,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -414,50 +416,73 @@ public class HCALxmlHandler {
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
         
         masterSnippet.getDocumentElement().normalize();
+        Element masterSnippetElement = masterSnippet.getDocumentElement();
 
-        if (functionManager.RunType.equals("local")){
-          String FedEnableMask = getTagTextContent( masterSnippet.getDocumentElement().getElementsByTagName("FedEnableMask"), "FedEnableMask");
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(FedEnableMask)));
+        NodeList listOfTags = masterSnippetElement.getChildNodes();
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            Element iElement = (Element) listOfTags.item(i);
+            String  iTagName = iElement.getNodeName();
+            logger.debug("[Martin log HCAL +" functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+            if( Arrays.asList(ValidMasterSnippetTags).contains( iTagName )){
+              NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+            }
+          }
         }
-
-        //Parse CfgScript
-        String tmpCfgScript =""; 
-        if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
-          //If the parameter is filled (by CommonMasterSnippet), add that first.
-          tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
-          tmpCfgScript  += getTagTextContent( masterSnippet.getDocumentElement().getElementsByTagName("CfgScript"), "CfgScript");
-        }
-        else{
-          //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
-          tmpCfgScript   = getTagTextContent( masterSnippet.getDocumentElement().getElementsByTagName("CfgScript"), "CfgScript");
-        }
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
-
-        //Parse ControlSequences
-        String TCDSControlSequence  = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("TCDSControl"), CfgCVSBasePath ,"TCDSControl" );
-        String LPMControlSequence   = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("LPMControl"), CfgCVSBasePath ,"LPMControl" );
-        String PIControlSequence    = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("PIControl"), CfgCVSBasePath ,"PIControl" );
-        String TTCciControlSequence = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl"), CfgCVSBasePath ,"TTCciControl" );
-        String LTCControlSequence   = getIncludeFiles( masterSnippet.getDocumentElement().getElementsByTagName("LTCControl"), CfgCVSBasePath ,"LTCControl" );
-
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TCDSCONTROL ,new StringT(TCDSControlSequence)));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LPMCONTROL  ,new StringT(LPMControlSequence)));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_PICONTROL   ,new StringT(PIControlSequence)));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL,new StringT(TTCciControlSequence)));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_LTCCONTROL  ,new StringT(LTCControlSequence)));
-  
-        //Parse Alarmer info
-        functionManager.alarmerURL        = getTagTextContent(masterSnippet.getDocumentElement().getElementsByTagName("AlarmerURL"), "AlarmerURL" );
-        functionManager.alarmerPartition  = getTagAttribute(masterSnippet.getDocumentElement().getElementsByTagName("AlarmerStatus"),"AlarmerStatus","partition" );
-
-        if( functionManager.alarmerPartition.equals("")){
-          functionManager.alarmerPartition = "HBHEHO";
-          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
-        }
-  
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: " + e.getMessage());
+    }
+  }
+
+  public String getHCALParameterFromTagName(String TagName){
+    String emptyString="";
+    if(TagName.equals("TCDSControl") ) return HCALParameters.HCAL_TCDSCONTROL;
+    if(TagName.equals("LPMControl")  ) return HCALParameters.HCAL_LPMCONTROL;
+    if(TagName.equals("PIControl")   ) return HCALParameters.HCAL_PICONTROL;
+    if(TagName.equals("TTCciControl")) return HCALParameters.HCAL_TTCCICONTROL;
+    if(TagName.equals("LTCControl")  ) return HCALParameters.HCAL_LTCCONTROL;
+    logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
+    return emptyString;
+  }
+
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTag ,String CfgCVSBasePath){
+    try{
+      if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
+          String HCALParameter = getHCALParameterFromTagName(TagName);
+          String ControlSequence  = getIncludeFiles( NodeListOfTag, CfgCVSBasePath ,TagName );
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
+      }
+      if(TagName.equals("AlarmerURL")){
+          functionManager.alarmerURL        = getTagTextContent(NodeListOfTag, TagName );
+      }
+      if(TagName.equals("AlarmerStatus")) {
+          functionManager.alarmerPartition  = getTagAttribute(NodeListOfTag,TagName,"partition" );
+      }
+      if(TagName.equals("CfgScript")){
+          String tmpCfgScript =""; 
+          if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
+            //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
+            tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
+            tmpCfgScript  += getTagTextContent( NodeListOfTag, TagName);
+          }
+          else{
+            //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
+            tmpCfgScript   = getTagTextContent( NodeListOfTag, TagName);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
+      }
+      if(TagName.equals("FedEnableMask")){
+        if (functionManager.RunType.equals("local")){
+            String tmpFedEnableMask = getTagTextContent( NodeListOfTag, TagName);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(tmpFedEnableMask)));
+          }
+      }
+    }
+    catch ( UserActionException e){
+        // Warn when found more than one tag name in mastersnippet
+        functionManager.goToError(e.getMessage());
     }
   }
 
@@ -480,7 +505,6 @@ public class HCALxmlHandler {
     else if(inputlist.getLength()>1){
         //Throw execptions if more than 1 TagName is found, decide later what to do
         String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
-        logger.warn(errMessage);
         throw new UserActionException(errMessage);
       }
       else if(inputlist.getLength()==1){
@@ -541,7 +565,7 @@ public class HCALxmlHandler {
         }
       }
       catch (IOException e){
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage());        
+        logger.error("[HCAL " + functionManager.FMname + "]: Got an IOExecption when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage());        
       }
     }
     return tmpCtrlSequence;
