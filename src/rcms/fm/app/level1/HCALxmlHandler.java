@@ -423,7 +423,8 @@ public class HCALxmlHandler {
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
-            logger.debug("[Martin log HCAL +" functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+            logger.debug("[Martin log HCAL "+ functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+
             if( Arrays.asList(ValidMasterSnippetTags).contains( iTagName )){
               NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
               SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
