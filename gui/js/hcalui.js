@@ -48,6 +48,9 @@ $(document).ready(function () {
 
 
     setInterval(function () {
+
+        hidelocalparams();
+        var currentState = $('#currentState').text();
         var currentState = $('#currentState').text();
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
@@ -172,6 +175,14 @@ function hideinitializebutton() {
     });
 }
 
+
+function hidelocalparams() {
+    if ($('#CFGSNIPPET_KEY_SELECTED').val().indexOf("global") !== -1) {
+        $('#newNUMBER_OF_EVENTScheckbox').parent().hide();
+        $('#newHCAL_EVENTSTAKEN').parent().hide();
+    }
+}
+
 function moveversionnumber() {
 
     $('#hcalfmVersion').css('font-size', '12');
@@ -205,6 +216,7 @@ function hcalOnLoad() {
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
     hidecheckboxes();
     hideinitializebutton();
+    hidelocalparams();
     hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
     hideduplicatefield('RUN_CONFIG_SELECTED');
     hideduplicatefield('MASKED_RESOURCES');
