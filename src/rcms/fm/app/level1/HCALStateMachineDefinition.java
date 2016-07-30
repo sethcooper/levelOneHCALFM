@@ -109,10 +109,10 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
 
     // define parameters for tts testing command
     //
-    CommandParameter<IntegerT> ttsTestFedId = new CommandParameter<IntegerT>(HCALParameters.TTS_TEST_FED_ID, new IntegerT(-1));
-    CommandParameter<StringT> ttsTestMode = new CommandParameter<StringT>(HCALParameters.TTS_TEST_MODE, new StringT(""));
-    CommandParameter<StringT> ttsTestPattern = new CommandParameter<StringT>(HCALParameters.TTS_TEST_PATTERN, new StringT(""));
-    CommandParameter<IntegerT> ttsTestSequenceRepeat = new CommandParameter<IntegerT>(HCALParameters.TTS_TEST_SEQUENCE_REPEAT, new IntegerT(-1));
+    CommandParameter<IntegerT> ttsTestFedId = new CommandParameter<IntegerT>         ("TTS_TEST_FED_ID", new IntegerT(-1));
+    CommandParameter<StringT> ttsTestMode = new CommandParameter<StringT>            ("TTS_TEST_MODE", new StringT(""));
+    CommandParameter<StringT> ttsTestPattern = new CommandParameter<StringT>         ("TTS_TEST_PATTERN", new StringT(""));
+    CommandParameter<IntegerT> ttsTestSequenceRepeat = new CommandParameter<IntegerT>("TTS_TEST_SEQUENCE_REPEAT", new IntegerT(-1));
 
     // define parameter set
 
@@ -136,8 +136,8 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     //
     // define parameters for Initialize command
     //
-    CommandParameter<IntegerT> initializeSid = new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT("0"));
-    CommandParameter<StringT> initializeGlobalConfigurationKey = new CommandParameter<StringT>(HCALParameters.GLOBAL_CONF_KEY, new StringT(""));
+    CommandParameter<IntegerT> initializeSid = new CommandParameter<IntegerT>("SID", new IntegerT("0"));
+    CommandParameter<StringT> initializeGlobalConfigurationKey = new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(""));
 
     // define parameter set
     ParameterSet<CommandParameter> initializeParameters = new ParameterSet<CommandParameter>();
@@ -154,30 +154,30 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     //
     // define parameters for Configure command
     //
-    CommandParameter<StringT> configureRunType = new CommandParameter<StringT>(HCALParameters.HCAL_RUN_TYPE, new StringT(""));
-    CommandParameter<StringT> configureRunKey = new CommandParameter<StringT>(HCALParameters.RUN_KEY, new StringT(""));
-    CommandParameter<StringT> configureTpgKey = new CommandParameter<StringT>(HCALParameters.TPG_KEY, new StringT(""));
-    CommandParameter<IntegerT> configureRunNumber = new CommandParameter<IntegerT>(HCALParameters.RUN_NUMBER, new IntegerT(0));
-    CommandParameter<StringT> configurefedEnableMask = new CommandParameter<StringT>(HCALParameters.FED_ENABLE_MASK, new StringT(""));
-    CommandParameter<StringT> hcalCfgScript = new CommandParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT, new StringT(""));
-    CommandParameter<StringT> hcalTTCciControl = new CommandParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL, new StringT(""));
-    CommandParameter<StringT> hcalLTCControl = new CommandParameter<StringT>(HCALParameters.HCAL_LTCCONTROL, new StringT(""));
-    CommandParameter<StringT> hcalTCDSControl = new CommandParameter<StringT>(HCALParameters.HCAL_TCDSCONTROL, new StringT(""));
-    CommandParameter<StringT> hcalLPMControl = new CommandParameter<StringT>(HCALParameters.HCAL_LPMCONTROL, new StringT(""));
-    CommandParameter<BooleanT> configureCLOCK_CHANGED = new CommandParameter<BooleanT>(HCALParameters.CLOCK_CHANGED, new BooleanT(false));
-    CommandParameter<BooleanT> configureUSE_RESET_FOR_RECOVER = new CommandParameter<BooleanT>(HCALParameters.USE_RESET_FOR_RECOVER, new BooleanT(true));
-    CommandParameter<StringT> hcalPIControl = new CommandParameter<StringT>(HCALParameters.HCAL_PICONTROL, new StringT(""));
-    CommandParameter<BooleanT> configureUSE_PRIMARY_TCDS = new CommandParameter<BooleanT>(HCALParameters.USE_PRIMARY_TCDS, new BooleanT(true));
-    CommandParameter<StringT> configureSUPERVISOR_ERROR = new CommandParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(""));
-    CommandParameter<StringT> configureAVAILABLE_RUN_CONFIGS = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RUN_CONFIGS, new StringT(""));
-    CommandParameter<StringT> configureRUN_CONFIG_SELECTED = new CommandParameter<StringT>(HCALParameters.RUN_CONFIG_SELECTED, new StringT(""));
-    CommandParameter<IntegerT> configureSID = new CommandParameter<IntegerT>(HCALParameters.SID, new IntegerT(0));
-    CommandParameter<StringT> configureCFGSNIPPET_KEY_SELECTED = new CommandParameter<StringT>(HCALParameters.CFGSNIPPET_KEY_SELECTED, new StringT(""));
-    CommandParameter<StringT> configureAVAILABLE_RESOURCES = new CommandParameter<StringT>(HCALParameters.AVAILABLE_RESOURCES, new StringT(""));
-    CommandParameter<StringT> configureMASKED_RESOURCES = new CommandParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(""));
-    CommandParameter<StringT> configureRU_INSTANCE = new CommandParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(""));
-    CommandParameter<StringT> configureLPM_SUPERVISOR = new CommandParameter<StringT>(HCALParameters.LPM_SUPERVISOR, new StringT(""));
-    CommandParameter<StringT> configureEVM_TRIG_FM = new CommandParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(""));
+    CommandParameter<IntegerT> configureSID                      =  new CommandParameter<IntegerT> ("SID"                     ,  new IntegerT(0)     );
+    CommandParameter<IntegerT> configureRunNumber                =  new CommandParameter<IntegerT> ("RUN_NUMBER"              ,  new IntegerT(0)     );
+    CommandParameter<StringT>  configureRunType                  =  new CommandParameter<StringT>  ("HCAL_RUN_TYPE"           ,  new StringT("")     );
+    CommandParameter<StringT>  configureRunKey                   =  new CommandParameter<StringT>  ("RUN_KEY"                 ,  new StringT("")     );
+    CommandParameter<StringT>  configureTpgKey                   =  new CommandParameter<StringT>  ("TPG_KEY"                 ,  new StringT("")     );
+    CommandParameter<StringT>  configurefedEnableMask            =  new CommandParameter<StringT>  ("FED_ENABLE_MASK"         ,  new StringT("")     );
+    CommandParameter<StringT>  hcalCfgScript                     =  new CommandParameter<StringT>  ("HCAL_CFGSCRIPT"          ,  new StringT("")     );
+    CommandParameter<StringT>  hcalTTCciControl                  =  new CommandParameter<StringT>  ("HCAL_TTCCICONTROL"       ,  new StringT("")     );
+    CommandParameter<StringT>  hcalLTCControl                    =  new CommandParameter<StringT>  ("HCAL_LTCCONTROL"         ,  new StringT("")     );
+    CommandParameter<StringT>  hcalTCDSControl                   =  new CommandParameter<StringT>  ("HCAL_TCDSCONTROL"        ,  new StringT("")     );
+    CommandParameter<StringT>  hcalLPMControl                    =  new CommandParameter<StringT>  ("HCAL_LPMCONTROL"         ,  new StringT("")     );
+    CommandParameter<StringT>  hcalPIControl                     =  new CommandParameter<StringT>  ("HCAL_PICONTROL"          ,  new StringT("")     );
+    CommandParameter<StringT>  configureSUPERVISOR_ERROR         =  new CommandParameter<StringT>  ("SUPERVISOR_ERROR"        ,  new StringT("")     );
+    CommandParameter<StringT>  configureAVAILABLE_RUN_CONFIGS    =  new CommandParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"   ,  new StringT("")     );
+    CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
+    CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
+    CommandParameter<StringT>  configureAVAILABLE_RESOURCES      =  new CommandParameter<StringT>  ("AVAILABLE_RESOURCES"     ,  new StringT("")     );
+    CommandParameter<StringT>  configureMASKED_RESOURCES         =  new CommandParameter<StringT>  ("MASKED_RESOURCES"        ,  new StringT("")     );
+    CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
+    CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
+    CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
+    CommandParameter<BooleanT> configureCLOCK_CHANGED            =  new CommandParameter<BooleanT> ("CLOCK_CHANGED"           ,  new BooleanT(false) );
+    CommandParameter<BooleanT> configureUSE_PRIMARY_TCDS         =  new CommandParameter<BooleanT> ("USE_PRIMARY_TCDS"        ,  new BooleanT(true)  );
+    CommandParameter<BooleanT> configureUSE_RESET_FOR_RECOVER    =  new CommandParameter<BooleanT> ("USE_RESET_FOR_RECOVER"   ,  new BooleanT(true)  );
 
     // define parameter set
     ParameterSet<CommandParameter> configureParameters = new ParameterSet<CommandParameter>();
@@ -216,12 +216,12 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
 
     // define parameters for SETTTSTEST_MODE command
     //
-    CommandParameter<StringT> hcalTTSCfgScript = new CommandParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT, new StringT(""));
-    CommandParameter<StringT> hcalTTSTTCciControl = new CommandParameter<StringT>(HCALParameters.HCAL_TTCCICONTROL, new StringT(""));
-    CommandParameter<StringT> hcalTTSLTCControl = new CommandParameter<StringT>(HCALParameters.HCAL_LTCCONTROL, new StringT(""));
-    CommandParameter<StringT> hcalTTSTCDSControl = new CommandParameter<StringT>(HCALParameters.HCAL_TCDSCONTROL, new StringT(""));
-    CommandParameter<StringT> hcalTTSLPMControl = new CommandParameter<StringT>(HCALParameters.HCAL_LPMCONTROL, new StringT(""));
-    CommandParameter<StringT> hcalTTSPIControl = new CommandParameter<StringT>(HCALParameters.HCAL_PICONTROL, new StringT(""));
+    CommandParameter<StringT> hcalTTSCfgScript    =  new CommandParameter<StringT>("HCAL_CFGSCRIPT"    ,  new StringT(""));
+    CommandParameter<StringT> hcalTTSTTCciControl =  new CommandParameter<StringT>("HCAL_TTCCICONTROL" ,  new StringT(""));
+    CommandParameter<StringT> hcalTTSLTCControl   =  new CommandParameter<StringT>("HCAL_LTCCONTROL"   ,  new StringT(""));
+    CommandParameter<StringT> hcalTTSTCDSControl  =  new CommandParameter<StringT>("HCAL_TCDSCONTROL"  ,  new StringT(""));
+    CommandParameter<StringT> hcalTTSLPMControl   =  new CommandParameter<StringT>("HCAL_LPMCONTROL"   ,  new StringT(""));
+    CommandParameter<StringT> hcalTTSPIControl    =  new CommandParameter<StringT>("HCAL_PICONTROL"    ,  new StringT(""));
 
     // define parameter set
     ParameterSet<CommandParameter> configureTTSParameters = new ParameterSet<CommandParameter>();
@@ -243,9 +243,9 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     //
     // define parameters for Start command
     //
-    CommandParameter<IntegerT> startRunNumber = new CommandParameter<IntegerT>(HCALParameters.RUN_NUMBER, new IntegerT(0));
-    CommandParameter<IntegerT> startRunSeqNumber = new CommandParameter<IntegerT>(HCALParameters.RUN_SEQ_NUMBER, new IntegerT(0));
-    CommandParameter<IntegerT> requestedEvents   = new CommandParameter<IntegerT>(HCALParameters.NUMBER_OF_EVENTS, new IntegerT(1));
+    CommandParameter<IntegerT> startRunNumber    =  new CommandParameter<IntegerT>("RUN_NUMBER"       ,  new IntegerT(0));
+    CommandParameter<IntegerT> startRunSeqNumber =  new CommandParameter<IntegerT>("RUN_SEQ_NUMBER"   ,  new IntegerT(0));
+    CommandParameter<IntegerT> requestedEvents   =  new CommandParameter<IntegerT>("NUMBER_OF_EVENTS" ,  new IntegerT(1));
 
     // define parameter set
     ParameterSet<CommandParameter> startParameters = new ParameterSet<CommandParameter>();
