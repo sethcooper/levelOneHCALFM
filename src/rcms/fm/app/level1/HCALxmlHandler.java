@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Scanner;
+import java.util.Arrays;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -48,6 +49,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -107,12 +109,12 @@ public class HCALxmlHandler {
             if (((Element)nodes.item(iNode)).getAttributes().getNamedItem("name").getNodeValue().equals(name)) {
                foundTheRequestedNamedElement = true;
                if ( ((Element)nodes.item(iNode)).hasAttribute(attribute)) {
-		              return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
-							 }else{
+                  return ((Element)nodes.item(iNode)).getAttributes().getNamedItem(attribute).getNodeValue();
+               }else{
                   logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+"' with name='"+name+"' in tag='"+tag+"'. Empty string will be returned");
                   String emptyString = "";
-									return emptyString;
-							 }
+                  return emptyString;
+               }
             }
           }
           if (!foundTheRequestedNamedElement) {
@@ -155,8 +157,8 @@ public class HCALxmlHandler {
       int NxcEndpointNodes = xcEndpointNodes.getLength();
       for (int i=0; i < NxcEndpointNodes; i++) {
         Element currentEndpointElement = (Element) xcEndpointNodes.item(i);
-				currentEndpointElement.setAttribute("connectOnRequest", "true");
-			}
+        currentEndpointElement.setAttribute("connectOnRequest", "true");
+      }
 
       String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
@@ -301,7 +303,7 @@ public class HCALxmlHandler {
       Element stateListenerContext = execXML.createElement("xc:Context");
       //stateListenerContext.setAttribute("url", "http://cmsrc-hcal.cms:16001/rcms");
       //stateListenerContext.setAttribute("url", "http://cmshcaltb02.cern.ch:16001/rcms");
-			//logger.info("[SethLog] " + functionManager.FMname + ": adding the RCMStateListener with url: " + rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms" );
+      //logger.info("[SethLog] " + functionManager.FMname + ": adding the RCMStateListener with url: " + rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms" );
       stateListenerContext.setAttribute("url", rcmsStateListenerURL);
       Element stateListenerApp=execXML.createElement("xc:Application");
       stateListenerApp.setAttribute("class", "RCMSStateListener");
@@ -356,10 +358,10 @@ public class HCALxmlHandler {
            for(int iFile=0; iFile< childlist.getLength() ; iFile++){
                Element iElement = (Element) childlist.item(iFile);
                String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
-		           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+               logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
                tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
            }
-				}
+        }
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
@@ -380,15 +382,7 @@ public class HCALxmlHandler {
 
         //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
-        if (TagNodeList.getLength()>1){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ TagName+ " in mastersnippet. Only the first one will be used ");
-        }else if (TagNodeList.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
-            return TagContent;
-        }else if (TagNodeList.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. "); 
-           TagContent = TagNodeList.item(0).getTextContent();
-				}
+        TagContent = getTagTextContent( TagNodeList, TagName );
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
@@ -400,31 +394,13 @@ public class HCALxmlHandler {
   public String getHCALMasterSnippetTagAttribute(String selectedRun, String CfgCVSBasePath, String TagName,String attribute) throws UserActionException{
     String tmpAttribute ="";
     try{
-        // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
 
         masterSnippet.getDocumentElement().normalize();
         NodeList TagNodeList =  masterSnippet.getDocumentElement().getElementsByTagName(TagName);
-        if (TagNodeList.getLength()>1){
-            String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
-            logger.warn(errMessage);
-            throw new UserActionException(errMessage);
-
-        }else if (TagNodeList.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet. Empty string will be returned. ");
-            return tmpAttribute;
-        }else if (TagNodeList.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. "); 
-					 Element TagElement = (Element) TagNodeList.item(0);
-					 if (TagElement.hasAttribute(attribute)){
-               logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found attribute "+attribute+ " in Tag named "+ TagName+ " in mastersnippet."); 
-		           tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
-					 }else{
-               logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+" in tag='"+TagName+"'. Empty string will be returned");
-							 return tmpAttribute;
-           }
-				}
+        
+        tmpAttribute = getTagAttribute( TagNodeList, TagName, attribute);
     }
     catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ TagName +" xml: " + e.getMessage());
@@ -432,6 +408,169 @@ public class HCALxmlHandler {
     return tmpAttribute;
   }
 
+  // Fill parameters from MasterSnippet
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
+    try{
+        // Get ControlSequences from mastersnippet
+        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
+        
+        masterSnippet.getDocumentElement().normalize();
+        Element masterSnippetElement = masterSnippet.getDocumentElement();
+
+        NodeList listOfTags = masterSnippetElement.getChildNodes();
+        for(int i =0;i< listOfTags.getLength();i++){
+          if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
+            Element iElement = (Element) listOfTags.item(i);
+            String  iTagName = iElement.getNodeName();
+            logger.debug("[Martin log HCAL "+ functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+
+            if( Arrays.asList(ValidMasterSnippetTags).contains( iTagName )){
+              NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+            }
+          }
+        }
+    }
+    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
+        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing masterSnippet:: " + e.getMessage());
+    }
+  }
+
+  public String getHCALParameterFromTagName(String TagName){
+    String emptyString="";
+    if(TagName.equals("TCDSControl") ) return HCALParameters.HCAL_TCDSCONTROL;
+    if(TagName.equals("LPMControl")  ) return HCALParameters.HCAL_LPMCONTROL;
+    if(TagName.equals("PIControl")   ) return HCALParameters.HCAL_PICONTROL;
+    if(TagName.equals("TTCciControl")) return HCALParameters.HCAL_TTCCICONTROL;
+    if(TagName.equals("LTCControl")  ) return HCALParameters.HCAL_LTCCONTROL;
+    logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
+    return emptyString;
+  }
+
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
+    try{
+      if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
+          String HCALParameter = getHCALParameterFromTagName(TagName);
+          String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
+      }
+      if(TagName.equals("AlarmerURL")){
+          functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
+      }
+      if(TagName.equals("AlarmerStatus")) {
+          functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
+      }
+      if(TagName.equals("CfgScript")){
+          String tmpCfgScript =""; 
+          if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
+            //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
+            tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
+            tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
+          }
+          else{
+            //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
+            tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
+      }
+      if(TagName.equals("FedEnableMask")){
+        if (functionManager.RunType.equals("local")){
+            String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(tmpFedEnableMask)));
+          }
+      }
+    }
+    catch ( UserActionException e){
+        // Warn when found more than one tag name in mastersnippet
+        functionManager.goToError(e.getMessage());
+    }
+  }
+
+  public boolean hasDefaultValue(String pam, String def_value){
+        String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
+        //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
+        if (present_value.equals(def_value)){
+          return true;
+        }else{
+          return false;
+        }
+  }
+
+  public boolean hasUniqueTag(NodeList inputlist, String TagName) throws UserActionException{
+    boolean isUnique=false;
+    if( inputlist.getLength()==0){
+      //Return false if no Tagname is found
+      logger.info("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ TagName+ " in mastersnippet.  Empty string will be returned. ");
+    } 
+    else if(inputlist.getLength()>1){
+        //Throw execptions if more than 1 TagName is found, decide later what to do
+        String errMessage="[Martin log HCAL " + functionManager.FMname + "]: Found more than one Tag of "+ TagName+ " in mastersnippet. ";
+        throw new UserActionException(errMessage);
+      }
+      else if(inputlist.getLength()==1){
+          //Return True if only 1 TagName is found.
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          isUnique=true;
+      }
+    return isUnique;
+  }
+  public String getTagTextContent(NodeList inputlist, String TagName) throws UserActionException{  
+    String TagContent = "";
+    boolean HasUniqueTag = false;
+    //Return empty string if we do not have a unique Tag in mastersnippet. 
+    if( !hasUniqueTag(inputlist,TagName) ){
+      return TagContent;
+    }
+    else{
+      TagContent = inputlist.item(0).getTextContent();  
+      return TagContent;
+    }
+  } 
+  public String getTagAttribute(NodeList inputlist,String TagName, String attribute) throws UserActionException{
+    String tmpAttribute= "";
+    //Return empty string if we do not have a unique Tag in mastersnippet. 
+    if( !hasUniqueTag(inputlist,TagName) ){
+      return tmpAttribute;
+    }
+    else{
+      //Return the attribute content if the TagElement has the correct attribute
+      Element TagElement = (Element) inputlist.item(0);
+      if (TagElement.hasAttribute(attribute)){
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found attribute "+attribute+ " in Tag named "+ TagName+ " in mastersnippet."); 
+          tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
+      }
+      else{
+          logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+" in tag='"+TagName+"'. Empty string will be returned");
+          return tmpAttribute;
+      }
+      return tmpAttribute;
+    }
+  } 
+  public String getIncludeFiles(NodeList inputlist,String CfgCVSBasePath, String TagName) throws UserActionException{
+    String tmpCtrlSequence ="";
+    //Return empty string if we do not have a unique Tag in mastersnippet. 
+    if( !hasUniqueTag(inputlist,TagName) ){
+      return tmpCtrlSequence;
+    }
+    else{
+      try{
+        //Loop through all the files
+        Element el = (Element) inputlist.item(0);
+        NodeList childlist = el.getElementsByTagName("include"); 
+        for(int iFile=0; iFile< childlist.getLength() ; iFile++){
+          Element iElement = (Element) childlist.item(iFile);
+          String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
+          logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
+          tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
+        }
+      }
+      catch (IOException e){
+        logger.error("[HCAL " + functionManager.FMname + "]: Got an IOExecption when parsing this TagName: "+ TagName +", with errorMessage: " + e.getMessage());        
+      }
+    }
+    return tmpCtrlSequence;
+  }
 
   static String readFile(String path, Charset encoding) throws IOException {
       byte[] encoded = Files.readAllBytes(Paths.get(path));
