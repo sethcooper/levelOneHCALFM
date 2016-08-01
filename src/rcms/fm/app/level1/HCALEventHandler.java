@@ -1488,7 +1488,7 @@ public class HCALEventHandler extends UserEventHandler {
         String gpKey;
         while (gpi.hasNext()) {
           gpKey = gpi.next();
-          publishLocalParameter(gpKey, localParams.get(gpKey));
+          publishGlobalParameter(gpKey, localParams.get(gpKey));
         }
       }
       logger.info("[HCAL " + functionManager.FMname + "] ... publishing to the RunInfo DB Done.");
