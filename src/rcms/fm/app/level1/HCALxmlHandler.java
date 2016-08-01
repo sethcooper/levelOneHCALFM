@@ -49,7 +49,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -460,6 +460,21 @@ public class HCALxmlHandler {
       }
       if(TagName.equals("AlarmerStatus")) {
           functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
+      }
+      if(TagName.equals("FMSettings"){
+          String DefaultNumberOfEvents      = 0;
+          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents"));
+          if( !StringNumberOfEvents.equals(""){
+            DefaultNumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(DefaultNumberOfEvents)));
+
+          Boolean DefaultRunInfoPublish     = false; 
+          String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
+          if( !StringRunInfoPublish.equals(""){
+            DefaultRunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(DefaultRunInfoPublish)));
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 

@@ -108,6 +108,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
+
+
       // check parameter set
       if (parameterSet.size()==0 || parameterSet.get("SID") == null )  {
 
