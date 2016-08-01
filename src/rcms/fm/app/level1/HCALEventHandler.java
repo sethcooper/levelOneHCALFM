@@ -1476,9 +1476,6 @@ public class HCALEventHandler extends UserEventHandler {
         for (String paramName : globalParams) {
           publishGlobalParameter(paramName);
         }
-        for (String paramName : globalParams) {
-          publishGlobalParameter(paramName);
-        }
         Set<String> localParamKeys = localParams.keySet();
         String lpKey;
         Iterator<String> lpi = localParamKeys.iterator();
