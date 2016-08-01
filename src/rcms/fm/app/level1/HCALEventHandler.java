@@ -2,12 +2,14 @@ package rcms.fm.app.level1;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 import java.util.Date;
 import java.util.TimeZone;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.lang.Integer;
 import java.util.Iterator;
 import java.util.List;
@@ -1393,345 +1395,106 @@ public class HCALEventHandler extends UserEventHandler {
     }
   }
 
+  // method to call for publishing runinfo
+  protected void publishLocalParameter (String parameterString, String nameForDB) {
+    Parameter<StringT> parameter;
+    if (!parameterString.equals("")) {
+      parameter = new Parameter<StringT>(nameForDB, new StringT(parameterString));
+    }
+    else {
+      parameter = new Parameter<StringT>(parameterString, new StringT("not set"));
+    }
+    try {
+      logger.info("[HCAL " + functionManager.FMname + "] Publishing local parameter + '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
+    }
+    catch (RunInfoException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException caught when publishing the Runinfo parameter '" + nameForDB +".";
+      logger.error(errMessage,e);
+    }
+  }
+  protected void publishGlobalParameter (String parameterName, String nameForDB){
+    String globalParameterString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
+    Parameter<StringT> parameter;
+    if (!globalParameterString.equals("")) {
+      parameter = new Parameter<StringT>(nameForDB,new StringT(globalParameterString));
+    }
+    else {
+      parameter = new Parameter<StringT>(nameForDB,new StringT("not set"));
+    }
+    try {
+      logger.info("[HCAL " + functionManager.FMname + "] Publishing global parameter + '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
+    }
+    catch (RunInfoException e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException caught when publishing the Runinfo parameter '" + nameForDB +".";
+      logger.error(errMessage,e);
+    }
+  }
+  protected void publishGlobalParameter (String parameterName) {
+    publishGlobalParameter(parameterName, parameterName);
+  }
+
+
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
+    functionManager = this.functionManager;
+    String globalParams[] = new String[] {"SUPERVISOR_ERROR", "MASKED RESOURCES", "HCAL_COMMENT"};
+    Hashtable<String, String> localParams = new Hashtable<String, String>();
+    localParams.put(   functionManager.FMfullpath                   ,  "FM_FULLPATH"          );
+    localParams.put(   functionManager.FMname                       ,  "FM_NAME"              );
+    localParams.put(   functionManager.FMurl                        ,  "FM_URL"               );
+    localParams.put(   functionManager.FMuri                        ,  "FM_URI"               );
+    localParams.put(   functionManager.FMrole                       ,  "FM_ROLE"              );
+    localParams.put(   functionManager.utcFMtimeofstart             ,  "FM_TIME_OF_START"     );
+    localParams.put(   RunKey                                       ,  "RUN_KEY"              );
+    localParams.put(   FullCfgScript                                ,  "CfgScript"            );
+    localParams.put(   FullTTCciControlSequence                     ,  "TTCciControlSequence" );
+    localParams.put(   FullTCDSControlSequence                      ,  "TCDSControlSequence"  );
+    localParams.put(   FullLPMControlSequence                       ,  "LPMControlSequence"   );
+    localParams.put(   FullPIControlSequence                        ,  "PIControlSequence"    );
+    localParams.put(   functionManager.getState().getStateString()  ,  "STATE_ON_EXIT"        );
+
+    if (RunType.equals("local")) {
+      localParams.put( String.valueOf(TriggersToTake)             ,  "TRIGGERS"             );
+    }
+    // TODO JHak put in run start time and stop times. This was always broken.
+
+    Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
+    globalRenamedParams.put( "RUN_CONFIG_SELECTED"                ,  "LOCAL_RUN_KEY"        );
 
     logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
     if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
-
       // check availability of RunInfo DB
       checkRunInfoDBConnection();
 
       if ( functionManager.HCALRunInfo == null) {
         logger.warn("[HCAL " + functionManager.FMname + "] Cannot publish run info summary!");
-        logger.debug("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e.is RunInfo DB down? Please check the logs ...");
       }
       else {
         logger.debug("[HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB ...");
-
-        {
-          if (RunType.equals("local")) {
-            Parameter<IntegerT> events = new Parameter<IntegerT>("TRIGGERS",new IntegerT(Integer.valueOf(TriggersToTake)));
-            try {
-              logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB TRIGGERS: " + events.getValue().toString());
-              if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(events); }
-            }
-            catch (RunInfoException e) {
-              String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the number of events taken ...\nProbably this is OK when the FM was destroyed.";
-              logger.error(errMessage,e);
-            }
-          }
+        for (String paramName : globalParams) {
+          publishGlobalParameter(paramName);
         }
-        /*{
-          Parameter<DateT> starttime = new Parameter<DateT>("START_TIME",new DateT(StartTime));
-          try {
-          logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB START_TIME: " + starttime.getValue().toString());
-          if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(starttime); }
-          }
-          catch (RunInfoException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run start time ...\nProbably this is OK when the FM was destroyed.";
-          logger.error(errMessage,e);
-          }
-          }
-          {
-          Parameter<DateT> stoptime = new Parameter<DateT>("STOP_TIME",new DateT(StopTime));
-          try {
-          logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB STOP_TIME: " + stoptime.getValue().toString());
-          if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(stoptime); }
-          }
-          catch (RunInfoException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run stop time ...\nProbably this is OK when the FM was destroyed.";
-          logger.error(errMessage,e);
-          }
-          }*/
-
-        {
-          Parameter<StringT> FMfullpath;
-          if (!functionManager.FMfullpath.equals("")) {
-            FMfullpath = new Parameter<StringT>("FM_FULLPATH",new StringT(functionManager.FMfullpath));
-          }
-          else {
-            FMfullpath = new Parameter<StringT>("FM_FULLPATH",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMfullpath: " + FMfullpath.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMfullpath); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMfullpath used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
+        for (String paramName : globalParams) {
+          publishGlobalParameter(paramName);
         }
-
-        {
-          Parameter<StringT> FMname;
-          if (!functionManager.FMname.equals("")) {
-            FMname = new Parameter<StringT>("FM_NAME",new StringT(functionManager.FMname));
-          }
-          else {
-            FMname = new Parameter<StringT>("FM_NAME",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMname: " + FMname.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMname); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMname used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
+        Set<String> localParamKeys = localParams.keySet();
+        String lpKey;
+        Iterator<String> lpi = localParamKeys.iterator();
+        while (lpi.hasNext()) {
+          lpKey = lpi.next();
+          publishLocalParameter(lpKey, localParams.get(lpKey));
         }
-
-        {
-          Parameter<StringT> FMurl;
-          if (!functionManager.FMurl.equals("")) {
-            FMurl = new Parameter<StringT>("FM_URL",new StringT(functionManager.FMurl));
-          }
-          else {
-            FMurl = new Parameter<StringT>("FM_URL",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMurl: " + FMurl.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMurl); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMurl used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
+        Set<String> renamedGlobalParamKeys = globalRenamedParams.keySet();
+        Iterator<String> gpi = renamedGlobalParamKeys.iterator();
+        String gpKey;
+        while (gpi.hasNext()) {
+          gpKey = gpi.next();
+          publishLocalParameter(gpKey, localParams.get(gpKey));
         }
-
-        {
-          Parameter<StringT> FMuri;
-          if (!functionManager.FMuri.equals("")) {
-            FMuri = new Parameter<StringT>("FM_URI",new StringT(functionManager.FMuri));
-          }
-          else {
-            FMuri = new Parameter<StringT>("FM_URI",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMuri: " + FMuri.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMuri); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMuri used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> FMrole;
-          if (!functionManager.FMrole.equals("")) {
-            FMrole = new Parameter<StringT>("FM_ROLE",new StringT(functionManager.FMrole));
-          }
-          else {
-            FMrole = new Parameter<StringT>("FM_ROLE",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMrole: " + FMrole.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMrole); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMrole used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> FMtimeofstart;
-          if (!functionManager.FMtimeofstart.equals("")) {
-            FMtimeofstart = new Parameter<StringT>("FM_TIME_OF_START",new StringT(functionManager.utcFMtimeofstart));
-          }
-          else {
-            FMtimeofstart = new Parameter<StringT>("FM_TIME_OF_START",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB FMtimeofstart: " + FMtimeofstart.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(FMtimeofstart); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the FMtimeofstart used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> runkey;
-          if (!RunKey.equals("")) {
-            runkey = new Parameter<StringT>("RUN_KEY",new StringT(RunKey));
-          }
-          else {
-            runkey = new Parameter<StringT>("RUN_KEY",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB RunKey: " + runkey.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(runkey); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the RunKey used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          String localRunKeyOnStopping = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
-          Parameter<StringT> localrunkey;
-          if (!localRunKeyOnStopping.equals("")) {
-            localrunkey = new Parameter<StringT>("LOCAL_RUN_KEY",new StringT(localRunKeyOnStopping));
-          }
-          else {
-            localrunkey = new Parameter<StringT>("LOCAL_RUN_KEY",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB Local Run Key: " + localrunkey.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(localrunkey); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error - RunInfoException occured  when publishing the RunKey used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> CfgScript;
-          if (!FullCfgScript.equals("")) {
-            CfgScript = new Parameter<StringT>("CfgScript",new StringT(PasswordFree(FullCfgScript)));
-          }
-          else {
-            CfgScript = new Parameter<StringT>("CfgScript",new StringT("not set"));
-          }
-          try {
-
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB CfgScript:\n" + CfgScript.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(CfgScript); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the CfgScript used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> TTCciControlSequence;
-          if (!FullTTCciControlSequence.equals("")) {
-            TTCciControlSequence = new Parameter<StringT>("TTCciControlSequence",new StringT(FullTTCciControlSequence));
-
-          }
-          else {
-            TTCciControlSequence = new Parameter<StringT>("TTCciControlSequence",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB TTCciControlSequence:\n" + TTCciControlSequence.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(TTCciControlSequence); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the TTCciControlSequence used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> LTCControlSequence;
-          if (!FullLTCControlSequence.equals("")) {
-            LTCControlSequence = new Parameter<StringT>("LTCControlSequence",new StringT(FullLTCControlSequence));
-
-          }
-          else {
-            LTCControlSequence = new Parameter<StringT>("LTCControlSequence",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB LTCControlSequence:\n" + LTCControlSequence.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(LTCControlSequence); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the LTCControlSequence used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> TCDSControlSequence;
-          if (!FullTCDSControlSequence.equals("")) {
-            TCDSControlSequence = new Parameter<StringT>("TCDSControlSequence",new StringT(FullTCDSControlSequence));
-
-          }
-          else {
-            TCDSControlSequence = new Parameter<StringT>("TCDSControlSequence",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB TCDSControlSequence:\n" + TCDSControlSequence.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(TCDSControlSequence); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the TCDSControlSequence used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> LPMControlSequence;
-          if (!FullLPMControlSequence.equals("")) {
-            LPMControlSequence = new Parameter<StringT>("LPMControlSequence",new StringT(FullLPMControlSequence));
-
-          }
-          else {
-            LPMControlSequence = new Parameter<StringT>("LPMControlSequence",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB LPMControlSequence:\n" + LPMControlSequence.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(LPMControlSequence); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the LPMControlSequence used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        {
-          Parameter<StringT> PIControlSequence;
-          if (!FullPIControlSequence.equals("")) {
-            PIControlSequence = new Parameter<StringT>("PIControlSequence",new StringT(FullPIControlSequence));
-
-          }
-          else {
-            PIControlSequence = new Parameter<StringT>("PIControlSequence",new StringT("not set"));
-          }
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB PIControlSequence:\n" + PIControlSequence.getValue().toString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(PIControlSequence); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the PIControlSequence used ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
-        /* {
-           Date runStop = Calendar.getInstance().getTime();
-           Parameter<DateT> StopTime = new Parameter<DateT>("TIME_ON_EXIT",new DateT(runStop));
-           try {
-           logger.debug("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo DB TIME_ONE_EXIT: " + StopTime.getValue().toString());
-           if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(StopTime); }
-           }
-           catch (RunInfoException e) {
-           String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run time on exit ...\nProbably this is OK when the FM was destroyed.";
-           logger.error(errMessage,e);
-           }
-           }*/
-        {
-          Parameter<StringT> StateOnExit = new Parameter<StringT>("STATE_ON_EXIT",new StringT(functionManager.getState().getStateString()));
-          try {
-            logger.info("[HCAL " + functionManager.FMname + "] Publishing to the RunInfo STATE_ON_EXIT: " + functionManager.getState().getStateString());
-            if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(StateOnExit); }
-          }
-          catch (RunInfoException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! RunInfoException: something seriously went wrong when publishing the run state on exit ...\nProbably this is OK when the FM was destroyed.";
-            logger.error(errMessage,e);
-          }
-        }
-
       }
-
       logger.info("[HCAL " + functionManager.FMname + "] ... publishing to the RunInfo DB Done.");
-
     }
   }
 
