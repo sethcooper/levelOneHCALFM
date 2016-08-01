@@ -2162,44 +2162,6 @@ public class HCALEventHandler extends UserEventHandler {
 
   }
 
-  // read a simple text file
-  protected String readTextFile(String FileName) {
-
-    String LocalConfigFromFile = "";
-
-    // reading the file charwise
-    {
-      int ch;
-      try {
-        BufferedReader in = new BufferedReader ( new FileReader (FileName) );
-        try {
-          while( (ch = in.read()) != -1 ) {
-            LocalConfigFromFile += (char) ch;
-          }
-          in.close();
-        }
-        catch (IOException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error in reading file named: " + FileName;
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Problems when reading local CVS based files which include HCAL configurations ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-        }
-      }
-      catch (IOException e) {
-        String errMessage = "[HCAL " + functionManager.FMname + "] Error in opening file named: " + FileName;
-        logger.error(errMessage,e);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Problems when opening local CVS based files which include HCAL configurations ...")));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-      }
-    }
-
-    return LocalConfigFromFile;
-  }
-
   // determine the active HCAL FEDs from the ENABLE_FED_MASK string received in the configureAction()
   protected List<String> getEnabledHCALFeds(String FedEnableMask) {
 
