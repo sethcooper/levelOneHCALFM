@@ -673,6 +673,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
 
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippets: ");
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
       if (TpgKey!=null && TpgKey!="NULL") {
@@ -711,7 +712,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
 
 
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] Printing results from parsing Mastersnippets: ");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence     );
