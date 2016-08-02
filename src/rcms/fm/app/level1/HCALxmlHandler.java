@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Scanner;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -32,9 +33,14 @@ import org.xml.sax.SAXException;
 
 import rcms.fm.fw.user.UserActionException;
 
+import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.BooleanT;
+
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -448,12 +454,14 @@ public class HCALxmlHandler {
     return emptyString;
   }
 
+
   public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
     try{
       if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
           String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
+          SetLV2Parameter(HCALParameter, ControlSequence);
       }
       if(TagName.equals("AlarmerURL")){
           functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );
@@ -461,20 +469,20 @@ public class HCALxmlHandler {
       if(TagName.equals("AlarmerStatus")) {
           functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
       }
-      if(TagName.equals("FMSettings"){
-          String DefaultNumberOfEvents      = 0;
-          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents"));
-          if( !StringNumberOfEvents.equals(""){
-            DefaultNumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+      if(TagName.equals("FMSettings")){
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+          if( !StringNumberOfEvents.equals("")){
+            Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
           }
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(DefaultNumberOfEvents)));
 
-          Boolean DefaultRunInfoPublish     = false; 
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
-          if( !StringRunInfoPublish.equals(""){
-            DefaultRunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+          if( !StringRunInfoPublish.equals("")){
+            Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
           }
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(DefaultRunInfoPublish)));
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
