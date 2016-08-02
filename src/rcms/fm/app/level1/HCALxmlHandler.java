@@ -461,7 +461,6 @@ public class HCALxmlHandler {
           String HCALParameter = getHCALParameterFromTagName(TagName);
           String ControlSequence  = getIncludeFiles( NodeListOfTagName, CfgCVSBasePath ,TagName );
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameter ,new StringT(ControlSequence)));
-          SetLV2Parameter(HCALParameter, ControlSequence);
       }
       if(TagName.equals("AlarmerURL")){
           functionManager.alarmerURL        = getTagTextContent(NodeListOfTagName, TagName );

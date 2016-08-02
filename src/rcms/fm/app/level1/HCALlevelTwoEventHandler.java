@@ -341,16 +341,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      if (parameterSet.get("HCAL_RUNINFOPUBLISH") != null) {
-        Boolean RunInfoPublish = ((BooleanT)parameterSet.get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received RunInfoPublish of value: " + RunInfoPublish + " from LV1");
-      }
-      else {
-        String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive RunInfoPublish from LV1.";
-        logger.warn(warnMessage);
-      }
-
+  
       if (parameterSet.get("RUN_CONFIG_SELECTED") != null) {
         String RunConfigSelected = ((StringT)parameterSet.get("RUN_CONFIG_SELECTED").getValue()).getString();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RUN_CONFIG_SELECTED",new StringT(RunConfigSelected)));
@@ -605,6 +596,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         else {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
         }
+        if (parameterSet.get("HCAL_RUNINFOPUBLISH") != null) {
+          Boolean RunInfoPublish = ((BooleanT)parameterSet.get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+          functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received RunInfoPublish of value: " + RunInfoPublish + " from LV1");
+        }
+        else {
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive RunInfoPublish from LV1.";
+          logger.warn(warnMessage);
+        }
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         if (parameterSet.get("HCAL_CFGCVSBASEPATH") != null) {
@@ -661,6 +661,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      
       if (CfgCVSBasePath.equals("not set")) {
         logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
       }

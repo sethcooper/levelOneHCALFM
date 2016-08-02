@@ -261,19 +261,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");
 
-      // Get the value of runinfopublish
-      Boolean RunInfoPublish = false;
-      if ( functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH") != null){
-        RunInfoPublish = ((BooleanT)functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-        logger.info("[Martin log HCAL LVL1 "+ functionManager.FMname + "] Going to pass RunInfoPublish value of : " + RunInfoPublish+" to LV2");
-      } else{
-        logger.warn("[Martin log HCAL LVL1 "+ functionManager.FMname + "] RunInfoPublish is null");
-      }
       // prepare run number to be passed to level 2
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
       pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE", new StringT(RunType)));
       pSet.put(new CommandParameter<IntegerT>("SID", new IntegerT(Sid)));
-      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH", new BooleanT(RunInfoPublish)));
       pSet.put(new CommandParameter<StringT>("GLOBAL_CONF_KEY", new StringT(GlobalConfKey)));
 
       pSet.put(new CommandParameter<StringT>("RUN_CONFIG_SELECTED", new StringT(RunConfigSelected)));
@@ -710,7 +701,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL").getValue()).getString();
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
+      // Get the value of runinfopublish from the results of parseMasterSnippet
+      Boolean RunInfoPublish = false;
+      if ( functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH") != null){
+        RunInfoPublish = ((BooleanT)functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+      } 
+      else{
+        logger.warn("[Martin log HCAL LVL1 "+ functionManager.FMname + "] RunInfoPublish is null");
+      }
 
+
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] Printing results from parsing Mastersnippets: ");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence     );
@@ -719,6 +720,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "   + functionManager.alarmerURL    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "   + functionManager.alarmerPartition    );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: " + FedEnableMask);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : " + RunInfoPublish);
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL
@@ -750,6 +752,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL", new StringT(FullPIControlSequence)));
       pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
+      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH", new BooleanT(RunInfoPublish)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
