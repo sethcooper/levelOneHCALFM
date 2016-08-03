@@ -1377,6 +1377,7 @@ public class HCALEventHandler extends UserEventHandler {
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
     globalRenamedParams.put( "RUN_CONFIG_SELECTED"                  ,  "LOCAL_RUN_KEY"        );
 
+    RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
     logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
     if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
       // check availability of RunInfo DB
@@ -1412,6 +1413,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database with info from hcalRunInfoServer
   protected void publishRunInfoSummaryfromXDAQ() {
     logger.info("[HCAL " + functionManager.FMname + "]: just called publishRunInfoSummaryfromXDAQ");
+    RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
     if (functionManager.HCALRunInfo!=null) {
       logger.info("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: HCALRunInfo was not null. Good.");
       if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
