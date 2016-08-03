@@ -228,24 +228,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Get the setting of whether RunInfo should be published from the userXML
-    {
-      String doRunInfoPublish =  "";
-      try{
-        doRunInfoPublish = xmlHandler.getHCALuserXMLelementContent("RunInfoPublish");
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (doRunInfoPublish.equals("true")) {
-        logger.warn("[HCAL base] This session: " + sessionId.toString() + " will be published to the RunInfo database.");
-        RunInfoPublish = true;
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
-      }else{
-        logger.warn("[Martin Log HCAL base] Invalid text Content in RunInfoPublish tag of the userXML");
-      }
-    }
-
     // Get the setting for whether official run numbers should be used from the userXML
     {
       String useOfficialRunNumbers = "";
@@ -1378,8 +1360,9 @@ public class HCALEventHandler extends UserEventHandler {
     globalRenamedParams.put( "RUN_CONFIG_SELECTED"                  ,  "LOCAL_RUN_KEY"        );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-    logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
-    if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
+
+    if ( RunInfoPublish ) {
+      logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
       // check availability of RunInfo DB
       checkRunInfoDBConnection();
 
@@ -1406,77 +1389,75 @@ public class HCALEventHandler extends UserEventHandler {
           publishGlobalParameter(gpKey, localParams.get(gpKey));
         }
       }
-      logger.info("[HCAL " + functionManager.FMname + "] ... publishing to the RunInfo DB Done.");
+      logger.info("[HCAL " + functionManager.FMname + "] finished publishing to the RunInfo DB.");
+    }else{
+      logger.info("[HCAL " + functionManager.FMname + "]: HCAL_RUNINFOPUBLISH is set to false. Not publishing RunInfo");
     }
   }
 
   // make entry into the CMS run info database with info from hcalRunInfoServer
   protected void publishRunInfoSummaryfromXDAQ() {
-    logger.info("[HCAL " + functionManager.FMname + "]: just called publishRunInfoSummaryfromXDAQ");
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-    if (functionManager.HCALRunInfo!=null) {
-      logger.info("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: HCALRunInfo was not null. Good.");
-      if (OfficialRunNumbers || RunInfoPublish || TestMode.equals("RunInfoPublish") || TestMode.equals("OfficialRunNumbers")) {
-        logger.debug("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
-        // check availability of RunInfo DB
+    if (RunInfoPublish){
+      logger.info("[HCAL " + functionManager.FMname + "]:  Going to publishRunInfoSummaryfromXDAQ");
+      if ( functionManager.HCALRunInfo == null) {
+        logger.warn("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Cannot publish run info summary!");
+        logger.info("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e.is RunInfo DB down? Please check the logs ...");
+        // Make new connection if we want to publish but do not have RunInfo
         checkRunInfoDBConnection();
+      }
 
-        if ( functionManager.HCALRunInfo == null) {
-          logger.warn("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Cannot publish run info summary!");
-          logger.info("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e.is RunInfo DB down? Please check the logs ...");
-        }
-        else {
-          // prepare and set for all HCAL supervisors the RunType
-          if (!functionManager.containerhcalRunInfoServer.isEmpty()) {
-            logger.debug("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
+      if (functionManager.HCALRunInfo!=null) {
+        logger.debug("[HCAL " + functionManager.FMname + "]: publishRunInfoSummaryfromXDAQ: attempting to publish runinfo from xdaq after checking userXML...");
 
-            RunInfoServerReader RISR = new RunInfoServerReader();
+        // prepare and set for all HCAL supervisors the RunType
+        if (!functionManager.containerhcalRunInfoServer.isEmpty()) {
+          logger.debug("[HCAL " + functionManager.FMname + "]: [HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB the info from the hcalRunInfoServer ...");
 
-            // find all RunInfoServers controlled by this FM and acquire the information
-            for (QualifiedResource qr : functionManager.containerhcalRunInfoServer.getApplications() ) {
-              RISR.acquire((XdaqApplication)qr);
-            }
+          RunInfoServerReader RISR = new RunInfoServerReader();
 
-            // convert the acquired HashMap into the RunInfo structure
-            HashMap<String,String> theInfo = RISR.getInfo();
-            Iterator theInfoIterator = theInfo.keySet().iterator();
+          // find all RunInfoServers controlled by this FM and acquire the information
+          for (QualifiedResource qr : functionManager.containerhcalRunInfoServer.getApplications() ) {
+            RISR.acquire((XdaqApplication)qr);
+          }
 
-            while(theInfoIterator.hasNext()) {
-              // get the next row from the HashMap
-              String key = (String) theInfoIterator.next();
-              String value = theInfo.get(key);
-              String setValue = "not set";
-              if (!value.equals("") && value != null) { setValue = value; }
-              logger.debug("[HCAL " + functionManager.FMname + "] The next parameter from RunInfoFromXDAQ is: " + key + ", and it has value: " + value);
+          // convert the acquired HashMap into the RunInfo structure
+          HashMap<String,String> theInfo = RISR.getInfo();
+          Iterator theInfoIterator = theInfo.keySet().iterator();
 
-              // fill HashMap Strings into the RunInfo compliant data type
-              if (!key.equals("") && key!=null) {
-                try {
-                  if (functionManager.HCALRunInfo != null) {
-                    logger.info("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + "to the RunInfo databse.");
-                    functionManager.HCALRunInfo.publishWithHistory(new Parameter<StringT>(key, new StringT(setValue)));
-                  }
-                  else logger.info("[HCAL " + functionManager.FMname + "]HCALRunInfo was null when trying to publish the RunInfo from XDAQ.");
-                }
-                catch (RunInfoException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error: caught a RunInfoException whemn attempting to publish XDAQ RunInfo parameter with key name: " + key;
-                  logger.error(errMessage,e);
-                }
+          while(theInfoIterator.hasNext()) {
+            // get the next row from the HashMap
+            String key = (String) theInfoIterator.next();
+            String value = theInfo.get(key);
+            String setValue = "not set";
+            if (!value.equals("") && value != null) { setValue = value; }
+            logger.debug("[HCAL " + functionManager.FMname + "] The next parameter from RunInfoFromXDAQ is: " + key + ", and it has value: " + value);
+
+            // fill HashMap Strings into the RunInfo compliant data type
+            if (!key.equals("") && key!=null) {
+              try {
+                logger.info("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + "to the RunInfo databse.");
+                functionManager.HCALRunInfo.publishWithHistory(new Parameter<StringT>(key, new StringT(setValue)));
+              }
+              catch (RunInfoException e) {
+                String errMessage = "[HCAL " + functionManager.FMname + "] Error: caught a RunInfoException whemn attempting to publish XDAQ RunInfo parameter with key name: " + key;
+                logger.error(errMessage,e);
               }
             }
-            logger.info("[HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
           }
-          else {
-            if (!functionManager.FMrole.equals("HCAL")) {
-              String errMessage = "[HCAL " + functionManager.FMname + "] Error! publishRunInfoSummaryfromXDAQ() requested but no hcalRunInfoServer application found - please check!";
-              logger.error(errMessage);
-            }
-          }
+          logger.info("[HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
+        }
+        else {
+          String errMessage = "[HCAL " + functionManager.FMname + "] Error! publishRunInfoSummaryfromXDAQ() requested but no hcalRunInfoServer application found - please check!";
+          logger.error(errMessage);
         }
       }
+      else {
+        logger.info("[HCAL " + functionManager.FMname + "] publishRunInfofromXDAQ(): Tried to publish but HCALRunInfo was null.... bad.");
+      }
     }
-    else {
-      logger.info("[HCAL " + functionManager.FMname + "] publishRunInfofromXDAQ(): HCALRunInfo was null.... bad.");
+    else{
+      logger.info("[HCAL " + functionManager.FMname + "]: HCAL_RUNINFOPUBLISH is set to false. Not publishing RunInfo");
     }
   }
 
