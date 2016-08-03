@@ -375,7 +375,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Executing resetAction");
 
       publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       // reset the non-async error state handling
@@ -1076,7 +1075,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("haaaalting ...")));
 
       publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {
@@ -1143,7 +1141,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("brrr - cold resetting ...")));
 
       publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {
@@ -1220,7 +1217,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       //logger.info("[JohnLog] LVL1 about to call publishRunInfoSummary");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] LVL1 about to call publishRunInfoSummary");
       publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       if (!functionManager.containerFMChildren.isEmpty()) {
