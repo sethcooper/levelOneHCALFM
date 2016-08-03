@@ -1353,7 +1353,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"SUPERVISOR_ERROR", "MASKED RESOURCES", "HCAL_COMMENT"};
+    String globalParams[] = new String[] {"SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
     localParams.put(   functionManager.FMfullpath                   ,  "FM_FULLPATH"          );
     localParams.put(   functionManager.FMname                       ,  "FM_NAME"              );
