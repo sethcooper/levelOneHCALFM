@@ -161,7 +161,6 @@ public class HCALEventHandler extends UserEventHandler {
   public Integer Sid              =  0;           // Session ID for database connections
   public Integer TriggersToTake   =  0;           // Requested number of events to be taken
   public Integer RunSeqNumber     =  0;           // Run sequence number
-  public Integer sessionId        =  0;           // TODO: Is this a duplicate of the above Sid?
   public Integer eventstaken      =  -1;          //Events taken for local runs
   public Integer localeventstaken =  -1;          // TODO: what does this do?
   public String  GlobalConfKey    =  "";          // global configuration key
@@ -238,7 +237,7 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn(e.getMessage());
       }
       if (useOfficialRunNumbers.equals("true")) {
-        logger.warn("[HCAL base] using offical run numbers for this session: " + sessionId.toString() + " (publishing to RunInfo and the info from the RunInfo XDAQ application is therefore switched on too)");
+        logger.warn("[HCAL base] using offical run numbers for this session: " + Sid.toString() + " (publishing to RunInfo and the info from the RunInfo XDAQ application is therefore switched on too)");
         OfficialRunNumbers = true;
         RunInfoPublish = true;
       }
@@ -1243,10 +1242,10 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     // and put it into the instance variable
-    sessionId = tempSessionId;
+    Sid = tempSessionId;
     // put the session ID into parameter set
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(sessionId)));
-    logger.info("[Martin log HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(Sid)));
+    logger.info("[HCAL " + functionManager.FMname + "] Reach the end of getsessionId() ");
   }
 
   // get official CMS run and sequence number
@@ -1254,15 +1253,17 @@ public class HCALEventHandler extends UserEventHandler {
 
     // check availability of runInfo DB
     RunInfoConnectorIF ric = functionManager.getRunInfoConnector();
+    // Get SID from parameter
+    Sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
     if ( ric == null ) {
       logger.warn("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e. is RunInfo DB down?");
 
       // by default give run number 0
-      return new RunNumberData(new Integer(sessionId),new Integer(0),functionManager.getOwner(),Calendar.getInstance().getTime());
+      return new RunNumberData(new Integer(Sid),new Integer(0),functionManager.getOwner(),Calendar.getInstance().getTime());
     }
     else {
       RunSequenceNumber rsn = new RunSequenceNumber(ric,functionManager.getOwner(),RunSequenceName);
-      RunNumberData rnd = rsn.createRunSequenceNumber(sessionId);
+      RunNumberData rnd = rsn.createRunSequenceNumber(Sid);
 
       logger.info("[HCAL " + functionManager.FMname + "] received run number: " + rnd.getRunNumber() + " and sequence number: " + rnd.getSequenceNumber());
 
@@ -1282,8 +1283,11 @@ public class HCALEventHandler extends UserEventHandler {
     if (functionManager.HCALRunInfo == null) {
       logger.info("[HCAL " + functionManager.FMname + "] creating new RunInfo accessor with namespace: " + functionManager.HCAL_NS + " now ...");
 
+      //Get SID from parameter
+      Sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
+
       RunInfoConnectorIF ric = functionManager.getRunInfoConnector();
-      functionManager.HCALRunInfo =  new RunInfo(ric,sessionId,Integer.valueOf(functionManager.RunNumber));
+      functionManager.HCALRunInfo =  new RunInfo(ric,Sid,Integer.valueOf(functionManager.RunNumber));
 
       functionManager.HCALRunInfo.setNameSpace(functionManager.HCAL_NS);
 
