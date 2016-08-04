@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Scanner;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -32,9 +33,14 @@ import org.xml.sax.SAXException;
 
 import rcms.fm.fw.user.UserActionException;
 
+import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.BooleanT;
+
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -49,7 +55,7 @@ public class HCALxmlHandler {
   protected HCALFunctionManager functionManager = null;
   static RCMSLogger logger = null;
   public DocumentBuilder docBuilder;
-  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask"};
+  public String[] ValidMasterSnippetTags = new String[] {"CfgScript","TCDSControl","TTCciControl","LPMControl","PIControl","LTCControl","AlarmerURL","AlarmerStatus","FedEnableMask","FMSettings"};
 
   public HCALxmlHandler(HCALFunctionManager parentFunctionManager) {
     this.logger = new RCMSLogger(HCALFunctionManager.class);
@@ -160,7 +166,7 @@ public class HCALxmlHandler {
         currentEndpointElement.setAttribute("connectOnRequest", "true");
       }
 
-      String maskedAppsString= ((StringT)parameterSet.get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+      String maskedAppsString= ((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString();
       String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
       String newExecXMLstring = "";
       int NxcContexts = 0;
@@ -439,14 +445,15 @@ public class HCALxmlHandler {
 
   public String getHCALParameterFromTagName(String TagName){
     String emptyString="";
-    if(TagName.equals("TCDSControl") ) return HCALParameters.HCAL_TCDSCONTROL;
-    if(TagName.equals("LPMControl")  ) return HCALParameters.HCAL_LPMCONTROL;
-    if(TagName.equals("PIControl")   ) return HCALParameters.HCAL_PICONTROL;
-    if(TagName.equals("TTCciControl")) return HCALParameters.HCAL_TTCCICONTROL;
-    if(TagName.equals("LTCControl")  ) return HCALParameters.HCAL_LTCCONTROL;
+    if(TagName.equals("TCDSControl") ) return "HCAL_TCDSCONTROL";
+    if(TagName.equals("LPMControl")  ) return "HCAL_LPMCONTROL";
+    if(TagName.equals("PIControl")   ) return "HCAL_PICONTROL";
+    if(TagName.equals("TTCciControl")) return "HCAL_TTCCICONTROL";
+    if(TagName.equals("LTCControl")  ) return "HCAL_LTCCONTROL";
     logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
     return emptyString;
   }
+
 
   public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
     try{
@@ -461,23 +468,46 @@ public class HCALxmlHandler {
       if(TagName.equals("AlarmerStatus")) {
           functionManager.alarmerPartition  = getTagAttribute(NodeListOfTagName,TagName,"partition" );
       }
+      if(TagName.equals("FMSettings")){
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
+          if( !StringNumberOfEvents.equals("")){
+            Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+          }
+
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
+          if( !StringRunInfoPublish.equals("")){
+            Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
+          }
+
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String  StringOfficialRunNumbers  = getTagAttribute(NodeListOfTagName, TagName,"OfficialRunNumbers");
+          if( !StringOfficialRunNumbers.equals("")){
+            Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
+          }
+
+      }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
-          if( !hasDefaultValue(HCALParameters.HCAL_CFGSCRIPT,"not set") ){
+          if( !hasDefaultValue("HCAL_CFGSCRIPT","not set") ){
             //If the parameter is filled (by CommonMasterSnippet), add that first instead of overwriting
-            tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.HCAL_CFGSCRIPT).getValue()).getString();
+            tmpCfgScript   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
             tmpCfgScript  += getTagTextContent( NodeListOfTagName, TagName);
           }
           else{
             //If the parameter has defaultValue, put what is in the current mastersnippet in the parameter
             tmpCfgScript   = getTagTextContent( NodeListOfTagName, TagName);
           }
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.HCAL_CFGSCRIPT,new StringT(tmpCfgScript)));
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT(tmpCfgScript)));
       }
       if(TagName.equals("FedEnableMask")){
         if (functionManager.RunType.equals("local")){
             String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.FED_ENABLE_MASK,new StringT(tmpFedEnableMask)));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
           }
       }
     }

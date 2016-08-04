@@ -99,7 +99,7 @@ public class HCALMasker {
 
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
     if (MaskedFMs.length() > 0) {
       MaskedFMs = MaskedFMs.substring(0, MaskedFMs.length()-1);
     }
@@ -163,12 +163,12 @@ public class HCALMasker {
     // This includes user GUI input and userXML maskedapps input.
     // The qr.setActive(false) will turn off the RCMS status of the FM. 
     // It's OK for an maskedapps to call that method too, although maskedapps will be stripped by the stripExecXML() anyway.
-    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+    String MaskedFMs =  ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
 
     logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs);
     String userXmlMaskedFM = "not set";
     try{
-        String localrunkey = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.CFGSNIPPET_KEY_SELECTED).getValue()).getString();
+        String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
         userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
         logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
     } catch (UserActionException e){
@@ -203,7 +203,7 @@ public class HCALMasker {
     for (QualifiedResource qr : level2list) {
       if (qr.getName().equals(EvmTrigFM)) { 
          qr.getResource().setRole("EvmTrig");
-         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.EVM_TRIG_FM, new StringT(qr.getName())));
+         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("EVM_TRIG_FM", new StringT(qr.getName())));
       }
       //itsThisLvl2 = false;
       try {
@@ -223,7 +223,7 @@ public class HCALMasker {
               qr.setActive(false);
 
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
-              allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get(HCALParameters.MASKED_RESOURCES).getValue()).getString();
+              allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
               for (Resource level2resource : fullconfigList) {
                 logger.debug("[HCAL " + functionManager.FMname + "]: The masked level 2 function manager " + qr.getName() + " has this in its XdaqExecutive list: " + level2resource.getName());
                 allMaskedResources+=level2resource.getName();
@@ -242,10 +242,10 @@ public class HCALMasker {
           }
         }
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the new MASKED_RESOURCES list.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.MASKED_RESOURCES, new StringT(allMaskedResources)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASKED_RESOURCES", new StringT(allMaskedResources)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the new MASKED_RESOURCES list.");
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.RU_INSTANCE, new StringT(eventBuilder)));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE", new StringT(eventBuilder)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + eventBuilder);
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
       }

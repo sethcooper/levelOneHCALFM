@@ -309,8 +309,8 @@ public class HCALFunctionManager extends UserFunctionManager {
       String errMessage = "[HCAL " + FMname + "] Error! MalformedURLException in createAction" + e.getMessage();
       logger.error(errMessage,e);
       sendCMSError(errMessage);
-      getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-      getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
+      getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+      getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
       if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
     }
 
@@ -716,7 +716,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
 
       // put the session ID into parameter set
-      getParameterSet().get(HCALParameters.SID).setValue(new IntegerT(sessionId));
+      getParameterSet().get("SID").setValue(new IntegerT(sessionId));
     }
 
   // close session Id. This routine is called always when functionmanager gets destroyed.
@@ -724,7 +724,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (logSessionConnector != null) {
       int sessionId = 0;
       try {
-        sessionId = ((IntegerT)getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
+        sessionId = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       }
       catch (Exception e) {
         logger.warn("[HCAL " + FMname + "] Could not get sessionId for closing session.\nNot closing session.\nThis is OK if no sessionId was requested from within HCAL land, i.e. global runs.",e);
@@ -781,7 +781,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       error.setMessage(errMessage);
 
       // update error msg parameter for GUI
-      getParameterSet().get(HCALParameters.ERROR_MSG).setValue(new StringT(errMessage));
+      getParameterSet().get("ERROR_MSG").setValue(new StringT(errMessage));
 
       // send error
       try {
@@ -804,7 +804,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   public void setAction(String action) {
 
     getParameterSet().put(new FunctionManagerParameter<StringT>
-        (HCALParameters.ACTION_MSG,new StringT(action)));
+        ("ACTION_MSG",new StringT(action)));
     return;
   }
 
@@ -830,8 +830,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     errMessage += " Message from the caught exception is: "+e.getMessage();
     logger.error(errMessage);
     sendCMSError(errMessage);
-    getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-    getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
     if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
   }
 
@@ -841,8 +841,8 @@ public class HCALFunctionManager extends UserFunctionManager {
   public void goToError(String errMessage) {
     logger.error(errMessage);
     sendCMSError(errMessage);
-    getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-    getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
     if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
   }
 
@@ -864,8 +864,8 @@ public class HCALFunctionManager extends UserFunctionManager {
         String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
         logger.error(errMessage,e);
         sendCMSError(errMessage);
-        getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-        getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
+        getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+        getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
         if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
       }
     }
