@@ -1339,21 +1339,15 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY", "NUMBER_OF_EVENTS", "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
     localParams.put(   "FM_URL"                ,  functionManager.FMurl                       );
     localParams.put(   "FM_URI"                ,  functionManager.FMuri                       );
     localParams.put(   "FM_ROLE"               ,  functionManager.FMrole                      );
-    localParams.put(   "FM_TIME_OF_START"      ,  functionManager.utcFMtimeofstart            );
-    localParams.put(   "RUN_KEY"               ,  RunKey                                      );
-    localParams.put(   "CfgScript"             ,  FullCfgScript                               );
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
 
-    if (RunType.equals("local")) {
-      localParams.put(  "TRIGGERS"             ,   String.valueOf(TriggersToTake)             );
-    }
     // TODO JHak put in run start time and stop times. This was always broken.
 
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
