@@ -653,14 +653,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // Try to find a common masterSnippet from MasterSnippet
       String CommonMasterSnippetFile ="";
-       try{
-         String TagName="CommonMasterSnippet";
-         String attribute="file";
-         CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
-       }catch(UserActionException e){
-         logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
-         functionManager.goToError(e.getMessage());
-       }
+      try{
+        String TagName="CommonMasterSnippet";
+        String attribute="file";
+        CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
+      }
+      catch(UserActionException e){
+        logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+        functionManager.goToError(e.getMessage());
+      }
 
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
@@ -671,7 +672,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[Martin log "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
-
+      //Pring results from mastersnippet:
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippets: ");
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
@@ -702,24 +703,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
-      Boolean RunInfoPublish = false;
-      if ( functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH") != null){
-        RunInfoPublish = ((BooleanT)functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-      } 
-      else{
-        logger.warn("[Martin log HCAL LVL1 "+ functionManager.FMname + "] RunInfoPublish is null");
-      }
+      RunInfoPublish           = ((BooleanT)functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+      OfficialRunNumbers       = ((BooleanT)functionManager.getParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
 
 
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence   );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence    );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence     );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +FullTTCciControlSequence  );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence    );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "   + functionManager.alarmerURL    );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "   + functionManager.alarmerPartition    );
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: " + FedEnableMask);
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : " + RunInfoPublish);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence              );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence               );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TTCciControlSequence is like this: \n" +FullTTCciControlSequence            );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LTCControlSequence is like this: \n"   +FullLTCControlSequence              );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerURL is "                        +functionManager.alarmerURL          );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final AlarmerPartition is "                  +functionManager.alarmerPartition    );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: "    +FedEnableMask                       );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL
@@ -752,6 +749,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
       pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
       pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH", new BooleanT(RunInfoPublish)));
+      pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS", new BooleanT(OfficialRunNumbers)));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -830,8 +828,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         else {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] startAction: We are in local mode ...");
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "] startAction: Going to take "+TriggersToTake+" Events");
 
           // determine run number and run sequence number and overwrite what was set before
+          OfficialRunNumbers       = ((BooleanT)functionManager.getParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
           if (OfficialRunNumbers) {
 
             RunNumberData rnd = getOfficialRunNumber();
