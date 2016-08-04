@@ -1339,7 +1339,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
@@ -1349,10 +1349,6 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "FM_TIME_OF_START"      ,  functionManager.utcFMtimeofstart            );
     localParams.put(   "RUN_KEY"               ,  RunKey                                      );
     localParams.put(   "CfgScript"             ,  FullCfgScript                               );
-    localParams.put(   "TTCciControlSequence"  ,  FullTTCciControlSequence                    );
-    localParams.put(   "TCDSControlSequence"   ,  FullTCDSControlSequence                     );
-    localParams.put(   "LPMControlSequence"    ,  FullLPMControlSequence                      );
-    localParams.put(   "PIControlSequence"     ,  FullPIControlSequence                       );
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
 
     if (RunType.equals("local")) {
