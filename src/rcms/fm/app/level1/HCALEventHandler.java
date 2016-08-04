@@ -227,22 +227,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Get the setting for whether official run numbers should be used from the userXML
-    {
-      String useOfficialRunNumbers = "";
-      try {
-        useOfficialRunNumbers = xmlHandler.getHCALuserXMLelementContent("OfficialRunNumbers");
-      }
-      catch (UserActionException e) { 
-        logger.warn(e.getMessage());
-      }
-      if (useOfficialRunNumbers.equals("true")) {
-        logger.warn("[HCAL base] using offical run numbers for this session: " + Sid.toString() + " (publishing to RunInfo and the info from the RunInfo XDAQ application is therefore switched on too)");
-        OfficialRunNumbers = true;
-        RunInfoPublish = true;
-      }
-    }
-
     // Get the RunSequenceName from the userXML
     {
       String NewRunSequenceName = "";
@@ -1305,7 +1289,7 @@ public class HCALEventHandler extends UserEventHandler {
       parameter = new Parameter<StringT>(parameterString, new StringT("not set"));
     }
     try {
-      logger.info("[HCAL " + functionManager.FMname + "] Publishing local parameter + '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      logger.info("[HCAL " + functionManager.FMname + "] Publishing local parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
       if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
     }
     catch (RunInfoException e) {

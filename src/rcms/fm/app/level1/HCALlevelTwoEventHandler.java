@@ -595,8 +595,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         else {
           logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a FED list during the configureAction() - this is bad!");
         }
+
+        //ger the HCAL_RUNINFOPUBLISH from LV1
         if (parameterSet.get("HCAL_RUNINFOPUBLISH") != null) {
-          Boolean RunInfoPublish = ((BooleanT)parameterSet.get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+          RunInfoPublish = ((BooleanT)parameterSet.get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
           functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
           logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received RunInfoPublish of value: " + RunInfoPublish + " from LV1");
         }
@@ -604,6 +606,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive RunInfoPublish from LV1.";
           logger.warn(warnMessage);
         }
+        //ger the OfficialRunNumers from LV1
+        if (parameterSet.get("OFFICIAL_RUN_NUMBERS") != null) {
+          OfficialRunNumbers = ((BooleanT)parameterSet.get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+          functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Received OfficialRunNumbers of value: " + OfficialRunNumbers + " from LV1");
+        }
+        else {
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] Did not receive OFFICIAL_RUN_NUMBERS from LV1.";
+          logger.warn(warnMessage);
+        }
+
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
         if (parameterSet.get("HCAL_CFGCVSBASEPATH") != null) {
@@ -1145,6 +1158,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //  }
             
 
+          OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
           if (OfficialRunNumbers) {
             RunNumberData rnd = getOfficialRunNumber();
 

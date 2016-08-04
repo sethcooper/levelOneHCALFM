@@ -482,6 +482,14 @@ public class HCALxmlHandler {
             Boolean RunInfoPublish           = Boolean.valueOf(StringRunInfoPublish);
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("HCAL_RUNINFOPUBLISH",new BooleanT(RunInfoPublish)));
           }
+
+          //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
+          String  StringOfficialRunNumbers  = getTagAttribute(NodeListOfTagName, TagName,"OfficialRunNumbers");
+          if( !StringOfficialRunNumbers.equals("")){
+            Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
+          }
+
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
