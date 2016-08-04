@@ -1323,29 +1323,19 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY", "NUMBER_OF_EVENTS", "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
-    localParams.put(   functionManager.FMfullpath                   ,  "FM_FULLPATH"          );
-    localParams.put(   functionManager.FMname                       ,  "FM_NAME"              );
-    localParams.put(   functionManager.FMurl                        ,  "FM_URL"               );
-    localParams.put(   functionManager.FMuri                        ,  "FM_URI"               );
-    localParams.put(   functionManager.FMrole                       ,  "FM_ROLE"              );
-    localParams.put(   functionManager.utcFMtimeofstart             ,  "FM_TIME_OF_START"     );
-    //localParams.put(   RunKey                                       ,  "RUN_KEY"              );
-    localParams.put(   FullCfgScript                                ,  "CfgScript"            );
-    localParams.put(   FullTTCciControlSequence                     ,  "TTCciControlSequence" );
-    localParams.put(   FullTCDSControlSequence                      ,  "TCDSControlSequence"  );
-    localParams.put(   FullLPMControlSequence                       ,  "LPMControlSequence"   );
-    localParams.put(   FullPIControlSequence                        ,  "PIControlSequence"    );
-    localParams.put(   functionManager.getState().getStateString()  ,  "STATE_ON_EXIT"        );
+    localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
+    localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
+    localParams.put(   "FM_URL"                ,  functionManager.FMurl                       );
+    localParams.put(   "FM_URI"                ,  functionManager.FMuri                       );
+    localParams.put(   "FM_ROLE"               ,  functionManager.FMrole                      );
+    localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
 
-    if (RunType.equals("local")) {
-      localParams.put( String.valueOf(TriggersToTake)               ,  "TRIGGERS"             );
-    }
     // TODO JHak put in run start time and stop times. This was always broken.
 
     Hashtable<String, String> globalRenamedParams = new Hashtable<String, String>();
-    globalRenamedParams.put( "RUN_CONFIG_SELECTED"                  ,  "LOCAL_RUN_KEY"        );
+    globalRenamedParams.put(  "LOCAL_RUN_KEY"  ,                 "RUN_CONFIG_SELECTED"        );
 
     RunInfoPublish = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
 
@@ -1367,14 +1357,14 @@ public class HCALEventHandler extends UserEventHandler {
         Iterator<String> lpi = localParamKeys.iterator();
         while (lpi.hasNext()) {
           lpKey = lpi.next();
-          publishLocalParameter(lpKey, localParams.get(lpKey));
+          publishLocalParameter(localParams.get(lpKey), lpKey);
         }
         Set<String> renamedGlobalParamKeys = globalRenamedParams.keySet();
         Iterator<String> gpi = renamedGlobalParamKeys.iterator();
         String gpKey;
         while (gpi.hasNext()) {
           gpKey = gpi.next();
-          publishGlobalParameter(gpKey, localParams.get(gpKey));
+          publishGlobalParameter(localParams.get(gpKey), gpKey);
         }
       }
       logger.info("[HCAL " + functionManager.FMname + "] finished publishing to the RunInfo DB.");
