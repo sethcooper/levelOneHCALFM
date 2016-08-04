@@ -297,7 +297,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // Get SID from LV1:
         if (parameterSet.get("SID") != null) {
           Sid = ((IntegerT)parameterSet.get("SID").getValue()).getInteger();
-          sessionId = Sid;
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>("SID",new IntegerT(Sid)));
           functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>("INITIALIZED_WITH_SID",new IntegerT(Sid)));
           logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "] Received the following SID from LV1 :"+ Sid) ;
@@ -2303,7 +2302,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      //logger.info("[JohnLog] about to call publishRunInfoSummary");
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 

@@ -121,12 +121,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         getSessionId();
         // get the Sid from the init command
         if (functionManager.getParameterSet().get("SID") != null) {
-          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "] Going to pass the SID just obtained ");
           Sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
-          logger.info("[Martin log HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
+          logger.info("[HCAL LVL1 " + functionManager.FMname + "] The session ID is " + Sid);
         }
         else {
-          String warnMessage = "[Martin log HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
+          String warnMessage = "[HCAL LVL1 " + functionManager.FMname + "] Did not set a SID properly in getSessionID()...";
           logger.warn(warnMessage);
         }
 
