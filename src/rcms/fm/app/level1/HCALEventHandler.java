@@ -1347,7 +1347,7 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   functionManager.FMuri                        ,  "FM_URI"               );
     localParams.put(   functionManager.FMrole                       ,  "FM_ROLE"              );
     localParams.put(   functionManager.utcFMtimeofstart             ,  "FM_TIME_OF_START"     );
-    localParams.put(   RunKey                                       ,  "RUN_KEY"              );
+    //localParams.put(   RunKey                                       ,  "RUN_KEY"              );
     localParams.put(   FullCfgScript                                ,  "CfgScript"            );
     localParams.put(   FullTTCciControlSequence                     ,  "TTCciControlSequence" );
     localParams.put(   FullTCDSControlSequence                      ,  "TCDSControlSequence"  );
