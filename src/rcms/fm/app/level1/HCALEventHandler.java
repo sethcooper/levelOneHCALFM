@@ -1280,13 +1280,13 @@ public class HCALEventHandler extends UserEventHandler {
   }
 
   // method to call for publishing runinfo
-  protected void publishLocalParameter (String parameterString, String nameForDB) {
+  protected void publishLocalParameter (String nameForDB, String parameterString) {
     Parameter<StringT> parameter;
     if (!parameterString.equals("")) {
       parameter = new Parameter<StringT>(nameForDB, new StringT(parameterString));
     }
     else {
-      parameter = new Parameter<StringT>(parameterString, new StringT("not set"));
+      parameter = new Parameter<StringT>(nameForDB, new StringT("empty string"));
     }
     try {
       logger.info("[HCAL " + functionManager.FMname + "] Publishing local parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
@@ -1297,17 +1297,17 @@ public class HCALEventHandler extends UserEventHandler {
       logger.error(errMessage,e);
     }
   }
-  protected void publishGlobalParameter (String parameterName, String nameForDB){
+  protected void publishGlobalParameter (String nameForDB, String parameterName){
     String globalParameterString = ((StringT)functionManager.getHCALparameterSet().get(parameterName).getValue()).getString();
     Parameter<StringT> parameter;
     if (!globalParameterString.equals("")) {
       parameter = new Parameter<StringT>(nameForDB,new StringT(globalParameterString));
     }
     else {
-      parameter = new Parameter<StringT>(nameForDB,new StringT("not set"));
+      parameter = new Parameter<StringT>(nameForDB,new StringT("empty string"));
     }
     try {
-      logger.info("[HCAL " + functionManager.FMname + "] Publishing global parameter + '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      logger.info("[HCAL " + functionManager.FMname + "] Publishing global parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
       if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
     }
     catch (RunInfoException e) {
@@ -1323,7 +1323,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY", "NUMBER_OF_EVENTS", "HCAL_TIME_OF_FM_START"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
@@ -1331,6 +1331,7 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "FM_URI"                ,  functionManager.FMuri                       );
     localParams.put(   "FM_ROLE"               ,  functionManager.FMrole                      );
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
+    localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
 
     // TODO JHak put in run start time and stop times. This was always broken.
 
@@ -1349,22 +1350,25 @@ public class HCALEventHandler extends UserEventHandler {
       }
       else {
         logger.debug("[HCAL " + functionManager.FMname + "] Start of publishing to the RunInfo DB ...");
-        for (String paramName : globalParams) {
-          publishGlobalParameter(paramName);
-        }
+        // Publish the local parameters
         Set<String> localParamKeys = localParams.keySet();
         String lpKey;
         Iterator<String> lpi = localParamKeys.iterator();
         while (lpi.hasNext()) {
           lpKey = lpi.next();
-          publishLocalParameter(localParams.get(lpKey), lpKey);
+          publishLocalParameter( lpKey,localParams.get(lpKey));
+        }
+        
+        // Publish the global parameters
+        for (String paramName : globalParams) {
+          publishGlobalParameter(paramName);
         }
         Set<String> renamedGlobalParamKeys = globalRenamedParams.keySet();
         Iterator<String> gpi = renamedGlobalParamKeys.iterator();
         String gpKey;
         while (gpi.hasNext()) {
           gpKey = gpi.next();
-          publishGlobalParameter(localParams.get(gpKey), gpKey);
+          publishGlobalParameter( gpKey,globalRenamedParams.get(gpKey));
         }
       }
       logger.info("[HCAL " + functionManager.FMname + "] finished publishing to the RunInfo DB.");
