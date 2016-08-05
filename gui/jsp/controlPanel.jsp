@@ -86,16 +86,18 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 	<tr> 
 		<td height="97" align="center" class="header">
 			<!-- Logo begin-->
-      <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
-      <br />
-			<a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
-			</a>
-			<!-- Logo end -->
-			<br />
-      <div id="hostport">
-			<!-- Host : Port begin -->
-				<%=request.getLocalName()%>:<%=request.getLocalPort()%>
-			<!-- Host : Port end -->
+      <div id="logoSpot">
+        <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
+        <br />
+			  <a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
+			  </a>
+			  <!-- Logo end -->
+			  <br />
+        <div id="hostport">
+			  <!-- Host : Port begin -->
+			  	<%=request.getLocalName()%>:<%=request.getLocalPort()%>
+			  <!-- Host : Port end -->
+        </div>
       </div>
 		</td>
 

@@ -3,6 +3,7 @@ package rcms.fm.app.level1;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
 
 import rcms.util.logger.RCMSLogger;
 import rcms.common.db.DBConnectorException;
@@ -12,6 +13,7 @@ import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.user.UserActionException;
 
@@ -200,6 +202,7 @@ public class HCALMasker {
       EvmTrigFM = evmTrigResources.get("EvmTrigFM").getName();
     }
 
+    VectorT<StringT> maskedFMsVector = new VectorT<StringT>();
     for (QualifiedResource qr : level2list) {
       if (qr.getName().equals(EvmTrigFM)) { 
          qr.getResource().setRole("EvmTrig");
@@ -221,6 +224,11 @@ public class HCALMasker {
             if (qr.getName().equals(MaskedFM)) {
               logger.info("[HCAL " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
+              StringT thisMaskedFM = new StringT(qr.getName());
+              if (!Arrays.asList(maskedFMsVector.toArray()).contains(thisMaskedFM)) {
+                logger.info("[JohnLogMask] " + functionManager.FMname + ": about to add " + thisMaskedFM.getString() + " to the maskedFMsVector.");
+                maskedFMsVector.add(thisMaskedFM);
+              }
 
               //logger.info("[HCAL " + functionManager.FMname + "]: LVL2 " + qr.getName() + " has rs group " + level2group.rs.toString());
               allMaskedResources = ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
@@ -232,6 +240,7 @@ public class HCALMasker {
               }
             }
           }
+          logger.info("[JohnLogMask] " + functionManager.FMname + ": about to set the global parameter MASK_SUMMARY");
         }
         for (Resource level2resource : fullconfigList) {
           if (level2resource.getName().contains("FanoutTTCciTA") || level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("hcalTrivialFU") || level2resource.getName().contains("hcalEventBuilder")) {
@@ -247,11 +256,11 @@ public class HCALMasker {
         logger.debug("[HCAL " + functionManager.FMname + "]: About to set the RU_INSTANCE.");
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("RU_INSTANCE", new StringT(eventBuilder)));
         logger.info("[HCAL " + functionManager.FMname + "]: Just set the RU_INSTANCE to " + eventBuilder);
-        logger.debug("[HCAL " + functionManager.FMname + "]: About to set the LPM_SUPERVISOR.");
       }
       catch (DBConnectorException ex) {
         logger.error("[HCAL " + functionManager.FMname + "]: Got a DBConnectorException when trying to retrieve level2s' children resources: " + ex.getMessage());
       }
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASK_SUMMARY", maskedFMsVector));
     }
   }
 }
