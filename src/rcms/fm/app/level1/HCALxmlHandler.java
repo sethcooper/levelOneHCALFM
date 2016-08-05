@@ -339,42 +339,6 @@ public class HCALxmlHandler {
     }
   }
 
-  // From MasterSnippet, get the CtrlSequenceTagName, loop over all the "include" sub-tags, read all the content in "file" with the "pro" version.
-  public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
-    String tmpCtrlSequence ="";
-    try{
-        // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
-
-        masterSnippet.getDocumentElement().normalize();
-
-        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
-        NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        if (CtrlSequence.getLength()>1){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
-        }else if (CtrlSequence.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ CtrlSequenceTagName+ " in mastersnippet. Empty string will be returned. ");
-            return tmpCtrlSequence;
-        }else if (CtrlSequence.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ CtrlSequenceTagName+ " in mastersnippet. Going to parse it. ");
-
-           Element el = (Element) CtrlSequence.item(0);
-           NodeList childlist = el.getElementsByTagName("include"); 
-           for(int iFile=0; iFile< childlist.getLength() ; iFile++){
-               Element iElement = (Element) childlist.item(iFile);
-               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
-               logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
-               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
-           }
-        }
-    }
-    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
-    }
-    String FullCtrlSequence = tmpCtrlSequence;
-    return FullCtrlSequence;
-  }
 
   // Return the Tag content of TagName in MasterSnippet
   public String getHCALMasterSnippetTag(String selectedRun, String CfgCVSBasePath, String TagName) throws UserActionException{
@@ -430,7 +394,7 @@ public class HCALxmlHandler {
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
             Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
-            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName="+ iTagName +" And it has ValidMasterSnippetTags = " + isValidTag);
+            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName = "+ iTagName );
 
             if(isValidTag){
               NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
@@ -577,6 +541,8 @@ public class HCALxmlHandler {
       return tmpAttribute;
     }
   } 
+
+  //  get the TagName, loop over all the "include" sub-tags, read all the content in "file" with the "pro" version.
   public String getIncludeFiles(NodeList inputlist,String CfgCVSBasePath, String TagName) throws UserActionException{
     String tmpCtrlSequence ="";
     //Return empty string if we do not have a unique Tag in mastersnippet. 
