@@ -429,9 +429,10 @@ public class HCALxmlHandler {
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
-            logger.debug("[Martin log HCAL "+ functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+            Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
+            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName="+ iTagName +" And it has ValidMasterSnippetTags = " + isValidTag);
 
-            if( Arrays.asList(ValidMasterSnippetTags).contains( iTagName )){
+            if(isValidTag){
               NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
               SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
             }
@@ -489,7 +490,6 @@ public class HCALxmlHandler {
             Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
           }
-
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
@@ -540,7 +540,7 @@ public class HCALxmlHandler {
       }
       else if(inputlist.getLength()==1){
           //Return True if only 1 TagName is found.
-          logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          logger.debug("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
           isUnique=true;
       }
     return isUnique;
@@ -571,7 +571,7 @@ public class HCALxmlHandler {
           tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
       }
       else{
-          logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+" in tag='"+TagName+"'. Empty string will be returned");
+          logger.warn("[Martin log "+functionManager.FMname+"] Did not find the attribute='"+attribute+" in tag='"+TagName+"'.");
           return tmpAttribute;
       }
       return tmpAttribute;
