@@ -659,17 +659,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
       }
       catch(UserActionException e){
-        logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
         functionManager.goToError(e.getMessage());
       }
 
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[Martin log "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
+          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
           xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
       }
       //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[Martin log "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
+      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
       xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
 
       //Pring results from mastersnippet:

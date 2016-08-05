@@ -329,18 +329,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Get the default number of events requested specified in the userXML
-    {
-      Integer DefaultNumberOfEvents = 0;
-      String theNumberOfEvents = "";
-      try { theNumberOfEvents=xmlHandler.getHCALuserXMLelementContent("NumberOfEvents"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!theNumberOfEvents.equals("")) {
-        DefaultNumberOfEvents = Integer.valueOf(theNumberOfEvents);
-        logger.info("[HCAL base] Default number of events to take set to: " + DefaultNumberOfEvents.toString());
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(DefaultNumberOfEvents)));
-      }
-    }
 
     // Get the CfgCVSBasePath in the userXML
     {
