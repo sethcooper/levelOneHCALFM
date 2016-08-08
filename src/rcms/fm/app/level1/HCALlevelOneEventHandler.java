@@ -703,9 +703,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
-      RunInfoPublish           = ((BooleanT)functionManager.getHCALParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-      OfficialRunNumbers       = ((BooleanT)functionManager.getHCALParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
-      TriggersToTake           = ((IntegerT)functionManager.getHCALParameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
+      RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+      OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+      TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
 
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
