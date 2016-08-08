@@ -379,7 +379,7 @@ public class HCALxmlHandler {
   }
 
   // Fill parameters from MasterSnippet
-  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath, boolean NeventIsSetFromGUI ) throws UserActionException{
     try{
         // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -398,7 +398,7 @@ public class HCALxmlHandler {
 
             if(isValidTag){
               NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath, NeventIsSetFromGUI);
             }
           }
         }
@@ -420,7 +420,7 @@ public class HCALxmlHandler {
   }
 
 
-  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
     try{
       if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
@@ -436,11 +436,15 @@ public class HCALxmlHandler {
       if(TagName.equals("FMSettings")){
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
-          if( !StringNumberOfEvents.equals("")){
-            Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+          if(NeventIsSetFromGUI){
+            logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
           }
-
+          else{
+            if( !StringNumberOfEvents.equals("")){
+               Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+               functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+            }
+          }
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
           if( !StringRunInfoPublish.equals("")){
@@ -483,6 +487,15 @@ public class HCALxmlHandler {
 
   public boolean hasDefaultValue(String pam, String def_value){
         String present_value = ((StringT)functionManager.getHCALparameterSet().get(pam).getValue()).getString();
+        //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
+        if (present_value.equals(def_value)){
+          return true;
+        }else{
+          return false;
+        }
+  }
+  public boolean hasDefaultValue(String pam, Integer def_value){
+        Integer present_value = ((IntegerT)functionManager.getHCALparameterSet().get(pam).getValue()).getInteger();
         //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
         if (present_value.equals(def_value)){
           return true;
