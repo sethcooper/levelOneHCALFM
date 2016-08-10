@@ -193,6 +193,8 @@ public class HCALEventHandler extends UserEventHandler {
   private List<Thread> MonitorThreadList             =  new ArrayList<Thread>();  // For watching level2s
   private List<Thread> HCALSupervisorWatchThreadList =  new ArrayList<Thread>();  // For querying the hcalSupervisor periodically
   private List<Thread> AlarmerWatchThreadList        =  new ArrayList<Thread>();  // For querying alarmer periodically
+  public String maskedAppsForRunInfo = "";
+
 
   public HCALEventHandler() throws rcms.fm.fw.EventHandlerException {
 
@@ -1334,6 +1336,8 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "FM_ROLE"               ,  functionManager.FMrole                      );
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
     localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
+    localParams.put(   "MASKED_RESOURCES"      ,  maskedAppsForRunInfo                        );
+    localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
 
     // TODO JHak put in run start time and stop times. This was always broken.
 
@@ -2441,6 +2445,8 @@ public class HCALEventHandler extends UserEventHandler {
               StopTime = new Date();
             }
 
+
+            maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
             publishRunInfoSummary();
 
             String Message = "[HCAL " + functionManager.FMname + "] ... (possibly) updated run info at: " + now.toString();
