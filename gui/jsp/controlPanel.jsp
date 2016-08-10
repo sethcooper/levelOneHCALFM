@@ -243,6 +243,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
+                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Masked Resources</strong>
+                                </td>
+                                <td id ="newMASKED_RESOURCES" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr>
                                 <td id="newOLD_MASKED_RESOURCEScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">

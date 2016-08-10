@@ -90,6 +90,7 @@ function checkCheckboxes() {
     $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
     $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
     $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
+    $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
 }
 
 function undisable(paramNumber) {
@@ -101,6 +102,7 @@ function clickboxes() {
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
         $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').click();
+        $('#newMASKED_RESOURCEScheckbox :checkbox').click();
     }
 }
 
@@ -127,16 +129,15 @@ function makedropdown(availableRunConfigs) {
 
 function fillMask() {
     var old_allMasks="";
-    var allMasks = jQuery.parseJSON($('MASKED_RESOURCES').val());
+    var finalMasks=[];
     $('#masks :checked').each(function () {
-        if allMasks.length != 0;
-        old_allMasks += $(this).val() + ";";
-        $.extend(true, allMasks, $(this).val());
+        //old_allMasks += $(this).val() + ";";
+        finalMasks.push($(this).val());
     });
-    $('#OLD_MASKED_RESOURCES').val($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
-    $('#MASKED_RESOURCES').val(JSON.stringify(allMasks));
+    //$('#OLD_MASKED_RESOURCES').val($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
+    $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
     //$('#maskTest').html($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
-    $('#maskTest').html(JSON.stringify(allMasks));
+    $('#maskTest').html(JSON.stringify(finalMasks));
 }
 
 function makecheckboxes(availableResources) {
@@ -212,6 +213,8 @@ function hcalOnLoad() {
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
     copyContents(OLD_MASKED_RESOURCES, newOLD_MASKED_RESOURCES);
     makecheckbox('newOLD_MASKED_RESOURCEScheckbox', 'OLD_MASKED_RESOURCES');
+    copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
+    makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
     makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
     copyContents(ACTION_MSG, newACTION_MSG);
