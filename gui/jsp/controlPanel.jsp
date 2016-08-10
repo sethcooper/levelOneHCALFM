@@ -75,7 +75,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 </head>
 
-<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.OLD_AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
@@ -249,15 +249,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                   <strong>Masked Resources</strong>
                                 </td>
                                 <td id ="newMASKED_RESOURCES" class="label_center_black">
-                                </td>
-                              </tr>
-                              <tr>
-                                <td id="newOLD_MASKED_RESOURCEScheckbox" class="label_center_black">
-                                </td>
-                                <td class="label_left_black">
-                                  <strong>Masked Resources</strong>
-                                </td>
-                                <td id ="newOLD_MASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>

@@ -55,11 +55,9 @@ $(document).ready(function () {
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-            $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').show();
         }
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-            $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').hide();
         }
         $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
@@ -89,7 +87,6 @@ function mirrorSelection() {
 function checkCheckboxes() {
     $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
     $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
-    $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
     $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
 }
 
@@ -101,7 +98,6 @@ function clickboxes() {
     if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
-        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').click();
         $('#newMASKED_RESOURCEScheckbox :checkbox').click();
     }
 }
@@ -121,8 +117,8 @@ function makedropdown(availableRunConfigs) {
     var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
     var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-    var maskedResourcesNumber = $('#OLD_MASKED_RESOURCES').attr("name").substring(20);
-    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'OLD_MASKED_RESOURCES'";
+    var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
+    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
     var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
     $('#dropdown').attr("onchange", onchanges);
 }
@@ -140,9 +136,10 @@ function fillMask() {
     $('#maskTest').html(JSON.stringify(finalMasks));
 }
 
-function makecheckboxes(availableResources) {
-    availableResources = availableResources.substring(0, availableResources.length - 1);
-    var array = availableResources.split(';');
+function makecheckboxes() {
+    var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
+    param =  param.replace(/['"]+/g, '');
+    var array = param.split(',');
     var maskDivContents = "<ul>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
@@ -203,7 +200,7 @@ function hcalOnLoad() {
     onClickCommandParameterCheckBox();
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
-    removeduplicatecheckbox('OLD_MASKED_RESOURCES');
+    removeduplicatecheckbox('MASKED_RESOURCES');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
@@ -211,8 +208,6 @@ function hcalOnLoad() {
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
-    copyContents(OLD_MASKED_RESOURCES, newOLD_MASKED_RESOURCES);
-    makecheckbox('newOLD_MASKED_RESOURCEScheckbox', 'OLD_MASKED_RESOURCES');
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
@@ -227,7 +222,7 @@ function hcalOnLoad() {
     hidelocalparams();
     hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
     hideduplicatefield('RUN_CONFIG_SELECTED');
-    hideduplicatefield('OLD_MASKED_RESOURCES');
+    hideduplicatefield('MASKED_RESOURCES');
     hideduplicatefield('NUMBER_OF_EVENTS');
     hideduplicatefield('ACTION_MSG');
     hideduplicatefield('RUN_NUMBER');
