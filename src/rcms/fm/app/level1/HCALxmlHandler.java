@@ -170,14 +170,14 @@ public class HCALxmlHandler {
       //String maskedAppsString= ((StringT)parameterSet.get("OLD_MASKED_RESOURCES").getValue()).getString();
       //String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
       VectorT<StringT> maskedAppsVector = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
-      String maskedAppArray[] = (String[]) maskedAppsVector.toArray();
+      StringT[] maskedAppArray = maskedAppsVector.toArray(new StringT[maskedAppsVector.size()]);
       String newExecXMLstring = "";
       int NxcContexts = 0;
       int removedContexts = 0;
       int removedApplications = 0;
-      for (String maskedApp: maskedAppArray) {
-        logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp);
-        String[] maskedAppParts = maskedApp.split("_");
+      for (StringT maskedApp: maskedAppArray) {
+        logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
+        String[] maskedAppParts = maskedApp.getString().split("_");
 
         //Remove masked applications from xc:Context nodes
         NodeList xcContextNodes = execXML.getDocumentElement().getElementsByTagName("xc:Context");
@@ -289,7 +289,7 @@ public class HCALxmlHandler {
         transformer.transform(domSource, result);
         newExecXMLstring = writer.toString();
         newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-        logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp);
+        logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
       }
       return newExecXMLstring;
     }

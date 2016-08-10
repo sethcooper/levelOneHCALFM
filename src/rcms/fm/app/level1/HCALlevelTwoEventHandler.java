@@ -129,14 +129,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0) {
         VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
         functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
-        StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[0]);
+        StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
-        for (StringT MaskedApplication: MaskedResourceArray) {
+        for (StringT MaskedApplication : MaskedResourceArray) {
           //String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
           //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
+          logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
           for (QualifiedResource qr : xdaqApplicationList) {
             //if (qr.getName().equals(MaskedApplication.getString()) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
+            logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
             if (qr.getName().equals(MaskedApplication.getString())) {
               //logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list: " + qr.getName());
@@ -145,6 +146,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               qr.setActive(false);
             }
           }
+          logger.info("[JohnLogVector] " + functionManager.FMname + ": Done masking application " + MaskedApplication.getString());
         }
         //logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
         logger.info("[HCAL LVL2 " + functionManager.FMname + "]: This FM has role: " + functionManager.FMrole);
