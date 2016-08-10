@@ -202,7 +202,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
-      String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
+      String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get("OLD_MASKED_RESOURCES").getValue()).getString();
       if (MaskedResources.length() > 0) {
         //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
@@ -299,8 +299,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         logger.error("[HCAL LVL1 " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
       }
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: About to set the initial list of masked resources: " + MaskedResources );
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASKED_RESOURCES", new StringT(MaskedResources)));
-      pSet.put(new CommandParameter<StringT>("MASKED_RESOURCES", new StringT(MaskedResources)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("OLD_MASKED_RESOURCES", new StringT(MaskedResources)));
+      pSet.put(new CommandParameter<StringT>("OLD_MASKED_RESOURCES", new StringT(MaskedResources)));
 
       String ruInstance =  ((StringT)functionManager.getHCALparameterSet().get("RU_INSTANCE").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the RU_INSTANCE " + ruInstance);

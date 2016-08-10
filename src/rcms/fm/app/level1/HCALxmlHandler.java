@@ -40,6 +40,7 @@ import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.VectorT;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -166,8 +167,10 @@ public class HCALxmlHandler {
         currentEndpointElement.setAttribute("connectOnRequest", "true");
       }
 
-      String maskedAppsString= ((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString();
-      String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
+      //String maskedAppsString= ((StringT)parameterSet.get("OLD_MASKED_RESOURCES").getValue()).getString();
+      //String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
+      VectorT<StringT> maskedAppsVector = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
+      String maskedAppArray[] = (String[]) maskedAppsVector.toArray();
       String newExecXMLstring = "";
       int NxcContexts = 0;
       int removedContexts = 0;

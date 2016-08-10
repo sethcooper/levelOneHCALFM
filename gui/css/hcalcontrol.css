@@ -226,7 +226,7 @@ ul {
 
 #newCFGSNIPPET_KEY_SELECTEDcheckbox input[type=checkbox],
 #newRUN_CONFIG_SELECTEDcheckbox input[type=checkbox],
-#newMASKED_RESOURCEScheckbox input[type=checkbox]{
+#newOLD_MASKED_RESOURCEScheckbox input[type=checkbox]{
 	visibility: hidden;
 }
 #masked_resourses_td{

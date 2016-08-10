@@ -55,11 +55,11 @@ $(document).ready(function () {
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+            $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').show();
         }
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+            $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').hide();
         }
         $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
@@ -89,7 +89,7 @@ function mirrorSelection() {
 function checkCheckboxes() {
     $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').prop('checked', true);
     $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').prop('checked', true);
-    $('#newMASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
+    $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').prop('checked', true);
 }
 
 function undisable(paramNumber) {
@@ -100,7 +100,7 @@ function clickboxes() {
     if ($('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox:checked').length == 0) {
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').click();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').click();
-        $('#newMASKED_RESOURCEScheckbox :checkbox').click();
+        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').click();
     }
 }
 
@@ -119,19 +119,24 @@ function makedropdown(availableRunConfigs) {
     var cfgSnippetArgs = "'" + cfgSnippetKeyNumber + "', 'CFGSNIPPET_KEY_SELECTED'";
     var masterSnippetNumber = $('#RUN_CONFIG_SELECTED').attr("name").substring(20);
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
-    var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
-    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
+    var maskedResourcesNumber = $('#OLD_MASKED_RESOURCES').attr("name").substring(20);
+    var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'OLD_MASKED_RESOURCES'";
     var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
 function fillMask() {
-    var allMasks = "";
+    var old_allMasks="";
+    var allMasks = jQuery.parseJSON($('MASKED_RESOURCES').val());
     $('#masks :checked').each(function () {
-        allMasks += $(this).val() + ";";
+        if allMasks.length != 0;
+        old_allMasks += $(this).val() + ";";
+        $.extend(true, allMasks, $(this).val());
     });
-    $('#MASKED_RESOURCES').val($('#MASKED_RESOURCES').val() + allMasks);
-    $('#maskTest').html($('#MASKED_RESOURCES').val() + allMasks);
+    $('#OLD_MASKED_RESOURCES').val($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
+    $('#MASKED_RESOURCES').val(JSON.stringify(allMasks));
+    //$('#maskTest').html($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
+    $('#maskTest').html(JSON.stringify(allMasks));
 }
 
 function makecheckboxes(availableResources) {
@@ -153,13 +158,13 @@ function hidecheckboxes() {
         $('#dropdowndiv').show();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-        $('#newMASKED_RESOURCEScheckbox :checkbox').show();
+        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').show();
     }
     else {
         $('#dropdowndiv').hide();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-        $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
+        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').hide();
     }
 }
 
@@ -197,7 +202,7 @@ function hcalOnLoad() {
     onClickCommandParameterCheckBox();
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
-    removeduplicatecheckbox('MASKED_RESOURCES');
+    removeduplicatecheckbox('OLD_MASKED_RESOURCES');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
@@ -205,8 +210,8 @@ function hcalOnLoad() {
     makecheckbox('newCFGSNIPPET_KEY_SELECTEDcheckbox', 'CFGSNIPPET_KEY_SELECTED');
     copyContents(RUN_CONFIG_SELECTED, newRUN_CONFIG_SELECTED);
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
-    copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
-    makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
+    copyContents(OLD_MASKED_RESOURCES, newOLD_MASKED_RESOURCES);
+    makecheckbox('newOLD_MASKED_RESOURCEScheckbox', 'OLD_MASKED_RESOURCES');
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
     makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
     copyContents(ACTION_MSG, newACTION_MSG);
@@ -219,7 +224,7 @@ function hcalOnLoad() {
     hidelocalparams();
     hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
     hideduplicatefield('RUN_CONFIG_SELECTED');
-    hideduplicatefield('MASKED_RESOURCES');
+    hideduplicatefield('OLD_MASKED_RESOURCES');
     hideduplicatefield('NUMBER_OF_EVENTS');
     hideduplicatefield('ACTION_MSG');
     hideduplicatefield('RUN_NUMBER');

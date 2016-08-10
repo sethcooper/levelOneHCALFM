@@ -125,9 +125,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.FMrole="EvmTrig";
       }
       List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
-      if (parameterSet.get("MASKED_RESOURCES") != null && !((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString().isEmpty()) {
-        String MaskedResources = ((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASKED_RESOURCES",new StringT(MaskedResources)));
+      if (parameterSet.get("OLD_MASKED_RESOURCES") != null && !((StringT)parameterSet.get("OLD_MASKED_RESOURCES").getValue()).getString().isEmpty()) {
+        String MaskedResources = ((StringT)parameterSet.get("OLD_MASKED_RESOURCES").getValue()).getString();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("OLD_MASKED_RESOURCES",new StringT(MaskedResources)));
         String[] MaskedResourceArray = MaskedResources.split(";");
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
         for (String MaskedApplication: MaskedResourceArray) {

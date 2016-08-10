@@ -82,8 +82,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"            ,  new StringT("none found") ) );  // Local run types available
 		this.put( new FunctionManagerParameter<StringT>  ("RUN_CONFIG_SELECTED"              ,  new StringT("not set")    ) );  // User selected local run type
 		this.put( new FunctionManagerParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED"          ,  new StringT("not set")    ) );  // Key name for the local run type selected by the user
-		this.put( new FunctionManagerParameter<StringT>  ("AVAILABLE_RESOURCES"              ,  new StringT("none found") ) );  // Full list of qualified resources
-		this.put( new FunctionManagerParameter<StringT>  ("MASKED_RESOURCES"                 ,  new StringT("")           ) );  // List of masked resources
+		this.put( new FunctionManagerParameter<StringT>  ("OLD_AVAILABLE_RESOURCES"              ,  new StringT("none found") ) );  // Full list of qualified resources
+		this.put( new FunctionManagerParameter<StringT>  ("OLD_MASKED_RESOURCES"                 ,  new StringT("")           ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<StringT>  ("RU_INSTANCE"                      ,  new StringT("")           ) );  // EventBuilder classname_instanceNumber of the active one for the run
 		this.put( new FunctionManagerParameter<StringT>  ("LPM_SUPERVISOR"                   ,  new StringT("")           ) );  // Supervisor configuring the LPM
 		this.put( new FunctionManagerParameter<StringT>  ("EVM_TRIG_FM"                      ,  new StringT("")           ) );  // Function manager doing eventbuilding and triggeradapting duties
@@ -91,6 +91,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
 
+		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_RESOURCES"      ,  new VectorT<StringT>()    ) );  // Full list of qualified resources
+		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 	}
 
