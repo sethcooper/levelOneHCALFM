@@ -665,21 +665,24 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         CommonMasterSnippetFile = xmlHandler.getHCALMasterSnippetTagAttribute(selectedRun,CfgCVSBasePath,TagName,attribute);
       }
       catch(UserActionException e){
-        logger.error("[HCAL "+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
+        logger.error("[HCAL LVL1"+functionManager.FMname+"]: Found more than one CommonMasterSnippet tag in the mastersnippet! This is not allowed!");
         functionManager.goToError(e.getMessage());
       }
 
+      //Check if the NUMBER_OF_EVENTS parameter is already set from GUI, if so, ignore settings from mastersnippet
+      boolean NeventIsSetFromGUI = !xmlHandler.hasDefaultValue("NUMBER_OF_EVENTS",1000);
+
       if(!CommonMasterSnippetFile.equals("")){    
           //parse and set HCAL parameters from CommonMasterSnippet
-          logger.info("[Martin log "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
-          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath);
+          logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse CommonMasterSnippet : "+ CommonMasterSnippetFile);
+          xmlHandler.parseMasterSnippet(CommonMasterSnippetFile,CfgCVSBasePath,NeventIsSetFromGUI);
       }
       //Parse and set HCAL parameters from MasterSnippet
-      logger.info("[Martin log "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
-      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath);
+      logger.info("[HCAL LVL1 "+ functionManager.FMname +"] Going to parse MasterSnippet : "+ selectedRun);
+      xmlHandler.parseMasterSnippet(selectedRun,CfgCVSBasePath,NeventIsSetFromGUI);
 
       //Pring results from mastersnippet:
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippets: ");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]  Printing results from parsing Mastersnippet(s): ");
       FullCfgScript = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The CfgScript from mastersnippet is like this: \n" + FullCfgScript);
       if (TpgKey!=null && TpgKey!="NULL") {
@@ -709,8 +712,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"  ).getValue()).getString();
       FedEnableMask            = ((StringT)functionManager.getHCALparameterSet().get("FED_ENABLE_MASK" ).getValue()).getString();
       // Get the value of runinfopublish from the results of parseMasterSnippet
-      RunInfoPublish           = ((BooleanT)functionManager.getParameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
-      OfficialRunNumbers       = ((BooleanT)functionManager.getParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+      RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
+      OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+      TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
 
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
@@ -723,6 +727,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FED_ENABLE_MASK used by the level-1 is: "    +FedEnableMask                       );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL
