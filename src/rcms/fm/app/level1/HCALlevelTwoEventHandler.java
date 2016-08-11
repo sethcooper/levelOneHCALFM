@@ -704,16 +704,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // get the FedEnableMask from LV1
-      if (functionManager.getParameterSet().get("FED_ENABLE_MASK") != null && ((StringT)functionManager.getParameterSet().get("FED_ENABLE_MASK").getValue()).getString() == "") {
-        //getFedEnableMask();
-        FedEnableMask = ((StringT)functionManager.getParameterSet().get("FED_ENABLE_MASK").getValue()).getString();
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK to be sent to the hcalSupervisor is: " + FedEnableMask);
-      }
-      else {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK was not retrieved from the userXML. This is OK if the level0 supplies the FedEnableMask.");
-      }
-
       // configure PeerTransportATCPs
       if (!functionManager.containerPeerTransportATCP.isEmpty()) {
         String peerTransportATCPstateName = "";
