@@ -156,13 +156,11 @@ function hidecheckboxes() {
         $('#dropdowndiv').show();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').show();
     }
     else {
         $('#dropdowndiv').hide();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-        $('#newOLD_MASKED_RESOURCEScheckbox :checkbox').hide();
     }
 }
 
@@ -201,6 +199,7 @@ function hcalOnLoad() {
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
+    removeduplicatecheckbox('MASK_SUMMARY');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
@@ -210,6 +209,7 @@ function hcalOnLoad() {
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
+    copyContents(MASK_SUMMARY, newMASK_SUMMARY);
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
     makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
     copyContents(ACTION_MSG, newACTION_MSG);
@@ -223,6 +223,7 @@ function hcalOnLoad() {
     hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
     hideduplicatefield('RUN_CONFIG_SELECTED');
     hideduplicatefield('MASKED_RESOURCES');
+    hideduplicatefield('MASK_SUMMARY');
     hideduplicatefield('NUMBER_OF_EVENTS');
     hideduplicatefield('ACTION_MSG');
     hideduplicatefield('RUN_NUMBER');
