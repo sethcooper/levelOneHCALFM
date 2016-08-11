@@ -513,13 +513,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // get the parameters of the command
       ParameterSet<CommandParameter> parameterSet = getUserFunctionManager().getLastInput().getParameterSet();
 
-      // check parameter set, if it is not set see if we are in local mode
       if (parameterSet.size()==0)  {
-        RunType = "local";
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
+        // LV2 should receive parameters from LV1 for both local and global run.
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Did not receive any parameters during ConfigureAction! Check if LV1 sends any.");
       }
       else {
-        // get the run type from the configure command
+        // Determine the run type from the configure command
         if (parameterSet.get("HCAL_RUN_TYPE") != null) {
           RunType = ((StringT)parameterSet.get("HCAL_RUN_TYPE").getValue()).getString();
           functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_RUN_TYPE",new StringT(RunType)));
@@ -622,118 +621,27 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.warn(warnMessage);
         }
 
-
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_CFGCVSBASEPATH") != null) {
-          CfgCVSBasePath = ((StringT)parameterSet.get("HCAL_CFGCVSBASEPATH").getValue()).getString();
-          functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGCVSBASEPATH",new StringT(CfgCVSBasePath)));
-        }
-        else {
-          logger.info("[Martin log HCAL LVL2 " + functionManager.FMname + "]  Did not receive a LVL1 CfgCVSBasePath! This is OK if this FM do not look for files in CVS ");
-        }
+        CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
+        CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
+        CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
+        CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
+        CheckAndSetParameter( parameterSet , "HCAL_TCDSCONTROL"    );
+        CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
+        CheckAndSetParameter( parameterSet , "HCAL_PICONTROL"      );
 
-        // get the HCAL CfgScript from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_CFGSCRIPT") != null) {
-          LVL1CfgScript = ((StringT)parameterSet.get("HCAL_CFGSCRIPT").getValue()).getString();
-        }
-        else {
-          logger.error("[HCAL LVL2 " + functionManager.FMname + "] Did not receive a LVL1 CfgScript! Check if the LV1 is passing to it.");
-        }
-
-        // get the HCAL TTCciControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_TTCCICONTROL") != null) {
-          LVL1TTCciControlSequence = ((StringT)parameterSet.get("HCAL_TTCCICONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TTCci control sequence. This is OK only if a TTCci is not used in this config.");
-        }
-
-        // get the HCAL LTCControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_LTCCONTROL") != null) {
-          LVL1LTCControlSequence = ((StringT)parameterSet.get("HCAL_LTCCONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LTC control sequence. This is OK only if a LTC is not used in this config.");
-        }
-        // get the HCAL TCDSControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_TCDSCONTROL") != null) {
-          LVL1TCDSControlSequence = ((StringT)parameterSet.get("HCAL_TCDSCONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 TCDS control sequence.This is OK only if a TCDS is not used in this config.");
-        }
-        // get the HCAL LPMControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_LPMCONTROL") != null) {
-          LVL1LPMControlSequence = ((StringT)parameterSet.get("HCAL_LPMCONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 LPM control sequence. This is OK only if a LPM is not used in this config.");
-        }
-        // get the HCAL PIControl from LVL1 if the LVL1 has sent something
-        if (parameterSet.get("HCAL_PICONTROL") != null) {
-          LVL1PIControlSequence = ((StringT)parameterSet.get("HCAL_PICONTROL").getValue()).getString();
-        }
-        else {
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive a LVL1 PI control sequence. This is OK only if a PI is not used in this config.");
-        }
       }
+
+      // Fill the local variable with the value received from LV1
+      CfgCVSBasePath           = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      FullCfgScript            = ((StringT)functionManager.getHCALparameterSet().get("HCAL_CFGSCRIPT"     ).getValue()).getString();
+      FullTTCciControlSequence = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TTCCICONTROL"  ).getValue()).getString();
+      FullLTCControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LTCCONTROL"    ).getValue()).getString();
+      FullTCDSControlSequence  = ((StringT)functionManager.getHCALparameterSet().get("HCAL_TCDSCONTROL"   ).getValue()).getString();
+      FullLPMControlSequence   = ((StringT)functionManager.getHCALparameterSet().get("HCAL_LPMCONTROL"    ).getValue()).getString();
+      FullPIControlSequence    = ((StringT)functionManager.getHCALparameterSet().get("HCAL_PICONTROL"     ).getValue()).getString();
 
       
-      if (CfgCVSBasePath.equals("not set")) {
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! The CfgCVSBasePath is not set in the LVL1! Check if LVL1 is passing it to LV2");
-      }
-      else {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] CfgCVSBasePath was received.\nHere it is:\n" + CfgCVSBasePath);
-      }
-
-      if (LVL1CfgScript.equals("not set")) {
-        logger.error("[HCAL LVL2 " + functionManager.FMname + "] The LVL1CfgScript is not set. Check if the LV1 is passing to it.");
-      }
-      else {
-        FullCfgScript = LVL1CfgScript;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1CfgScript was received.\nHere it is:\n" + FullCfgScript);
-      }
-
-      if (LVL1TTCciControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TTCci control sequence is not set. This is OK only if a TTCci is not used in this config.");
-      }
-      else {
-        FullTTCciControlSequence = LVL1TTCciControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 TTCci control sequence was received.\nHere it is:\n" + FullTTCciControlSequence);
-      }
-
-      if (LVL1LTCControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LTC control sequence is not set. This is OK only if a LTC is not used in this config.");
-      }
-      else {
-        FullLTCControlSequence = LVL1LTCControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 LTC control sequence was received.\nHere it is:\n" + FullLTCControlSequence);
-      }
-
-      if (LVL1TCDSControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 TCDS control sequence is not set. This is OK only if a TCDS is not used in this config.");
-      }
-      else {
-        FullTCDSControlSequence = LVL1TCDSControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 TCDS control sequence was received.\nHere it is:\n" + FullTCDSControlSequence);
-      }
-
-      if (LVL1LPMControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 LPM control sequence is not set. This is OK only if a LPM is not used in this config.");
-      }
-      else {
-        FullLPMControlSequence = LVL1LPMControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 LPM control sequence was received.\nHere it is:\n" + FullLPMControlSequence);
-      }
-
-      if (LVL1PIControlSequence.equals("not set")) {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The LVL1 PI control sequence is not set. This is OK only if a PI is not used in this config.");
-      }
-      else {
-        FullPIControlSequence = LVL1PIControlSequence;
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] LVL1 PI control sequence was received.\nHere it is:\n" + FullPIControlSequence);
-      }
-
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction: We are in " + RunType + " mode ...");
@@ -789,6 +697,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         logger.warn("[HCAL LVL2 " + functionManager.FMname + "] added the received TPG_KEY: " + TpgKey + " as HTR snippet to the full CfgScript ...");
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] FullCfgScript with added received TPG_KEY: " + TpgKey + " as HTR snippet.\nHere it is:\n" + FullCfgScript);
 
+        // Update the parameterset if we have modification from TpgKey
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT", new StringT(FullCfgScript)));
+
       }
       else {
         logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Warning! Did not receive any TPG_KEY.\nPerhaps this is OK for local runs ... ");
@@ -796,16 +707,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         if (!RunType.equals("local")) {
           logger.error("[HCAL LVL2 " + functionManager.FMname + "] Error! For global runs we should have received a TPG_KEY.\nPlease check if HCAL is in the trigger.\n If HCAL is in the trigger and you see this message please call an expert - this is bad!!");
         }
-      }
-
-      // get the FedEnableMask from LV1
-      if (functionManager.getParameterSet().get("FED_ENABLE_MASK") != null && ((StringT)functionManager.getParameterSet().get("FED_ENABLE_MASK").getValue()).getString() == "") {
-        //getFedEnableMask();
-        FedEnableMask = ((StringT)functionManager.getParameterSet().get("FED_ENABLE_MASK").getValue()).getString();
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK to be sent to the hcalSupervisor is: " + FedEnableMask);
-      }
-      else {
-        logger.info("[HCAL LVL2 " + functionManager.FMname + "] The FED_ENABLE_MASK was not retrieved from the userXML. This is OK if the level0 supplies the FedEnableMask.");
       }
 
       // configure PeerTransportATCPs
@@ -1162,17 +1063,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //    logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
         //  }
             
+         // KKH For standalone LV2 runs. Deprecated.
+         // OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+         // if (OfficialRunNumbers) {
+         //   RunNumberData rnd = getOfficialRunNumber();
 
-          OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
-          if (OfficialRunNumbers) {
-            RunNumberData rnd = getOfficialRunNumber();
+         //   functionManager.RunNumber    = rnd.getRunNumber();
+         //   RunSeqNumber = rnd.getSequenceNumber();
 
-            functionManager.RunNumber    = rnd.getRunNumber();
-            RunSeqNumber = rnd.getSequenceNumber();
-
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
-          }
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
+         // }
         }
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to TriggerAdapter, etc.: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
       }

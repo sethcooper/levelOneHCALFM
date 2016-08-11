@@ -2792,4 +2792,17 @@ public class HCALEventHandler extends UserEventHandler {
       AlarmerWatchThreadList.remove(this);
     }
   }
+  
+  // Function to receive parameter
+  void CheckAndSetParameter(ParameterSet pSet , String PamName){
+    if( pSet.get(PamName) != null){
+      String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
+      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
+      logger.info("[HCAL "+ functionManager.FMname +" ] Received "+ PamName +" from last input.\n Here it is: \n"+ PamValue);
+    }
+    else{
+      logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
+    }
+  }
+
 }
