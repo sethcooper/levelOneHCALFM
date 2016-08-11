@@ -193,6 +193,8 @@ public class HCALEventHandler extends UserEventHandler {
   private List<Thread> MonitorThreadList             =  new ArrayList<Thread>();  // For watching level2s
   private List<Thread> HCALSupervisorWatchThreadList =  new ArrayList<Thread>();  // For querying the hcalSupervisor periodically
   private List<Thread> AlarmerWatchThreadList        =  new ArrayList<Thread>();  // For querying alarmer periodically
+  public String maskedAppsForRunInfo = "";
+
 
   public HCALEventHandler() throws rcms.fm.fw.EventHandlerException {
 
@@ -1325,7 +1327,7 @@ public class HCALEventHandler extends UserEventHandler {
   // make entry into the CMS run info database
   protected void publishRunInfoSummary() {
     functionManager = this.functionManager;
-    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "MASKED_RESOURCES", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
+    String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
@@ -1333,6 +1335,8 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "FM_URI"                ,  functionManager.FMuri                       );
     localParams.put(   "FM_ROLE"               ,  functionManager.FMrole                      );
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
+    localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
+    localParams.put(   "MASKED_RESOURCES"      ,  maskedAppsForRunInfo                        );
     localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
 
     // TODO JHak put in run start time and stop times. This was always broken.
@@ -2441,6 +2445,8 @@ public class HCALEventHandler extends UserEventHandler {
               StopTime = new Date();
             }
 
+
+            maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
             publishRunInfoSummary();
 
             String Message = "[HCAL " + functionManager.FMname + "] ... (possibly) updated run info at: " + now.toString();
@@ -2786,4 +2792,17 @@ public class HCALEventHandler extends UserEventHandler {
       AlarmerWatchThreadList.remove(this);
     }
   }
+  
+  // Function to receive parameter
+  void CheckAndSetParameter(ParameterSet pSet , String PamName){
+    if( pSet.get(PamName) != null){
+      String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
+      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
+      logger.info("[HCAL "+ functionManager.FMname +" ] Received "+ PamName +" from last input.\n Here it is: \n"+ PamValue);
+    }
+    else{
+      logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
+    }
+  }
+
 }

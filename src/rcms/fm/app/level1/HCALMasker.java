@@ -223,7 +223,7 @@ public class HCALMasker {
         List<Resource> fullconfigList = fullConfig.getChildrenResources();
         if (MaskedFMs.size() > 0) {
           logger.info("[HCAL " + functionManager.FMname + "]: Got MaskedFMs " + MaskedFMs.toString());
-          StringT[] MaskedResourceArray = MaskedFMs.toArray(new StringT[0]);
+          StringT[] MaskedResourceArray = MaskedFMs.toArray(new StringT[MaskedFMs.size()]);
           for (StringT MaskedFM : MaskedResourceArray) {
             logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask FM " + MaskedFM.getString());
             logger.debug("[HCAL " + functionManager.FMname + "]: " + functionManager.FMname + ": Checking this QR:  " +qr.getName());
