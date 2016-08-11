@@ -61,7 +61,13 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     function getfullpath() {
       var fullpath = document.getElementsByClassName("control_label2")[0];
       var eloginfo = document.getElementById("elogInfo");
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
+      var maskSummary = $("#MASK_SUMMARY").text();
+      maskSummary = maskSummary.replace(/\"/g, "");
+      maskSummary = maskSummary.replace("\[","");
+      maskSummary = maskSummary.replace("\]","");
+      maskSummary = maskSummary.replace(/,/g, ",&nbsp;");
+      if (maskSummary === "") {maskSummary = "none";}
+      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events, masks: " + maskSummary;
     }
 
     function activate_relevant_table(tbid) {
@@ -75,7 +81,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 </head>
 
-<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
@@ -243,6 +249,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
+                                <td id="newMASK_SUMMARYcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle();" />Show full masks
+                                </td>
+                                <td id ="newMASK_SUMMARY" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="maskedResourcesField" style="display: none;">
                                 <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">

@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.regex.Pattern;
 import java.lang.Double;
 
 import java.io.StringReader; 
@@ -46,6 +47,7 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
+import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -202,8 +204,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
-      String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue()).getString();
-      if (MaskedResources.length() > 0) {
+      //String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get("OLD_MASKED_RESOURCES").getValue()).getString();
+      VectorT<StringT> MaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+
+      if (MaskedResources.size() > 0) {
         //logger.info("[JohnLog2] " + functionManager.FMname + ": about to set the xml for the xdaq executives.");
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: about to set the xml for the xdaq executives.");
         for( QualifiedResource qr : xdaqExecList) {
@@ -270,7 +274,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       pSet.put(new CommandParameter<StringT>("RUN_CONFIG_SELECTED", new StringT(RunConfigSelected)));
       pSet.put(new CommandParameter<StringT>("CFGSNIPPET_KEY_SELECTED", new StringT(CfgSnippetKeySelected)));
       String xmlString = "<userXML>" + ((FunctionManagerResource)functionManager.getQualifiedGroup().getGroup().getThisResource()).getUserXml() + "</userXML>";
-      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources);
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Started out with masked resources: " + MaskedResources.toString());
       try {
         DocumentBuilder docBuilder;
         logger.info("[HCAL LVL1 " + functionManager.FMname + "]: The xmlString was: " + xmlString );
@@ -288,19 +292,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] In RunConfig element " + Integer.toString(i) + " with name " + nodes.item(i).getAttributes().getNamedItem("name").getNodeValue() + " found maskedapp nodevalue " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           logger.info("[HCAL LVL1 " + functionManager.FMname + "]:RunConfigSelected was " + RunConfigSelected);
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
-            MaskedResources += nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().replace("|",";");
+            String[] appsToMask = nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().split(Pattern.quote("|"));
+            for (String appToMask : appsToMask) {
+              MaskedResources.add(new StringT(appToMask)) ;
+            }
             logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
         } 
-        MaskedResources+=";";
-        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources);
+        logger.info("[HCAL LVL1 " + functionManager.FMname + "]: Ended up with the list of masked resources: " + MaskedResources.toString());
       }
       catch (ParserConfigurationException | SAXException | IOException e) {
         logger.error("[HCAL LVL1 " + functionManager.FMname + "]: Got an error when trying to manipulate the userXML: " + e.getMessage());
       }
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: About to set the initial list of masked resources: " + MaskedResources );
-      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASKED_RESOURCES", new StringT(MaskedResources)));
-      pSet.put(new CommandParameter<StringT>("MASKED_RESOURCES", new StringT(MaskedResources)));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
+      pSet.put(new CommandParameter<VectorT<StringT>>("MASKED_RESOURCES", MaskedResources));
 
       String ruInstance =  ((StringT)functionManager.getHCALparameterSet().get("RU_INSTANCE").getValue()).getString();
       logger.info("[HCAL LVL1 " + functionManager.FMname + "]: This level1 has the RU_INSTANCE " + ruInstance);

@@ -49,6 +49,7 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.DateT;
+import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.resourceservice.db.Group;
@@ -125,17 +126,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         functionManager.FMrole="EvmTrig";
       }
       List<QualifiedResource> xdaqApplicationList = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqApplication());
-      if (parameterSet.get("MASKED_RESOURCES") != null && !((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString().isEmpty()) {
-        String MaskedResources = ((StringT)parameterSet.get("MASKED_RESOURCES").getValue()).getString();
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("MASKED_RESOURCES",new StringT(MaskedResources)));
-        String[] MaskedResourceArray = MaskedResources.split(";");
+      if (parameterSet.get("MASKED_RESOURCES") != null && ((VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue()).size()!=0) {
+        VectorT<StringT> MaskedResources = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES",MaskedResources));
+        StringT[] MaskedResourceArray = MaskedResources.toArray(new StringT[MaskedResources.size()]);
         List<QualifiedResource> level2list = qualifiedGroup.seekQualifiedResourcesOfType(new FunctionManager());
-        for (String MaskedApplication: MaskedResourceArray) {
-          String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
+        for (StringT MaskedApplication : MaskedResourceArray) {
+          //String MaskedAppWcolonsNoCommas = MaskedApplication.replace("," , ":");
           //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "]: " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
+          logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
           for (QualifiedResource qr : xdaqApplicationList) {
-            if (qr.getName().equals(MaskedApplication) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
+            //if (qr.getName().equals(MaskedApplication.getString()) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
+            logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
+            if (qr.getName().equals(MaskedApplication.getString())) {
               //logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list: " + qr.getName());
               //logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
@@ -143,6 +146,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               qr.setActive(false);
             }
           }
+          logger.info("[JohnLogVector] " + functionManager.FMname + ": Done masking application " + MaskedApplication.getString());
         }
         //logger.info("[JohnLog] " + functionManager.FMname + ": This FM has role: " + functionManager.FMrole);
         logger.info("[HCAL LVL2 " + functionManager.FMname + "]: This FM has role: " + functionManager.FMrole);
@@ -182,6 +186,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
           XdaqExecutiveConfiguration configRetrieved =  exec.getXdaqExecutiveConfiguration();
           System.out.println("[HCAL LVL2 System] " +qr.getName() + " has executive xml: " +  configRetrieved.getXml());
+          logger.info("[JohnLogVector] " + functionManager.FMname + ": Done with qualified resource: " + qr.getName());
         }
       }
       else {

@@ -7,6 +7,7 @@ import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.StringT;
+import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserStateMachineDefinition;
 import rcms.statemachine.definition.State;
 import rcms.statemachine.definition.StateMachineDefinitionException;
@@ -170,14 +171,16 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  configureAVAILABLE_RUN_CONFIGS    =  new CommandParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"   ,  new StringT("")     );
     CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
     CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
-    CommandParameter<StringT>  configureAVAILABLE_RESOURCES      =  new CommandParameter<StringT>  ("AVAILABLE_RESOURCES"     ,  new StringT("")     );
-    CommandParameter<StringT>  configureMASKED_RESOURCES         =  new CommandParameter<StringT>  ("MASKED_RESOURCES"        ,  new StringT("")     );
+    CommandParameter<StringT>  configureOLD_AVAILABLE_RESOURCES      =  new CommandParameter<StringT>  ("OLD_AVAILABLE_RESOURCES"     ,  new StringT("")     );
+    CommandParameter<StringT>  configureOLD_MASKED_RESOURCES         =  new CommandParameter<StringT>  ("OLD_MASKED_RESOURCES"        ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
     CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
     CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
     CommandParameter<BooleanT> configureCLOCK_CHANGED            =  new CommandParameter<BooleanT> ("CLOCK_CHANGED"           ,  new BooleanT(false) );
     CommandParameter<BooleanT> configureUSE_PRIMARY_TCDS         =  new CommandParameter<BooleanT> ("USE_PRIMARY_TCDS"        ,  new BooleanT(true)  );
     CommandParameter<BooleanT> configureUSE_RESET_FOR_RECOVER    =  new CommandParameter<BooleanT> ("USE_RESET_FOR_RECOVER"   ,  new BooleanT(true)  );
+    CommandParameter<VectorT<StringT>>  configureMASKED_RESOURCES         =  new CommandParameter<VectorT<StringT>>  ("MASKED_RESOURCES"        ,  new VectorT<StringT>()     );
+    CommandParameter<VectorT<StringT>>  configureAVAILABLE_RESOURCES      =  new CommandParameter<VectorT<StringT>>  ("AVAILABLE_RESOURCES"     ,  new VectorT<StringT>()     );
 
     // define parameter set
     ParameterSet<CommandParameter> configureParameters = new ParameterSet<CommandParameter>();
@@ -203,6 +206,7 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureSID);
       configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
       configureParameters.add(configureAVAILABLE_RESOURCES);
+      configureParameters.add(configureOLD_MASKED_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);
       configureParameters.add(configureRU_INSTANCE);
       configureParameters.add(configureLPM_SUPERVISOR);
