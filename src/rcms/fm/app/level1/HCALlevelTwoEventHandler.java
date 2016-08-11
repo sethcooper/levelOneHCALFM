@@ -1058,17 +1058,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         //    logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
         //  }
             
+         // KKH For standalone LV2 runs. Deprecated.
+         // OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+         // if (OfficialRunNumbers) {
+         //   RunNumberData rnd = getOfficialRunNumber();
 
-          OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
-          if (OfficialRunNumbers) {
-            RunNumberData rnd = getOfficialRunNumber();
+         //   functionManager.RunNumber    = rnd.getRunNumber();
+         //   RunSeqNumber = rnd.getSequenceNumber();
 
-            functionManager.RunNumber    = rnd.getRunNumber();
-            RunSeqNumber = rnd.getSequenceNumber();
-
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
-          }
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
+         // }
         }
         logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to TriggerAdapter, etc.: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
       }
