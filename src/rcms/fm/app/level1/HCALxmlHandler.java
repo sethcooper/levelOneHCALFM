@@ -344,42 +344,6 @@ public class HCALxmlHandler {
     }
   }
 
-  // From MasterSnippet, get the CtrlSequenceTagName, loop over all the "include" sub-tags, read all the content in "file" with the "pro" version.
-  public String getHCALControlSequence(String selectedRun, String CfgCVSBasePath, String CtrlSequenceTagName) throws UserActionException{
-    String tmpCtrlSequence ="";
-    try{
-        // Get ControlSequences from mastersnippet
-        docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document masterSnippet = docBuilder.parse(new File(CfgCVSBasePath + selectedRun + "/pro"));
-
-        masterSnippet.getDocumentElement().normalize();
-
-        //NodeList TTCciControl =  masterSnippet.getDocumentElement().getElementsByTagName("TTCciControl");
-        NodeList CtrlSequence =  masterSnippet.getDocumentElement().getElementsByTagName(CtrlSequenceTagName);
-        if (CtrlSequence.getLength()>1){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Found more than one ctrl sequence of "+ CtrlSequenceTagName+ " in mastersnippet. Only the first one will be used ");
-        }else if (CtrlSequence.getLength()==0){
-            logger.warn("[Martin log HCAL " + functionManager.FMname + "]: Cannot find "+ CtrlSequenceTagName+ " in mastersnippet. Empty string will be returned. ");
-            return tmpCtrlSequence;
-        }else if (CtrlSequence.getLength()==1){
-           logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ CtrlSequenceTagName+ " in mastersnippet. Going to parse it. ");
-
-           Element el = (Element) CtrlSequence.item(0);
-           NodeList childlist = el.getElementsByTagName("include"); 
-           for(int iFile=0; iFile< childlist.getLength() ; iFile++){
-               Element iElement = (Element) childlist.item(iFile);
-               String fname = CfgCVSBasePath + iElement.getAttribute("file").substring(1)+"/"+ iElement.getAttribute("version");
-               logger.info("[Martin log HCAL " + functionManager.FMname + "]: Going to read the file of this node from " + fname) ;
-               tmpCtrlSequence += readFile(fname,Charset.defaultCharset());
-           }
-        }
-    }
-    catch ( DOMException | ParserConfigurationException | SAXException | IOException e) {
-        logger.error("[HCAL " + functionManager.FMname + "]: Got a error when parsing the "+ CtrlSequenceTagName +" xml: " + e.getMessage());
-    }
-    String FullCtrlSequence = tmpCtrlSequence;
-    return FullCtrlSequence;
-  }
 
   // Return the Tag content of TagName in MasterSnippet
   public String getHCALMasterSnippetTag(String selectedRun, String CfgCVSBasePath, String TagName) throws UserActionException{
@@ -420,7 +384,7 @@ public class HCALxmlHandler {
   }
 
   // Fill parameters from MasterSnippet
-  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath) throws UserActionException{
+  public void parseMasterSnippet(String selectedRun, String CfgCVSBasePath, boolean NeventIsSetFromGUI ) throws UserActionException{
     try{
         // Get ControlSequences from mastersnippet
         docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -434,11 +398,12 @@ public class HCALxmlHandler {
           if( listOfTags.item(i).getNodeType()== Node.ELEMENT_NODE){
             Element iElement = (Element) listOfTags.item(i);
             String  iTagName = iElement.getNodeName();
-            logger.debug("[Martin log HCAL "+ functionManager.FMname+"The tagName of this node is "+ iTagName+" And it has ValidMasterSnippetTags = " + Arrays.asList(ValidMasterSnippetTags).contains( iTagName ));
+            Boolean isValidTag = Arrays.asList(ValidMasterSnippetTags).contains( iTagName );
+            logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName = "+ iTagName );
 
-            if( Arrays.asList(ValidMasterSnippetTags).contains( iTagName )){
+            if(isValidTag){
               NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath);
+              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath, NeventIsSetFromGUI);
             }
           }
         }
@@ -460,7 +425,7 @@ public class HCALxmlHandler {
   }
 
 
-  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath){
+  public void SetHCALParameterFromTagName(String TagName, NodeList NodeListOfTagName ,String CfgCVSBasePath, boolean NeventIsSetFromGUI){
     try{
       if(TagName.equals("TCDSControl")|| TagName.equals("LPMControl")|| TagName.equals("PIControl")|| TagName.equals("TTCciControl") || TagName.equals("LTCControl") ){
           String HCALParameter = getHCALParameterFromTagName(TagName);
@@ -476,11 +441,15 @@ public class HCALxmlHandler {
       if(TagName.equals("FMSettings")){
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String StringNumberOfEvents       = getTagAttribute(NodeListOfTagName, TagName,"NumberOfEvents");
-          if( !StringNumberOfEvents.equals("")){
-            Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+          if(NeventIsSetFromGUI){
+            logger.info("[HCAL LVL1 "+functionManager.FMname+" Number of Events already set to "+ functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()+" from GUI. Not over-writting");
           }
-
+          else{
+            if( !StringNumberOfEvents.equals("")){
+               Integer NumberOfEvents           = Integer.valueOf(StringNumberOfEvents);
+               functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("NUMBER_OF_EVENTS",new IntegerT(NumberOfEvents)));
+            }
+          }
           //Set the parameters if the attribute exists in the element, otherwise will use default in HCALParameter
           String  StringRunInfoPublish      = getTagAttribute(NodeListOfTagName, TagName,"RunInfoPublish");
           if( !StringRunInfoPublish.equals("")){
@@ -494,7 +463,6 @@ public class HCALxmlHandler {
             Boolean OfficialRunNumbers      = Boolean.valueOf(StringOfficialRunNumbers);
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("OFFICIAL_RUN_NUMBERS",new BooleanT(OfficialRunNumbers)));
           }
-
       }
       if(TagName.equals("CfgScript")){
           String tmpCfgScript =""; 
@@ -531,6 +499,15 @@ public class HCALxmlHandler {
           return false;
         }
   }
+  public boolean hasDefaultValue(String pam, Integer def_value){
+        Integer present_value = ((IntegerT)functionManager.getHCALparameterSet().get(pam).getValue()).getInteger();
+        //logger.info("[Martin log HCAL "+functionManager.FMname+"] the present value of "+pam+" is "+present_value);
+        if (present_value.equals(def_value)){
+          return true;
+        }else{
+          return false;
+        }
+  }
 
   public boolean hasUniqueTag(NodeList inputlist, String TagName) throws UserActionException{
     boolean isUnique=false;
@@ -545,7 +522,7 @@ public class HCALxmlHandler {
       }
       else if(inputlist.getLength()==1){
           //Return True if only 1 TagName is found.
-          logger.info("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
+          logger.debug("[Martin log HCAL " + functionManager.FMname + "]: Found 1 "+ TagName+ " in mastersnippet. Going to parse it. ");
           isUnique=true;
       }
     return isUnique;
@@ -576,12 +553,14 @@ public class HCALxmlHandler {
           tmpAttribute = TagElement.getAttributes().getNamedItem(attribute).getNodeValue();
       }
       else{
-          logger.warn("[Martin log "+functionManager.FMname+"] Does not found the attribute='"+attribute+" in tag='"+TagName+"'. Empty string will be returned");
+          logger.warn("[Martin log "+functionManager.FMname+"] Did not find the attribute='"+attribute+" in tag='"+TagName+"'.");
           return tmpAttribute;
       }
       return tmpAttribute;
     }
   } 
+
+  //  get the TagName, loop over all the "include" sub-tags, read all the content in "file" with the "pro" version.
   public String getIncludeFiles(NodeList inputlist,String CfgCVSBasePath, String TagName) throws UserActionException{
     String tmpCtrlSequence ="";
     //Return empty string if we do not have a unique Tag in mastersnippet. 
