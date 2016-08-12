@@ -44,7 +44,7 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
-    $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
     setInterval(function () {
@@ -59,7 +59,7 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
 
@@ -195,7 +195,6 @@ function moveversionnumber() {
 
 function hcalOnLoad() {
     activate_relevant_table('AllParamTables');
-    onClickCommandParameterCheckBox();
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
@@ -234,4 +233,5 @@ function hcalOnLoad() {
     getfullpath();
     showsupervisorerror();
     moveversionnumber();
+    onClickCommandParameterCheckBox();
 }
