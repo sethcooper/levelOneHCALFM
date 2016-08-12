@@ -167,10 +167,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             //String newExecXML = intermediateXML;
             //TODO
             //if (functionManager.FMrole.equals("EvmTrig") && !addedContext) {
+            logger.warn("[SethLog HCAL LVL2 " + functionManager.FMname + "]: just after stripExecXML; do addStateListenerContext");
             String newExecXML = xmlHandler.addStateListenerContext(intermediateXML, functionManager.rcmsStateListenerURL);
             //  addedContext = true;
               System.out.println("Set the statelistener context.");
             //}
+            logger.warn("[SethLog HCAL LVL2 " + functionManager.FMname + "]: just after addStateListenerContext; do setUTCPConnectOnRequest");
+            newExecXML = xmlHandler.setUTCPConnectOnRequest(newExecXML);
+            System.out.println("Set the utcp connectOnRequest attribute.");
             config.setXml(newExecXML);
             //logger.info("[JohnLog3] " + functionManager.FMname + ": Just set the xml for executive " + qr.getName());
             logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Just set the xml for executive " + qr.getName());
