@@ -72,7 +72,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 				String errMsg =  actionMsg;
         if (!fm.containerhcalSupervisor.isEmpty()) {
 					((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-					errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+					errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
 				}
 
         else if (!fm.containerFMChildren.isEmpty()) {
@@ -160,7 +160,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					String errMsg =  actionMsg;
 					if (!fm.containerhcalSupervisor.isEmpty()) {
 						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
 					}
 					handleError(errMsg,actionMsg);
 					return;
@@ -192,7 +192,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					String errMsg =  actionMsg;
 					if (!fm.containerhcalSupervisor.isEmpty()) {
 						((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
-						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
+						errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get("SUPERVISOR_ERROR").getValue()).getString();
 					}
 					handleError(errMsg,actionMsg);
 					return;
@@ -311,7 +311,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
             //logger.warn("started execution of taskSequence");
             setTimeoutThread(true);
             try {
-                fm.getParameterSet().get(HCALParameters.ACTION_MSG)
+                fm.getParameterSet().get("ACTION_MSG")
                     .setValue(new StringT(""+taskSequence.getDescription()));
  
             } catch (Exception e) {

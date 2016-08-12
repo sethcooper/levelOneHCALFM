@@ -1,5 +1,7 @@
 package rcms.fm.app.level1;
 
+import java.net.URI;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -7,12 +9,16 @@ import java.util.Arrays;
 
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserFunctionManager;
+import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
+import rcms.resourceservice.db.resource.Resource;
+import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
+import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.statemachine.definition.Input;
 import rcms.statemachine.definition.State;
 import rcms.statemachine.definition.StateMachineDefinitionException;
@@ -136,7 +142,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   // the actual calculated State.
   public State calcState = null;
 
-	protected HCALEventHandler theEventHandler = null;
+  protected HCALEventHandler theEventHandler = null;
   // switch to find out if FM is available
   private boolean destroyed = false;
 
@@ -219,11 +225,13 @@ public class HCALFunctionManager extends UserFunctionManager {
   // switch to find out if this FM is configuring for the very first time
   protected Boolean VeryFirstConfigure = true;
 
-	public HCALStateNotificationHandler theStateNotificationHandler = null;
+  public HCALStateNotificationHandler theStateNotificationHandler = null;
 
   public String rcmsStateListenerURL = "";
 
-	public String alarmerURL = "";
+  public String alarmerURL = "";
+
+  public String alarmerPartition = "";
 
   public HCALFunctionManager() {
     // any State Machine Implementation must provide the framework with some information about itself.
@@ -258,9 +266,9 @@ public class HCALFunctionManager extends UserFunctionManager {
     // add SetParameterHandler
     addEventHandler(new HCALSetParameterHandler());
 
-		// state notification handler
+    // state notification handler
     theStateNotificationHandler = new HCALStateNotificationHandler();
-		addEventHandler(theStateNotificationHandler);
+    addEventHandler(theStateNotificationHandler);
 
     // get log session connector
     logSessionConnector = getLogSessionConnector();
@@ -292,19 +300,19 @@ public class HCALFunctionManager extends UserFunctionManager {
 
     // set statelistener URL
     try {
-			URL fmURL = new URL(FMurl);
-			String rcmsStateListenerHost = fmURL.getHost();
-			int rcmsStateListenerPort = fmURL.getPort()+1;
-			String rcmsStateListenerProtocol = fmURL.getProtocol();
-			rcmsStateListenerURL = rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms";
-		} catch (MalformedURLException e) {
-			String errMessage = "[HCAL " + FMname + "] Error! MalformedURLException in createAction" + e.getMessage();
-			logger.error(errMessage,e);
-			sendCMSError(errMessage);
-			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-			getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-			if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
-		}
+      URL fmURL = new URL(FMurl);
+      String rcmsStateListenerHost = fmURL.getHost();
+      int rcmsStateListenerPort = fmURL.getPort()+1;
+      String rcmsStateListenerProtocol = fmURL.getProtocol();
+      rcmsStateListenerURL = rcmsStateListenerProtocol+"://"+rcmsStateListenerHost+":"+rcmsStateListenerPort+"/rcms";
+    } catch (MalformedURLException e) {
+      String errMessage = "[HCAL " + FMname + "] Error! MalformedURLException in createAction" + e.getMessage();
+      logger.error(errMessage,e);
+      sendCMSError(errMessage);
+      getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+      getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
+      if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+    }
 
     FMpartition = FMname.substring(5);
 
@@ -351,9 +359,9 @@ public class HCALFunctionManager extends UserFunctionManager {
     // This method is called by the framework when the Function Manager is destroyed.
 
     System.out.println("[HCAL " + FMname + "] destroyAction called");
-    logger.debug("[HCAL " + FMname + "] destroyAction called");
+    logger.info("[HCAL " + FMname + "] destroyAction called");
 
-
+    
     // if RunInfo database is connected try to report the destroying of this FM
     /*if ((HCALRunInfo!=null) && (RunWasStarted)) {
       {
@@ -385,8 +393,8 @@ public class HCALFunctionManager extends UserFunctionManager {
     HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
     }*/
 
-    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs
-    if (RunType.equals("local")) { closeSessionId(); }
+    // try to close any open session ID only if we are in local run mode i.e. not CDAQ and not miniDAQ runs and if it's a LV1FM
+    if (RunType.equals("local") && !containerFMChildren.isEmpty()) { closeSessionId(); }
 
     // unsubscribe from retrieving XMAS info
     if (XMASMonitoringEnabled) { unsubscribeWSE(); }  
@@ -413,16 +421,13 @@ public class HCALFunctionManager extends UserFunctionManager {
         }
       }
     }
+    //Stop watchthreads before destroying
+    theEventHandler.stopMonitorThread = true;
+    theEventHandler.stopHCALSupervisorWatchThread = true;
+    theEventHandler.stopTriggerAdapterWatchThread = true;
+    theEventHandler.stopAlarmerWatchThread = true; 
 
-    // find all XDAQ executives and kill them
-    if (qualifiedGroup!=null) {
-      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
-      Iterator it = listExecutive.iterator();
-      while (it.hasNext()) {
-        XdaqExecutive ex = (XdaqExecutive) it.next();
-        ex.destroy();
-      }  
-    }
+    destroyXDAQ();
 
     destroyed = true;
 
@@ -515,7 +520,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       svCalc = new StateVectorCalculation(resourceGroup);
 
       // all FM's are assumed to have either a supervisor or an LPMController which will give state notifications via xdaq2rc
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.INITIAL);
@@ -523,7 +528,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.INITIALIZING);
@@ -534,9 +539,9 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
 
 
-			//   the level-2's fire SETHALT on themselves at the end of initAction without any state calculations
-			//   but they will calculate this if reset/halt/recoverAction is called
-			//     in that case, the state should be calculated from either the supervisor or the LPM
+      //   the level-2's fire SETHALT on themselves at the end of initAction without any state calculations
+      //   but they will calculate this if reset/halt/recoverAction is called
+      //     in that case, the state should be calculated from either the supervisor or the LPM
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.HALTED);
@@ -577,7 +582,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.RESUMING);
@@ -613,14 +618,14 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.STOPPING);
         sv.registerConditionState(containerFMChildrenNoEvmTrigNoTCDSLPM,HCALStates.RUNNING);
         // need this gone for 904 to work
         // why was it here for P5 anyway?
-				//sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
+        //sv.registerConditionState(containerFMTCDSLPM,HCALStates.CONFIGURED);
         sv.registerConditionState(containerFMEvmTrig,HCALStates.STOPPING);
         svCalc.add(sv);
       }
@@ -634,7 +639,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       //  svCalc.add(sv);
       //}
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.PAUSED);
@@ -656,7 +661,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.PREPARING_TTSTEST_MODE);
@@ -664,7 +669,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.TTSTEST_MODE);
@@ -672,7 +677,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         svCalc.add(sv);
       }
 
-			if (!containerFMChildren.isEmpty())
+      if (!containerFMChildren.isEmpty())
       {
         StateVector sv = new StateVector();
         sv.setResultState(HCALStates.TESTING_TTS);
@@ -711,7 +716,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       }
 
       // put the session ID into parameter set
-      getParameterSet().get(HCALParameters.SID).setValue(new IntegerT(sessionId));
+      getParameterSet().get("SID").setValue(new IntegerT(sessionId));
     }
 
   // close session Id. This routine is called always when functionmanager gets destroyed.
@@ -719,7 +724,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (logSessionConnector != null) {
       int sessionId = 0;
       try {
-        sessionId = ((IntegerT)getParameterSet().get(HCALParameters.SID).getValue()).getInteger();
+        sessionId = ((IntegerT)getParameterSet().get("SID").getValue()).getInteger();
       }
       catch (Exception e) {
         logger.warn("[HCAL " + FMname + "] Could not get sessionId for closing session.\nNot closing session.\nThis is OK if no sessionId was requested from within HCAL land, i.e. global runs.",e);
@@ -776,7 +781,7 @@ public class HCALFunctionManager extends UserFunctionManager {
       error.setMessage(errMessage);
 
       // update error msg parameter for GUI
-      getParameterSet().get(HCALParameters.ERROR_MSG).setValue(new StringT(errMessage));
+      getParameterSet().get("ERROR_MSG").setValue(new StringT(errMessage));
 
       // send error
       try {
@@ -793,74 +798,107 @@ public class HCALFunctionManager extends UserFunctionManager {
     }
 
 
-	/**----------------------------------------------------------------------
-	 * set the current Action
-	 */
-	public void setAction(String action) {
+  /**----------------------------------------------------------------------
+   * set the current Action
+   */
+  public void setAction(String action) {
 
-		getParameterSet().put(new FunctionManagerParameter<StringT>
-				(HCALParameters.ACTION_MSG,new StringT(action)));
-		return;
-	}
+    getParameterSet().put(new FunctionManagerParameter<StringT>
+        ("ACTION_MSG",new StringT(action)));
+    return;
+  }
 
-	/**----------------------------------------------------------------------
-	*/
-	String findApplicationName( String id ) throws Exception {
+  /**----------------------------------------------------------------------
+  */
+  String findApplicationName( String id ) throws Exception {
 
-		List<XdaqApplication> apps = containerXdaqApplication.getApplications();
-		Iterator appIterator = apps.iterator();
-		while( appIterator.hasNext( ) ) {
-			XdaqApplication app = (XdaqApplication)appIterator.next();
-			if ( app.getURI().toString().equals( id ) )
-				return app.getApplication();
-		}
+    List<XdaqApplication> apps = containerXdaqApplication.getApplications();
+    Iterator appIterator = apps.iterator();
+    while( appIterator.hasNext( ) ) {
+      XdaqApplication app = (XdaqApplication)appIterator.next();
+      if ( app.getURI().toString().equals( id ) )
+        return app.getApplication();
+    }
 
-		return "";
-	}
+    return "";
+  }
 
-	/**----------------------------------------------------------------------
-	 * go to the error state, setting messages and so forth, with exception
-	 */
-	public void goToError(String errMessage, Exception e) {
+  /**----------------------------------------------------------------------
+   * go to the error state, setting messages and so forth, with exception
+   */
+  public void goToError(String errMessage, Exception e) {
     errMessage += " Message from the caught exception is: "+e.getMessage();
     goToError(errMessage);
-	}
+  }
 
-	/**----------------------------------------------------------------------
-	 * go to the error state, setting messages and so forth, without exception
-	 */
-	public void goToError(String errMessage) {
-		logger.error(errMessage);
-		sendCMSError(errMessage);
-		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-		getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ..."+errMessage)));
-    Input errInput = new Input(HCALInputs.SETERROR);
-    errInput.setReason(errMessage);
-		if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(errInput); ErrorState = true; }
-	}
+  /**----------------------------------------------------------------------
+   * go to the error state, setting messages and so forth, without exception
+   */
+  public void goToError(String errMessage) {
+    logger.error(errMessage);
+    sendCMSError(errMessage);
+    getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
+    if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+  }
 
-	/**----------------------------------------------------------------------
-	 * halt the LPM controller 
-	 */
-	public void haltLPMControllers() {
-		if (!containerlpmController.isEmpty()) {
-			XdaqApplication lpmApp = null;
-			try {
-				logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
-				Iterator it = containerlpmController.getQualifiedResourceList().iterator();
-				while (it.hasNext()) {
-					lpmApp = (XdaqApplication) it.next();
-					lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
-				}
-			}
-			catch (Exception e) {
-				String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
-				logger.error(errMessage,e);
-				sendCMSError(errMessage);
-				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-				getParameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("oops - technical difficulties ...")));
-				if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
-			}
-		}
-	}
+  /**----------------------------------------------------------------------
+   * halt the LPM controller 
+   */
+  public void haltLPMControllers() {
+    if (!containerlpmController.isEmpty()) {
+      XdaqApplication lpmApp = null;
+      try {
+        logger.debug("[HCAL LVL2 " + FMname + "] HALT LPM...");
+        Iterator it = containerlpmController.getQualifiedResourceList().iterator();
+        while (it.hasNext()) {
+          lpmApp = (XdaqApplication) it.next();
+          lpmApp.execute(HCALInputs.HALT,"test",rcmsStateListenerURL);
+        }
+      }
+      catch (Exception e) {
+        String errMessage = "[HCAL " + FMname + "] " + this.getClass().toString() + " failed HALT of lpm application: " + lpmApp.getName() + " class: " + lpmApp.getClass() + " instance: " + lpmApp.getInstance();
+        logger.error(errMessage,e);
+        sendCMSError(errMessage);
+        getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+        getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+        if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
+      }
+    }
+  }
+
+  /**----------------------------------------------------------------------
+   * get all XDAQ executives and kill them
+   */
+  protected void destroyXDAQ() {
+    // see if there is an exec with a supervisor and kill it first
+    URI supervExecURI = null;
+    if (containerhcalSupervisor != null) {
+      for (QualifiedResource qr : containerhcalSupervisor.getApplications()) {
+        Resource supervResource = containerhcalSupervisor.getApplications().get(0).getResource();
+        XdaqExecutiveResource qrSupervParentExec = ((XdaqApplicationResource)supervResource).getXdaqExecutiveResourceParent();
+        supervExecURI = qrSupervParentExec.getURI();
+        QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
+        XdaqExecutive ex = (XdaqExecutive) qrExec;
+        ex.destroy();
+      }
+    }
+
+    // find all XDAQ executives and kill them
+    if (qualifiedGroup != null) {
+      List listExecutive = qualifiedGroup.seekQualifiedResourcesOfType(new XdaqExecutive());
+      Iterator it = listExecutive.iterator();
+      while (it.hasNext()) {
+        XdaqExecutive ex = (XdaqExecutive) it.next();
+        if (!ex.getURI().equals(supervExecURI)) {
+          ex.destroy();
+        }
+      }
+    }
+
+    // reset the qualified group so that the next time an init is sent all resources will be initialized again
+    QualifiedGroup qg = getQualifiedGroup();
+    if (qg != null) { qg.reset(); }
+  }
+
 }
