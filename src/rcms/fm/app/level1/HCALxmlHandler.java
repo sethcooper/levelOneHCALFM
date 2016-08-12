@@ -292,7 +292,6 @@ public class HCALxmlHandler {
   }  
 
   public String addStateListenerContext(String execXMLstring, String rcmsStateListenerURL) throws UserActionException{
-    logger.warn("[SethLog] " + functionManager.FMname + ": adding the RCMStateListener context to the executive xml.");   
     String newExecXMLstring = "";
     try {
 
@@ -340,7 +339,6 @@ public class HCALxmlHandler {
 
   public String setUTCPConnectOnRequest(String execXMLstring) throws UserActionException{
     try {
-      logger.warn("[SethLog] " + functionManager.FMname + ": add the utcp connectOnRequest=true to the executive xml.");
       String newExecXMLstring = "";
 
       docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
