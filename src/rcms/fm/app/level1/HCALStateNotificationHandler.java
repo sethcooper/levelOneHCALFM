@@ -77,7 +77,7 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
         else if (!fm.containerFMChildren.isEmpty()) {
 					errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received from: " + notification.getIdentifier() + "; reason: " + notification.getReason();
-          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(errMsg)));
+          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(errMsg)));
 				}
 
         handleError(errMsg,actionMsg);
