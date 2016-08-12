@@ -74,23 +74,12 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 					((HCALlevelTwoFunctionManager)fm).getSupervisorErrorMessage();
 					errMsg = "[HCAL Level 2 FM with name " + fm.getName().toString() + " reports error from the hcalSupervisor: " + ((StringT)fm.getHCALparameterSet().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
 				}
+
         else if (!fm.containerFMChildren.isEmpty()) {
-					Iterator it = fm.containerFMChildren.getQualifiedResourceList().iterator();
-					while (it.hasNext()) {
-						FunctionManager fmChild = (FunctionManager) it.next();
-						errMsg = "[HCAL LVL1 " + fm.FMname + "] Error! state of the LVL2 FM with role: " + fmChild.getRole().toString() + "\nPlease check the chainsaw logs";
-						if ( fmChild.isInitialized() && fmChild.refreshState().toString().equals(HCALStates.ERROR.toString())) {
-							try {
-                String superErr = ((StringT)fmChild.getParameter().get(HCALParameters.SUPERVISOR_ERROR).getValue()).getString();
-								errMsg = "[HCAL LVL1 " + fm.FMname + "]: The Level 2 FM with name " + fmChild.getName().toString() + " is in ERROR and has received an xdaq error from the hcalSupervisor: " +superErr ;
-								fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(superErr)));
-                
-							} catch (ParameterServiceException e) {
-								errMsg = "[HCAL LVL1 " + fm.FMname + "] Level 2 FM with name " + fmChild.getName().toString() + " is in error, but the hcalSupervisor was unable to report an error message from xdaq.";
-							}
-						}
-          }
+					errMsg = "[HCAL LVL1 " + fm.FMname + "] Error received from: " + notification.getIdentifier() + "; reason: " + notification.getReason();
+          fm.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.SUPERVISOR_ERROR, new StringT(errMsg)));
 				}
+
         handleError(errMsg,actionMsg);
 				return;
 			}
