@@ -294,7 +294,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           if (nodes.item(i).getAttributes().getNamedItem("name").getNodeValue().equals(CfgSnippetKeySelected)) {
             String[] appsToMask = nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue().split(Pattern.quote("|"));
             for (String appToMask : appsToMask) {
-              MaskedResources.add(new StringT(appToMask)) ;
+              if (!appToMask.isEmpty()) MaskedResources.add(new StringT(appToMask)) ;
             }
             logger.info("[HCAL LVL1 " + functionManager.FMname + "]: From selecting the RunConfig " + RunConfigSelected + ", got additional masked application " + nodes.item(i).getAttributes().getNamedItem("maskedapps").getNodeValue());
           }
