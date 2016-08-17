@@ -32,8 +32,8 @@ function hideduplicatefield(parameter) {
     document.getElementById("globalParameterName" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display = "none";
 }
 
-function showsupervisorerror() {
-    var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
+function showsupervisorerror(errMessage) {
+    //var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
     if (errMessage != "not set" && errMessage != "") {
         document.getElementById("supervisorRow").style.display = "";
         document.getElementById("supervisorError").innerHTML = errMessage;
@@ -59,6 +59,8 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
+        //showsupervisorerror();
+        //getfullpath();
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
@@ -193,6 +195,18 @@ function moveversionnumber() {
 }
 
 
+    function getfullpath(nEvents) {
+      var maskSummary = $("#MASK_SUMMARY").text();
+      maskSummary = maskSummary.replace(/\"/g, "");
+      maskSummary = maskSummary.replace("\[","");
+      maskSummary = maskSummary.replace("\]","");
+      maskSummary = maskSummary.replace(/,/g, ",&nbsp;");
+      if (maskSummary === "") {maskSummary = "none";}
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + nEvents + " events, masks: " + maskSummary);
+    }
+
+
+
 function hcalOnLoad() {
     activate_relevant_table('AllParamTables');
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
@@ -230,8 +244,8 @@ function hcalOnLoad() {
     hideduplicatefield('HCAL_TIME_OF_FM_START');
     removeduplicatecheckbox('USE_RESET_FOR_RECOVER');
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
-    getfullpath();
-    showsupervisorerror();
+    getfullpath("-1");
+    showsupervisorerror("");
     moveversionnumber();
     onClickCommandParameterCheckBox();
 }

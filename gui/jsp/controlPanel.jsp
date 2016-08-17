@@ -58,24 +58,11 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   </script>
 
   <script>
-    function getfullpath() {
-      var fullpath = document.getElementsByClassName("control_label2")[0];
-      var eloginfo = document.getElementById("elogInfo");
-      var maskSummary = $("#MASK_SUMMARY").text();
-      maskSummary = maskSummary.replace(/\"/g, "");
-      maskSummary = maskSummary.replace("\[","");
-      maskSummary = maskSummary.replace("\]","");
-      maskSummary = maskSummary.replace(/,/g, ",&nbsp;");
-      if (maskSummary === "") {maskSummary = "none";}
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events, masks: " + maskSummary;
-    }
-
     function activate_relevant_table(tbid) {
       if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
       else {turn_off_visibility(tbid);}
     }
   </script>
-
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <!-- Custom javascript section end -->
 

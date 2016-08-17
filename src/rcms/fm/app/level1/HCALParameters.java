@@ -24,7 +24,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER"};
+  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER"};
 
 	private HCALParameters() {
 		super();
