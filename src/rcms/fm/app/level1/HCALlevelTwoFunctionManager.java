@@ -66,7 +66,9 @@ public class HCALlevelTwoFunctionManager extends HCALFunctionManager {
 				pam =((XdaqApplication)qr).getXDAQParameter();
 				pam.select(new String[] {"Partition", "overallErrorMessage","StateTransitionMessage"});
 				pam.get();
-				supervisorError = "(" + pam.getValue("Partition") + ") " + pam.getValue("overallErrorMessage") + "; transitionMessage=" + pam.getValue("StateTransitionMessage");
+				supervisorError = "(" + pam.getValue("Partition") + ") " + pam.getValue("overallErrorMessage");
+        if(!pam.getValue("StateTransitionMessage").equalsIgnoreCase("ok"))
+          supervisorError+= "; transitionMessage=" + pam.getValue("StateTransitionMessage");
 				getHCALparameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR", new StringT(supervisorError)));
 			}
 			catch (XDAQTimeoutException e) {

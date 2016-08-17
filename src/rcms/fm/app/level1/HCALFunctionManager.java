@@ -828,11 +828,7 @@ public class HCALFunctionManager extends UserFunctionManager {
    */
   public void goToError(String errMessage, Exception e) {
     errMessage += " Message from the caught exception is: "+e.getMessage();
-    logger.error(errMessage);
-    sendCMSError(errMessage);
-    getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
-    if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+    goToError(errMessage);
   }
 
   /**----------------------------------------------------------------------
@@ -843,7 +839,10 @@ public class HCALFunctionManager extends UserFunctionManager {
     sendCMSError(errMessage);
     getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
     getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
-    if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; }
+    getParameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT(errMessage)));
+    Input errInput = new Input(HCALInputs.SETERROR);
+    errInput.setReason(errMessage);
+    if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(errInput); ErrorState = true; }
   }
 
   /**----------------------------------------------------------------------
