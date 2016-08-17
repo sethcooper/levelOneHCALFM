@@ -379,7 +379,6 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
                                 //CLEANUP and set error
                                 String errmsg = "Application transition timeout error";
                                 fm.goToError(errmsg);
-                                fm.fireEvent(HCALInputs.SETERROR);
                                 taskSequence = null;
                                 isTimeoutActive=false;
                                 return;
