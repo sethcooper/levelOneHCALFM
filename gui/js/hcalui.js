@@ -45,8 +45,8 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
-    var cachedRunNo = $('#RUN_NUMBER');
-    var cachedNevents = $('#NUMBER_OF_EVENTS');
+    var cachedRunNo = $('#RUN_NUMBER').val();
+    var cachedNevents = $('#NUMBER_OF_EVENTS').val();
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
@@ -61,11 +61,11 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        if ($('#RUN_NUMBER') !=  cachedRunNo) { showsupervisorerror(); }
-        if ($('#NUMBER_OF_EVENTS') !=  cachedNevents) { getfullpath(); }
+        if ($('#RUN_NUMBER').val() !=  cachedRunNo) { showsupervisorerror(); }
+        if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
-        cachedRunNo = $('#RUN_NUMBER');
-        cachedNevents = $('#NUMBER_OF_EVENTS');
+        cachedRunNo = $('#RUN_NUMBER').val();
+        cachedNevents = $('#NUMBER_OF_EVENTS').val();
     }, 750);
 
 
