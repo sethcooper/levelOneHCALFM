@@ -79,13 +79,13 @@ $(document).ready(function () {
 });
 
 function setProgress(progress) {
-    var numberOfEvents = $("#NUMBER_OF_EVENTS").val(),
-        containerWidth = $(".container").width();
+    var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
+    var width = $(".container").width();
     var progressPercent = 100 * progress / numberOfEvents;
-    var progressBarWidth = progressPercent * (containerWidth / 100);
-    $(".progressbar").width(progressBarWidth);
+    var progressBarWidth = progressPercent * (width / 100);
+    //$(".progressbar").width(progressBarWidth);
     console.log("progressPercent is: " + progressPercent);
-    //$(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {

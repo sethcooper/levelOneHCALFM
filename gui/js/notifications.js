@@ -15,9 +15,9 @@ function myUpdateParameters(message) {
                     pValue = pValueNode.textContent;
                     //if (pName == "SUPERVISOR_ERROR") { showsupervisorerror(pValue); }
                     //if (pName == "NUMBER_OF_EVENTS") { getfullpath(pValue); }
+                    if (pName == "HCAL_EVENTSTAKEN") { setProgress(pValue); }
                 }
             }
         }
-        setProgress(pValue);
     }
 }
