@@ -68,6 +68,8 @@ $(document).ready(function () {
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
         cachedRunNo = $('#RUN_NUMBER').val();
         cachedNevents = $('#NUMBER_OF_EVENTS').val();
+        cachedSupErr = $('#SUPERVISOR_ERROR').val();
+    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
 
