@@ -32,8 +32,9 @@ function hideduplicatefield(parameter) {
     document.getElementById("globalParameterName" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display = "none";
 }
 
-function showsupervisorerror(errMessage) {
-    //var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
+//function showsupervisorerror(errMessage) {
+function showsupervisorerror() {
+    var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
     if (errMessage != "not set" && errMessage != "") {
         document.getElementById("supervisorRow").style.display = "";
         document.getElementById("supervisorError").innerHTML = errMessage;
@@ -59,8 +60,8 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        //showsupervisorerror();
-        //getfullpath();
+        showsupervisorerror();
+        getfullpath();
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
@@ -195,14 +196,15 @@ function moveversionnumber() {
 }
 
 
-    function getfullpath(nEvents) {
+//    function getfullpath(nEvents) {
+    function getfullpath() {
       var maskSummary = $("#MASK_SUMMARY").text();
       maskSummary = maskSummary.replace(/\"/g, "");
       maskSummary = maskSummary.replace("\[","");
       maskSummary = maskSummary.replace("\]","");
       maskSummary = maskSummary.replace(/,/g, ",&nbsp;");
       if (maskSummary === "") {maskSummary = "none";}
-      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + nEvents + " events, masks: " + maskSummary);
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
     }
 
 

@@ -13,8 +13,8 @@ function myUpdateParameters(message) {
                     // get the parameter name and its value
                     pName = pNameNode.childNodes[0].nodeValue;
                     pValue = pValueNode.textContent;
-                    if (pName == "SUPERVISOR_ERROR") { showsupervisorerror(pValue); }
-                    if (pName == "NUMBER_OF_EVENTS") { getfullpath(pValue); }
+                    //if (pName == "SUPERVISOR_ERROR") { showsupervisorerror(pValue); }
+                    //if (pName == "NUMBER_OF_EVENTS") { getfullpath(pValue); }
                 }
             }
         }
