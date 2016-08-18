@@ -47,6 +47,7 @@ $(document).ready(function () {
     $('#currentState').attr("class", "hcal_control_" + initcolor);
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
+    var cachedSupErr = $('#SUPERVISOR_ERROR').val();
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
@@ -61,7 +62,8 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        if ($('#RUN_NUMBER').val() !=  cachedRunNo) { showsupervisorerror(); }
+        if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+        if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
         if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
         cachedRunNo = $('#RUN_NUMBER').val();
@@ -249,8 +251,8 @@ function hcalOnLoad() {
     hideduplicatefield('HCAL_TIME_OF_FM_START');
     removeduplicatecheckbox('USE_RESET_FOR_RECOVER');
     removeduplicatecheckbox('USE_PRIMARY_TCDS');
-    getfullpath("-1");
-    showsupervisorerror("");
+    getfullpath();
+    showsupervisorerror();
     moveversionnumber();
     onClickCommandParameterCheckBox();
 }
