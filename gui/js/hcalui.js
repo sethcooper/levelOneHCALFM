@@ -45,13 +45,14 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
+    var cachedRunNo = $('#RUN_NUMBER');
+    var cachedNevents = $('#NUMBER_OF_EVENTS');
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
     setInterval(function () {
 
         hidelocalparams();
-        var currentState = $('#currentState').text();
         var currentState = $('#currentState').text();
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
@@ -60,9 +61,11 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
-        showsupervisorerror();
-        getfullpath();
+        if ($('#RUN_NUMBER') !=  cachedRunNo) { showsupervisorerror(); }
+        if ($('#NUMBER_OF_EVENTS') !=  cachedNevents) { getfullpath(); }
         //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        cachedRunNo = $('#RUN_NUMBER');
+        cachedNevents = $('#NUMBER_OF_EVENTS');
     }, 750);
 
 
