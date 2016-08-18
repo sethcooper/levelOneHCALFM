@@ -838,7 +838,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     logger.error(errMessage);
     sendCMSError(errMessage);
     getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ..."+errMessage)));
+    getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
     getParameterSet().put(new FunctionManagerParameter<StringT>("SUPERVISOR_ERROR",new StringT(errMessage)));
     Input errInput = new Input(HCALInputs.SETERROR);
     errInput.setReason(errMessage);
