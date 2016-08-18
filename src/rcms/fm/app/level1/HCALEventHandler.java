@@ -423,34 +423,28 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     VectorT<StringT> availableResources = new VectorT<StringT>();
-    String old_availableResources = "";
 
     QualifiedGroup qg = functionManager.getQualifiedGroup();
     List<QualifiedResource> qrList = qg.seekQualifiedResourcesOfType(new FunctionManager());
     for (QualifiedResource qr : qrList) {
-      old_availableResources += qr.getName() + ";";
       availableResources.add(new StringT(qr.getName()));
     }
 
     qrList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
     for (QualifiedResource qr : qrList) {
-      old_availableResources += qr.getName() + ";";
       availableResources.add(new StringT(qr.getName()));
     }
 
     qrList = qg.seekQualifiedResourcesOfType(new JobControl());
     for (QualifiedResource qr : qrList) {
-      old_availableResources += qr.getName() + ";";
       availableResources.add(new StringT(qr.getName()));
     }
 
     qrList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
     for (QualifiedResource qr : qrList) {
-      old_availableResources += qr.getName() + ";";
       availableResources.add(new StringT(qr.getName()));
     }
 
-    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("OLD_AVAILABLE_RESOURCES",new StringT(old_availableResources)));
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("AVAILABLE_RESOURCES",availableResources));
   }
 

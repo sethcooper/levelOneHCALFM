@@ -134,15 +134,11 @@ function makedropdown(availableRunConfigs) {
 }
 
 function fillMask() {
-    var old_allMasks="";
     var finalMasks=[];
     $('#masks :checked').each(function () {
-        //old_allMasks += $(this).val() + ";";
         finalMasks.push($(this).val());
     });
-    //$('#OLD_MASKED_RESOURCES').val($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
     $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
-    //$('#maskTest').html($('#OLD_MASKED_RESOURCES').val() + old_allMasks);
     $('#maskTest').html(JSON.stringify(finalMasks));
 }
 

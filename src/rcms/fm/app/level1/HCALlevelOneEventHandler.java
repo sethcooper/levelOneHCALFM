@@ -204,7 +204,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       List<QualifiedResource> xdaqExecList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
       // loop over the executives to strip the connections
 
-      //String MaskedResources =  ((StringT)functionManager.getHCALparameterSet().get("OLD_MASKED_RESOURCES").getValue()).getString();
       VectorT<StringT> MaskedResources = (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
 
       if (MaskedResources.size() > 0) {

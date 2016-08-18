@@ -171,8 +171,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
     CommandParameter<StringT>  configureAVAILABLE_RUN_CONFIGS    =  new CommandParameter<StringT>  ("AVAILABLE_RUN_CONFIGS"   ,  new StringT("")     );
     CommandParameter<StringT>  configureRUN_CONFIG_SELECTED      =  new CommandParameter<StringT>  ("RUN_CONFIG_SELECTED"     ,  new StringT("")     );
     CommandParameter<StringT>  configureCFGSNIPPET_KEY_SELECTED  =  new CommandParameter<StringT>  ("CFGSNIPPET_KEY_SELECTED" ,  new StringT("")     );
-    CommandParameter<StringT>  configureOLD_AVAILABLE_RESOURCES      =  new CommandParameter<StringT>  ("OLD_AVAILABLE_RESOURCES"     ,  new StringT("")     );
-    CommandParameter<StringT>  configureOLD_MASKED_RESOURCES         =  new CommandParameter<StringT>  ("OLD_MASKED_RESOURCES"        ,  new StringT("")     );
     CommandParameter<StringT>  configureRU_INSTANCE              =  new CommandParameter<StringT>  ("RU_INSTANCE"             ,  new StringT("")     );
     CommandParameter<StringT>  configureLPM_SUPERVISOR           =  new CommandParameter<StringT>  ("LPM_SUPERVISOR"          ,  new StringT("")     );
     CommandParameter<StringT>  configureEVM_TRIG_FM              =  new CommandParameter<StringT>  ("EVM_TRIG_FM"             ,  new StringT("")     );
@@ -206,7 +204,6 @@ public class HCALStateMachineDefinition extends UserStateMachineDefinition {
       configureParameters.add(configureSID);
       configureParameters.add(configureCFGSNIPPET_KEY_SELECTED);
       configureParameters.add(configureAVAILABLE_RESOURCES);
-      configureParameters.add(configureOLD_MASKED_RESOURCES);
       configureParameters.add(configureMASKED_RESOURCES);
       configureParameters.add(configureRU_INSTANCE);
       configureParameters.add(configureLPM_SUPERVISOR);

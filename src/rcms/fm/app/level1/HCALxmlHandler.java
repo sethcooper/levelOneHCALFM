@@ -159,7 +159,6 @@ public class HCALxmlHandler {
       Document execXML = docBuilder.parse(inputSource);
       execXML.getDocumentElement().normalize();
 
-      //String maskedAppsString= ((StringT)parameterSet.get("OLD_MASKED_RESOURCES").getValue()).getString();
       //String maskedAppArray[] = maskedAppsString.substring(0, maskedAppsString.length()-1).split(";");
       VectorT<StringT> maskedAppsVector = (VectorT<StringT>)parameterSet.get("MASKED_RESOURCES").getValue();
       StringT[] maskedAppArray = maskedAppsVector.toArray(new StringT[maskedAppsVector.size()]);
