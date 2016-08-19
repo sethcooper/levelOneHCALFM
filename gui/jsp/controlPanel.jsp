@@ -31,7 +31,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700" rel="stylesheet" type="text/css">
 
   <title>Run Control and Monitoring System</title>
-  <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
@@ -72,7 +71,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 
 <!-- Table T1 begin -->
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0;">
 
   <!-- Header fragment -->
 	<!-- T1_Row1 begin -->

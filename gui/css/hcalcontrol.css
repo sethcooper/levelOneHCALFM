@@ -161,36 +161,36 @@
 	font-weight:bold;
 }
 
-.hcal_control_label1 {
-	font-family : Verdana, Verdana, sans-serif;
+.control_label1 {
+	font-family: "Open Sans", sans-serif;
 	color : black;
 	font-size : small;
 	text-align : left;
 }
 
-.hcal_control_label2 {
-	font-family : Verdana, Verdana, sans-serif;
+.control_label2 {
+	font-family: "Open Sans", sans-serif;
 	color : #666666;
 	font-size : small;
 	text-align : left;
 }
 
-.hcal_control_label3{
-	font-family : Verdana, Verdana, sans-serif;
+.control_label3{
+	font-family: "Open Sans", sans-serif;
 	color : #000099;
 	font-size : small;
 	text-align : left;
 }
 
-.hcal_control_label4{
-	font-family : Verdana, Verdana, sans-serif;
+.control_label4{
+	font-family: "Open Sans", sans-serif;
 	color : black;
 	font-size : large;
 	text-align : left;
 }
 
-.hcal_control_button1 {
-	font-family : Verdana, Verdana, sans-serif;
+.control_button1 {
+	font-family: "Open Sans", sans-serif;
 	color : black;
 	font-size : small;
 	text-align : center;
@@ -308,7 +308,8 @@ a {
   padding-left: 120px;
 }
 body {
-  background-color: #082945;
+  display: inline;
+  background-color: #3a5165;
 }
 #logospot img {
   width: 90px;
