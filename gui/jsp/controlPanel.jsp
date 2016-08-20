@@ -71,7 +71,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 
 
 <!-- Table T1 begin -->
-<table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0;">
+<table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0; background-color: #3a5165;">
 
   <!-- Header fragment -->
 	<!-- T1_Row1 begin -->
@@ -123,7 +123,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 	<!-- T1_Row2 begin -->
 	<tr> 
 		<td height="21" class="header">&nbsp;</td>
-		<td height="21" colspan="2">&nbsp;</td>
+		<td height="21" colspan="2" style="border-radius: 10px 0px 0px 0px; background-color: fdfdfd;">&nbsp;</td>
 	</tr>
 	<!-- T1_Row2 end -->
 
@@ -137,7 +137,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     </td>
     <!-- Menu end -->
     <!-- Custom dynamic content begin -->
-    <td height="259" valign="top" colspan="2">
+    <td height="259" valign="top" colspan="2" style="background-color:#fdfdfd">
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>
