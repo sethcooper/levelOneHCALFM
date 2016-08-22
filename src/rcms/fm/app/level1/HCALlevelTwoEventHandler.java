@@ -478,12 +478,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // halt LPM
       functionManager.haltLPMControllers();
 
-      // leave intermediate state directly only when not talking to asynchronous applications
-      if  (!functionManager.ErrorState)  {
-
-        functionManager.fireEvent( HCALInputs.SETHALT );
-      }
-
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("recoverAction executed ...")));
@@ -1135,20 +1129,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         // starting HCAL
-        //if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
+        HCALSuperVisorIsOK = false;
         try {
 
           // define start time
           StartTime = new Date();
 
-          if (HCALSupervisorAsyncEnable) {
-            functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCSTART);
-            logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending ASYNCSTART to supervisor");
-          }
-          else {
-            functionManager.containerhcalSupervisor.execute(HCALInputs.HCALSTART);
-            logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending START to supervisor");
-          }
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCSTART);
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending ASYNCSTART to supervisor");
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (HCAL=Enable) failed ...";
@@ -1370,17 +1358,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 				functionManager.goToError(errMessage);
       }
 
-      if (!HCALSupervisorAsyncEnable) {
-        // leave intermediate state only when not talking to asynchronous applications
-        if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-          logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
-          functionManager.fireEvent( HCALInputs.SETSTART );
-        }
-      }else{
-				// Fire start when we're in Async mode
-        //  logger.info("[HCAL LVL2 " + functionManager.FMname + "] fireEvent: " + HCALInputs.SETSTART);
-        //  functionManager.fireEvent( HCALInputs.SETSTART );
-      }
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1867,11 +1844,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       }
 
-      // leave intermediate state only when not talking to asynchronous applications
-      if ( !functionManager.ErrorState)  {
-        functionManager.fireEvent( HCALInputs.SETHALT );
-      }
-
       // publish info of the actual run taken
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ();
@@ -1900,12 +1872,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //
       // perhaps nothing have to be done here for HCAL !?
       //
-
-      // leave intermediate state only when not talking to asynchronous applications
-      if ( !functionManager.ErrorState) {
-        functionManager.fireEvent( HCALInputs.SETCOLDRESET );
-      }
-
 
       publishRunInfoSummary();
       publishRunInfoSummaryfromXDAQ(); 
@@ -2120,13 +2086,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
             if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
-        }
-      }
-
-      // leave intermediate state only when not talking to asynchronous applications
-      if (  !functionManager.ErrorState)  {
-        if (!functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())) {
-          functionManager.fireEvent(HCALInputs.SETCONFIGURE);
         }
       }
 

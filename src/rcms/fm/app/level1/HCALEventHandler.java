@@ -667,8 +667,9 @@ public class HCALEventHandler extends UserEventHandler {
           }
         }
       }
+
       // send SOAP configure to the HCAL supervisor
-      //if (functionManager.asyncSOAP) { HCALSuperVisorIsOK = false; }  // handle the not async SOAP talking HCAL supervisor when there are async SOAP applications defined
+      HCALSuperVisorIsOK = false;
       try {
         functionManager.containerhcalSupervisor.execute(HCALInputs.CONFIGURE);
       }
@@ -948,11 +949,6 @@ public class HCALEventHandler extends UserEventHandler {
       System.out.println(sw.toString());
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
       functionManager.goToError(errMessage,e);
-      //logger.error(errMessage);
-      //functionManager.sendCMSError(errMessage);
-      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-      //functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-      //if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
     }
 
     // find xdaq applications
@@ -1102,7 +1098,6 @@ public class HCALEventHandler extends UserEventHandler {
           pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress","ReportStateToRCMS"});
           pam.get();
 
-          //FIXME SIC set this ourselves!
           dowehaveanasynchcalSupervisor = pam.getValue("ReportStateToRCMS");
 
           logger.info("[HCAL " + functionManager.FMname + "] initXDAQ(): asking for the HCAL supervisor ReportStateToRCMS results is: " + dowehaveanasynchcalSupervisor);
@@ -1132,10 +1127,10 @@ public class HCALEventHandler extends UserEventHandler {
         //}
         //else if (dowehaveanasynchcalSupervisor.equals("true")) {
 
-        //  logger.info("[HCAL " + functionManager.FMname + "] using async SOAP communication with HCAL supervisor ...");
+        logger.info("[HCAL " + functionManager.FMname + "] using async SOAP communication with HCAL supervisor ...");
 
-        //  functionManager.asynchcalSupervisor = true;  // yes we have a hcalSupervisor which can talk async SOAP
-        //  functionManager.asyncSOAP = true;  // switch on the async HCAL level 2 FM behaviour
+        functionManager.asynchcalSupervisor = true;  // yes we have a hcalSupervisor which can talk async SOAP
+        functionManager.asyncSOAP = true;  // switch on the async HCAL level 2 FM behaviour
         //}
       }
     }
