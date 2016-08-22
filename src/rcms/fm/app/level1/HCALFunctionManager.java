@@ -183,7 +183,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   protected List<String> HCALFedList = null;
 
   // switch which records if applications are defined which can talk asynchronous SOAP
-  public boolean asyncSOAP = false;
+  public boolean asyncSOAP = true;
 
   // flag to memorize the role of this FM
   public boolean Level2FM = false;

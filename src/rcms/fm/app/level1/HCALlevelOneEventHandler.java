@@ -258,7 +258,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread3.start();
 
       // don't do this weird stuff for the HCAL supervisor - which is not taking async SOAP - for the level 1 FM
-      HCALSuperVisorIsOK = true;
+      //HCALSuperVisorIsOK = true;
 
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
@@ -830,11 +830,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
         if (!RunType.equals("local")) {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! command parameter problem for the startAction ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+					functionManager.goToError(errMessage);
         }
         else {
           logger.info("[HCAL LVL1 " + functionManager.FMname + "] startAction: We are in local mode ...");
@@ -867,11 +863,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         else {
           String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Did not receive a run number ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+					functionManager.goToError(errMessage);
         }
 
         // get the run sequence number from the start command
@@ -1180,11 +1172,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
               }
               catch (CommandException e) {
                 String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! for FM with role: " + fmChild.getRole().toString() + ", CommandException: sending: " + HCALInputs.COLDRESET + " failed ...";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - problems ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
             }
             else {
