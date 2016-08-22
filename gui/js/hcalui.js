@@ -32,6 +32,7 @@ function hideduplicatefield(parameter) {
     document.getElementById("globalParameterName" + document.getElementById(parameter).getAttribute("name").substring(20)).parentNode.style.display = "none";
 }
 
+//function showsupervisorerror(errMessage) {
 function showsupervisorerror() {
     var errMessage = document.getElementById("SUPERVISOR_ERROR").value;
     if (errMessage != "not set" && errMessage != "") {
@@ -44,21 +45,31 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
-    $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+    var cachedRunNo = $('#RUN_NUMBER').val();
+    var cachedNevents = $('#NUMBER_OF_EVENTS').val();
+    var cachedSupErr = $('#SUPERVISOR_ERROR').val();
+    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
 
 
     setInterval(function () {
+
+        hidelocalparams();
         var currentState = $('#currentState').text();
         $('#currentState').attr("class", "hcal_control_" + currentState);
         if (currentState == "Initial") {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').show();
         }
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-            $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
         }
-        $('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
+        if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
+        if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
+        //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
+        cachedRunNo = $('#RUN_NUMBER').val();
+        cachedNevents = $('#NUMBER_OF_EVENTS').val();
+        cachedSupErr = $('#SUPERVISOR_ERROR').val();
+    //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 
 
@@ -68,13 +79,13 @@ $(document).ready(function () {
 });
 
 function setProgress(progress) {
-    var numberOfEvents = $("#NUMBER_OF_EVENTS").val(),
-        containerWidth = $(".container").width();
+    var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
+    var width = $(".container").width();
     var progressPercent = 100 * progress / numberOfEvents;
-    var progressBarWidth = progressPercent * (containerWidth / 100);
-    $(".progressbar").width(progressBarWidth);
+    var progressBarWidth = progressPercent * (width / 100);
+    //$(".progressbar").width(progressBarWidth);
     console.log("progressPercent is: " + progressPercent);
-    //$(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
+    $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
 
 function mirrorSelection() {
@@ -118,22 +129,23 @@ function makedropdown(availableRunConfigs) {
     var masterSnippetArgs = "'" + masterSnippetNumber + "', 'RUN_CONFIG_SELECTED'";
     var maskedResourcesNumber = $('#MASKED_RESOURCES').attr("name").substring(20);
     var maskedResourcesArgs = "'" + maskedResourcesNumber + "', 'MASKED_RESOURCES'";
-    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection();";
+    var onchanges = "onClickGlobalParameterCheckBox(" + cfgSnippetArgs + "); onClickGlobalParameterCheckBox(" + masterSnippetArgs + "); onClickGlobalParameterCheckBox(" + maskedResourcesArgs + "); clickboxes(); mirrorSelection(); fillMask();";
     $('#dropdown').attr("onchange", onchanges);
 }
 
 function fillMask() {
-    var allMasks = "";
+    var finalMasks=[];
     $('#masks :checked').each(function () {
-        allMasks += $(this).val() + ";";
+        finalMasks.push($(this).val());
     });
-    $('#MASKED_RESOURCES').val($('#MASKED_RESOURCES').val() + allMasks);
-    $('#maskTest').html($('#MASKED_RESOURCES').val() + allMasks);
+    $('#MASKED_RESOURCES').val(JSON.stringify(finalMasks));
+    $('#maskTest').html(JSON.stringify(finalMasks));
 }
 
-function makecheckboxes(availableResources) {
-    availableResources = availableResources.substring(0, availableResources.length - 1);
-    var array = availableResources.split(';');
+function makecheckboxes() {
+    var param = $('#AVAILABLE_RESOURCES').html().replace("[", "").replace("]","");
+    param =  param.replace(/['"]+/g, '');
+    var array = param.split(',');
     var maskDivContents = "<ul>";
     for (var i = 0, l = array.length; i < l; i++) {
         var option = array[i].split(':');
@@ -150,13 +162,11 @@ function hidecheckboxes() {
         $('#dropdowndiv').show();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').show();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').show();
-        $('#newMASKED_RESOURCEScheckbox :checkbox').show();
     }
     else {
         $('#dropdowndiv').hide();
         $('#newCFGSNIPPET_KEY_SELECTEDcheckbox :checkbox').hide();
         $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
-        $('#newMASKED_RESOURCEScheckbox :checkbox').hide();
     }
 }
 
@@ -172,6 +182,14 @@ function hideinitializebutton() {
     });
 }
 
+
+function hidelocalparams() {
+    if ($('#CFGSNIPPET_KEY_SELECTED').val().indexOf("global") !== -1) {
+        $('#newNUMBER_OF_EVENTScheckbox').parent().hide();
+        $('#newHCAL_EVENTSTAKEN').parent().hide();
+    }
+}
+
 function moveversionnumber() {
 
     $('#hcalfmVersion').css('font-size', '12');
@@ -181,12 +199,25 @@ function moveversionnumber() {
 }
 
 
+//    function getfullpath(nEvents) {
+    function getfullpath() {
+      var maskSummary = $("#MASK_SUMMARY").text();
+      maskSummary = maskSummary.replace(/\"/g, "");
+      maskSummary = maskSummary.replace("\[","");
+      maskSummary = maskSummary.replace("\]","");
+      maskSummary = maskSummary.replace(/,/g, ",&nbsp;");
+      if (maskSummary === "") {maskSummary = "none";}
+      $("#elogInfo").text("Run # " + $("#RUN_NUMBER").val()  + " - " + $(".control_label2").first().text() + " - Local run key: "+ $("#CFGSNIPPET_KEY_SELECTED").val()  + " - " + $("#NUMBER_OF_EVENTS").val() + " events, masks: " + maskSummary);
+    }
+
+
+
 function hcalOnLoad() {
     activate_relevant_table('AllParamTables');
-    onClickCommandParameterCheckBox();
     removeduplicatecheckbox('CFGSNIPPET_KEY_SELECTED');
     removeduplicatecheckbox('RUN_CONFIG_SELECTED');
     removeduplicatecheckbox('MASKED_RESOURCES');
+    removeduplicatecheckbox('MASK_SUMMARY');
     removeduplicatecheckbox('NUMBER_OF_EVENTS');
     removeduplicatecheckbox('ACTION_MSG');
     removeduplicatecheckbox('RUN_NUMBER');
@@ -196,6 +227,7 @@ function hcalOnLoad() {
     makecheckbox('newRUN_CONFIG_SELECTEDcheckbox', 'RUN_CONFIG_SELECTED');
     copyContents(MASKED_RESOURCES, newMASKED_RESOURCES);
     makecheckbox('newMASKED_RESOURCEScheckbox', 'MASKED_RESOURCES');
+    copyContents(MASK_SUMMARY, newMASK_SUMMARY);
     copyContents(NUMBER_OF_EVENTS, newNUMBER_OF_EVENTS);
     makecheckbox('newNUMBER_OF_EVENTScheckbox', 'NUMBER_OF_EVENTS');
     copyContents(ACTION_MSG, newACTION_MSG);
@@ -205,9 +237,11 @@ function hcalOnLoad() {
     copyContents(HCAL_TIME_OF_FM_START, newHCAL_TIME_OF_FM_START);
     hidecheckboxes();
     hideinitializebutton();
+    hidelocalparams();
     hideduplicatefield('CFGSNIPPET_KEY_SELECTED');
     hideduplicatefield('RUN_CONFIG_SELECTED');
     hideduplicatefield('MASKED_RESOURCES');
+    hideduplicatefield('MASK_SUMMARY');
     hideduplicatefield('NUMBER_OF_EVENTS');
     hideduplicatefield('ACTION_MSG');
     hideduplicatefield('RUN_NUMBER');
@@ -218,4 +252,5 @@ function hcalOnLoad() {
     getfullpath();
     showsupervisorerror();
     moveversionnumber();
+    onClickCommandParameterCheckBox();
 }

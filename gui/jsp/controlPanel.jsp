@@ -31,7 +31,6 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700" rel="stylesheet" type="text/css">
 
   <title>Run Control and Monitoring System</title>
-  <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
@@ -58,44 +57,39 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   </script>
 
   <script>
-    function getfullpath() {
-      var fullpath = document.getElementsByClassName("control_label2")[0];
-      var eloginfo = document.getElementById("elogInfo");
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
-    }
-
     function activate_relevant_table(tbid) {
       if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
       else {turn_off_visibility(tbid);}
     }
   </script>
-
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <!-- Custom javascript section end -->
 
 </head>
 
-<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0; background-color: #3a5165;">
 
   <!-- Header fragment -->
 	<!-- T1_Row1 begin -->
 	<tr> 
 		<td height="97" align="center" class="header">
 			<!-- Logo begin-->
-      <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
-      <br />
-			<a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
-			</a>
-			<!-- Logo end -->
-			<br />
-      <div id="hostport">
-			<!-- Host : Port begin -->
-				<%=request.getLocalName()%>:<%=request.getLocalPort()%>
-			<!-- Host : Port end -->
+      <div id="logoSpot">
+        <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
+        <br />
+			  <a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
+			  </a>
+			  <!-- Logo end -->
+			  <br />
+        <div id="hostport">
+			  <!-- Host : Port begin -->
+			  	<%=request.getLocalName()%>:<%=request.getLocalPort()%>
+			  <!-- Host : Port end -->
+        </div>
       </div>
 		</td>
 
@@ -129,7 +123,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
 	<!-- T1_Row2 begin -->
 	<tr> 
 		<td height="21" class="header">&nbsp;</td>
-		<td height="21" colspan="2">&nbsp;</td>
+		<td height="21" colspan="2" style="border-radius: 10px 0px 0px 0px; background-color: fdfdfd;">&nbsp;</td>
 	</tr>
 	<!-- T1_Row2 end -->
 
@@ -143,7 +137,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
     </td>
     <!-- Menu end -->
     <!-- Custom dynamic content begin -->
-    <td height="259" valign="top" colspan="2">
+    <td height="259" valign="top" colspan="2" style="background-color:#fdfdfd">
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>
@@ -241,6 +235,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 </td>
                               </tr>
                               <tr>
+                                <td id="newMASK_SUMMARYcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle();" />Show full masks
+                                </td>
+                                <td id ="newMASK_SUMMARY" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="maskedResourcesField" style="display: none;">
                                 <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
