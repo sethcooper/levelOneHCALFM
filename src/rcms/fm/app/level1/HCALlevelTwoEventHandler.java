@@ -455,25 +455,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         try {
-          functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: recovering failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage,e);
         }
 
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: recoverAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
       // halt LPM
       functionManager.haltLPMControllers();
@@ -1457,23 +1449,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             functionManager.containerTriggerAdapter.execute(HCALInputs.HCALPAUSE);
           }
           catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: pausing (TriggerAdapter=Suspend) failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: pausing (Suspend to trigger adapter) failed ...";
+            functionManager.goToError(errMessage,e);
           }
 
         }
         else {
           if (functionManager.FMrole.equals("EvmTrig")) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: pauseAction()";
-            logger.error(errMessage);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage);
           }
         }
       }
@@ -1516,23 +1500,15 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             functionManager.containerTriggerAdapter.execute(HCALInputs.RESUME);
           }
           catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: resuming failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: resume to trigger adapter failed ...";
+            functionManager.goToError(errMessage,e);
           }
 
         }
         else {
           if (functionManager.FMrole.equals("EvmTrig")) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: resumeAction()";
-            logger.error(errMessage);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage);
           }
         }
       }
@@ -1574,26 +1550,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             try {
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALHALT);
+              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
             }
             catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: TriggerAdapter=Disable failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: TriggerAdapter Disable failed ...";
+              functionManager.goToError(errMessage,e);
             }
 
           }
           else {
             if (functionManager.FMrole.equals("EvmTrig")) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: haltingAction()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage);
             }
           }
         }
@@ -1613,37 +1581,25 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           // define stop time
           StopTime = new Date();
 
-          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALHALT);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALDISABLE);
         }
         catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 1/2 (HCAL=Disable) failed";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 1/2 (Disable to hcalSupervisor) failed";
+          functionManager.goToError(errMessage,e);
         }
 
         try {
-          functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
         }
         catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (HCAL=Reset) failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (AsyncReset to hcalSupervisor) failed ...";
+          functionManager.goToError(errMessage,e);
         }
 
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
 
       // stop the event building gracefully
@@ -1652,11 +1608,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // check if all events were build before stopping
         if(!isRUBuildersEmpty()) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Could not flush the EVMs ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
 
         // stop the FEDStreamers
@@ -1667,11 +1619,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
           catch (QualifiedResourceContainerException e) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FEDStreamers failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
 
@@ -1683,11 +1631,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
           catch (QualifiedResourceContainerException e) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FUEventProcessors failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
 
@@ -1699,11 +1643,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
           catch (QualifiedResourceContainerException e) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FUEventProcessors failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
 
@@ -1736,11 +1676,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
           catch (QualifiedResourceContainerException e) {
             String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping StorageManagers failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage,e);
           }
         }
       }
@@ -1789,19 +1725,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               }
               catch (XDAQTimeoutException e) {
                 String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQTimeoutException: haltAction()\n Perhaps the DCC manager application is dead!?";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
               catch (XDAQException e) {
                 String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQException: preparingTTSTestModeAction";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
             }
           }
@@ -1824,22 +1752,14 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               }
               catch (XDAQMessageException e) {
                 String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQMessageException: haltAction()";
-                logger.error(errMessage,e);
-                functionManager.sendCMSError(errMessage);
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                functionManager.goToError(errMessage,e);
               }
             }
           }
         }
         else {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No DCC (HCAL FED) found: haltAction()";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
 
       }
@@ -1887,14 +1807,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
   }
 
   public void stoppingAction(Object obj) throws UserActionException {
-    if (obj instanceof StateNotification) {
-
-      // triggered by State Notification from child resource
-      computeNewState((StateNotification) obj);
-      return;
-
-    }
-    else if (obj instanceof StateEnteredEvent) {
+    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Executing stoppingAction");
       logger.info("[HCAL LVL2 " + functionManager.FMname + "] Executing stoppingAction");
 
@@ -1916,15 +1829,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
 
             try {
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALHALT);
+              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
             }
             catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter=Disable) failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: step 1/2 (TriggerAdapter Disable) failed ...";
+              functionManager.goToError(errMessage,e);
             }
 
             // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
@@ -1934,11 +1843,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           else {
             if (functionManager.FMrole.equals("EvmTrig")) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: stoppingAction()";
-              logger.error(errMessage);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage);
             }
           }
         }
@@ -1957,24 +1862,16 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           // define stop time
           StopTime = new Date();
 
-          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALHALT);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCDISABLE);
         }
         catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException:  step 2/2 (HCAL=Disable) failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException:  step 2/2 (AsyncDisable to hcalSupervisor) failed ...";
+          functionManager.goToError(errMessage,e);
         }
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: stoppingAction()";
-        logger.error(errMessage);
-        functionManager.sendCMSError(errMessage);
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(errMessage)));
-        if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+        functionManager.goToError(errMessage);
       }
 
       // stop the event building gracefully
@@ -1983,11 +1880,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         // check if all events were build before stopping
         if(!isRUBuildersEmpty()) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Could not flush the EVMs ...";
-          logger.error(errMessage);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+          functionManager.goToError(errMessage);
         }
 
         // include scheduling ToDo
@@ -2004,11 +1897,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FEDStreamers failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage,e);
             }
           }
         }
