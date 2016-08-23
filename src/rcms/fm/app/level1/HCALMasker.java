@@ -106,10 +106,10 @@ public class HCALMasker {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
 
     for (QualifiedResource level2 : level2list) {
-      logger.warn("[JohnLogMaskBug] " + functionManager.FMname + ": now checking if " + level2.getName() + " is masked before picking the EvmTrig FM. The list of masked FMs is:");
-      logger.warn(Arrays.asList(MaskedFMs.toArray()).toString());
+      //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + ": now checking if " + level2.getName() + " is masked before picking the EvmTrig FM. The list of masked FMs is:");
+      //logger.warn(Arrays.asList(MaskedFMs.toArray()).toString());
       if (!Arrays.asList(MaskedFMs.toArray()).contains(new StringT(level2.getName()))) {
-        logger.warn("[JohnLogMaskBug] " + functionManager.FMname + "... didn't find " + level2.getName() + " in the masked FMs list.");
+        //logger.warn("[JohnLogMaskBug] " + functionManager.FMname + "... didn't find " + level2.getName() + " in the masked FMs list.");
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
           logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -188,6 +188,8 @@ public class HCALMasker {
     //boolean somebodysHandlingTA = false;
     //boolean itsThisLvl2 = false;
     //boolean itsAdummy = false;
+
+    //Update the MaskedResources for pickEvmTrig
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
     try {
       allMaskedResources = MaskedFMs.clone();
