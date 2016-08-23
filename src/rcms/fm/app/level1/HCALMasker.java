@@ -106,7 +106,10 @@ public class HCALMasker {
     List<QualifiedResource> level2list = qg.seekQualifiedResourcesOfType(new FunctionManager());
 
     for (QualifiedResource level2 : level2list) {
-      if (!Arrays.asList(MaskedFMs.toArray()).contains(level2.getName())) {
+      logger.warn("[JohnLogMaskBug] " + functionManager.FMname + ": now checking if " + level2.getName() + " is masked before picking the EvmTrig FM. The list of masked FMs is:");
+      logger.warn(Arrays.asList(MaskedFMs.toArray()).toString());
+      if (!Arrays.asList(MaskedFMs.toArray()).contains(new StringT(level2.getName()))) {
+        logger.warn("[JohnLogMaskBug] " + functionManager.FMname + "... didn't find " + level2.getName() + " in the masked FMs list.");
         try {
           QualifiedGroup level2group = ((FunctionManager)level2).getQualifiedGroup();
           logger.debug("[HCAL " + functionManager.FMname + "]: the qualified group has this DB connector" + level2group.rs.toString());
@@ -186,6 +189,13 @@ public class HCALMasker {
     //boolean itsThisLvl2 = false;
     //boolean itsAdummy = false;
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
+    try {
+      allMaskedResources = MaskedFMs.clone();
+    }
+    catch (CloneNotSupportedException e) {
+      logger.error("Caught a CloneNotSupportedException when cloning the MaskedFMs vector.");
+    }
+    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("MASKED_RESOURCES", allMaskedResources));
     //String ruInstance = "";
     //String lpmSupervisor = "";
     //String EvmTrigsApps = "";

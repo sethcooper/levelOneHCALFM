@@ -1350,6 +1350,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 				functionManager.goToError(errMessage);
       }
 
+      if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
+        functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
+      } 
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1358,7 +1361,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.RunWasStarted = true; // switch to enable writing to runInfo when run was destroyed
 
       logger.debug("startAction executed ...");
-
     }
   }
 
@@ -1977,6 +1979,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
+      if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
+        functionManager.fireEvent( HCALInputs.SETCONFIGURE ); //TODO revisit this, a proper fix would get rid of this.
+      } 
 
       logger.info("[HCAL LVL2 " + functionManager.FMname +"] about to call publishRunInfoSummary");
       publishRunInfoSummary();

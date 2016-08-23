@@ -84,6 +84,7 @@ function setProgress(progress) {
     var progressPercent = 100 * progress / numberOfEvents;
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
+    progressPercent = progressPercent.toFixed(2);
     console.log("progressPercent is: " + progressPercent);
     $(".progressbar").width(progressBarWidth).html(progressPercent + "% &nbsp; &nbsp;");
 }
