@@ -257,9 +257,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       TriggerAdapterWatchThread thread3 = new TriggerAdapterWatchThread();
       thread3.start();
 
-      // don't do this weird stuff for the HCAL supervisor - which is not taking async SOAP - for the level 1 FM
-      //HCALSuperVisorIsOK = true;
-
       // give the RunType to the controlling FM
       functionManager.RunType = RunType;
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] initAction: We are in " + RunType + " mode ...");

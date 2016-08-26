@@ -824,11 +824,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence, FedEnableMask, UsePrimaryTCDS);
       }
 
-      // if not talking to applications which talk asynchronous SOAP wait only for the HCAL supervisor
-      //if ( (!functionManager.asyncSOAP) && (!functionManager.ErrorState) ) {
-      //  waitforHCALsupervisor();
-      //}
-
       if (functionManager.FMrole.equals("EvmTrig")) {
 
         // configure FEDStreamers ... nothing to do here
@@ -1120,8 +1115,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
 
-        // starting HCAL
-        HCALSuperVisorIsOK = false;
         try {
 
           // define start time
