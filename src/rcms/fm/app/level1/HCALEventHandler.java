@@ -151,8 +151,6 @@ public class HCALEventHandler extends UserEventHandler {
   public boolean RunInfoPublishfromXDAQ        =  false;  // Switch to publish additional runinfo from the hcalRunInfoServer or not
   public boolean stopMonitorThread             =  false;  // For turning off the level2 watch thread
   public boolean stopHCALSupervisorWatchThread =  false;  // For turning off the supervisor watch thread
-  public boolean HCALSuperVisorIsOK            =  false;  // Flag for hcalSupervisor status
-  public boolean AllButHCALSuperVisorIsOK      =  false;  // Flag for watching xdaqs TODO: is this used?
   public boolean stopTriggerAdapterWatchThread =  false;  // For turning off the TA thread
   public boolean stopAlarmerWatchThread        =  false;  // For turning off the alarmer thread
   public boolean NotifiedControlledFMs         =  false;  // For notifications to level2s
@@ -181,7 +179,6 @@ public class HCALEventHandler extends UserEventHandler {
   public DocumentBuilder docBuilder;
 
   protected boolean SpecialFMsAreControlled    =  false;  // Switch for saying whether "special" FMs are controlled. TODO: is this needed any more?
-  protected boolean HCALSupervisorAsyncEnable  =  false;  // Switch for enabling asynchronous enable functionality for hcalSupervisors
   protected boolean LocalMultiPartitionReadOut =  false;  // Switch for enabling multipartition runs
 
   protected String WSE_FILTER                        =  "empty";                         // for XMAS -- TODO: is this needed?
@@ -263,22 +260,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
     }
 
-    // Check if the userXML specifies whether the AsyncEnable feature should be used
-    {
-      String useHCALSupervisorAsyncEnable = "";
-      try { useHCALSupervisorAsyncEnable = xmlHandler.getHCALuserXMLelementContent("HCALSupervisorAsyncEnable"); }
-      catch (UserActionException e) { logger.warn(e.getMessage()); }
-      if (!useHCALSupervisorAsyncEnable.equals("")) {
-        HCALSupervisorAsyncEnable = true;
-      }
-      if (HCALSupervisorAsyncEnable) {
-        logger.warn("[HCAL base] HCALSupervisorAsyncEnable: " + HCALSupervisorAsyncEnable + " - this means \"AsyncEnable\" is sent to the HCAL supervisor instead of \"Enable\"");
-      }
-      else {
-        logger.warn("[HCAL base] HCALSupervisorAsyncEnable: " + HCALSupervisorAsyncEnable + " - this means \"Enable\" is sent to the HCAL supervisor instead of \"AsyncEnable\"");
-      }
-    }
-
     // Check if the userXML specifies whether ATCP connections should be stopped
     {
       String useStopATCP = "";
@@ -314,22 +295,6 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn("[HCAL base] StopFEDStreamer: " + functionManager.StopFEDStreamer + " - this means FEDStreamer XDAQ apps are started once during the starting transition but never ever stopped in a run config.");
       }
     }
-
-    // Check if the userXML specifies that the async communication is disabled
-    //{
-    //  String doForceNotToUseAsyncCommunication = "";
-    //  try { doForceNotToUseAsyncCommunication=xmlHandler.getHCALuserXMLelementContent("ForceNotToUseAsyncCommunication"); }
-    //  catch (UserActionException e) { logger.warn(e.getMessage()); }
-    //  if (!doForceNotToUseAsyncCommunication.equals("")) {
-    //    functionManager.ForceNotToUseAsyncCommunication = true;
-    //  }
-    //  if (functionManager.ForceNotToUseAsyncCommunication) {
-    //    logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means all async communication is swichted off completely!!");
-    //  }
-    //  else {
-    //    logger.warn("[HCAL base] ForceNotToUseAsyncCommunication: " + functionManager.ForceNotToUseAsyncCommunication + " - this means async communication is possible if async XDAQ apps were detected, configured ...");
-    //  }
-    //}
 
 
     // Get the CfgCVSBasePath in the userXML
@@ -669,7 +634,6 @@ public class HCALEventHandler extends UserEventHandler {
       }
 
       // send SOAP configure to the HCAL supervisor
-      HCALSuperVisorIsOK = false;
       try {
         functionManager.containerhcalSupervisor.execute(HCALInputs.CONFIGURE);
       }
@@ -1069,11 +1033,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerhcalRunInfoServer = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalRunInfoServer"));
 
 
-    // find out if this FM controlls applications which talk asynchronous SOAP
-    //if (!(functionManager.containerFUResourceBroker.isEmpty() && functionManager.containerFUEventProcessor.isEmpty() && functionManager.containerStorageManager.isEmpty() && functionManager.containerFEDStreamer.isEmpty())) {
-    //  functionManager.asyncSOAP = true;
-    //}
-
     if (!functionManager.containerPeerTransportATCP.isEmpty()) {
       logger.debug("[HCAL " + functionManager.FMname + "] Found PeerTransportATCP applications - will handle them ...");
     }
@@ -1081,10 +1040,6 @@ public class HCALEventHandler extends UserEventHandler {
     // find out if HCAL supervisor is ready for async SOAP communication
     if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
-      {
-        String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for checking if async SOAP communication is possible - good!";
-        logger.debug(debugMessage);
-      }
 
       XDAQParameter pam = null;
 
@@ -1105,45 +1060,19 @@ public class HCALEventHandler extends UserEventHandler {
         }
         catch (XDAQTimeoutException e) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException in initXDAQ() when checking the async SOAP capabilities ...\n Perhaps the HCAL supervisor application is dead!?";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+          functionManager.goToError(errMessage,e);
         }
         catch (XDAQException e) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException in initXDAQ() when checking the async SOAP capabilities ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; }
-
+          functionManager.goToError(errMessage,e);
         }
 
-        //if (dowehaveanasynchcalSupervisor==null || dowehaveanasynchcalSupervisor.equals("undefined")) {
-        //  logger.warn("[HCAL " + functionManager.FMname + "] could not check if  async SOAP communication with HCAL supervisor is possible ...");
-        //}
-        //else if (dowehaveanasynchcalSupervisor.equals("true")) {
-
         logger.info("[HCAL " + functionManager.FMname + "] using async SOAP communication with HCAL supervisor ...");
-
-        functionManager.asynchcalSupervisor = true;  // yes we have a hcalSupervisor which can talk async SOAP
-        functionManager.asyncSOAP = true;  // switch on the async HCAL level 2 FM behaviour
-        //}
       }
     }
     else {
       logger.info("[HCAL " + functionManager.FMname + "] Warning! No HCAL supervisor found in initXDAQ().\nThis happened when checking the async SOAP capabilities.\nThis is OK for a level1 FM.");
     }
-
-
-    // here all async communication is switched off
-    //if (functionManager.ForceNotToUseAsyncCommunication) {
-    //  functionManager.asynchcalSupervisor = false;
-    //  functionManager.asyncSOAP = false;
-    //}
 
     // finally, halt all LPM apps
     functionManager.haltLPMControllers();
@@ -1850,83 +1779,6 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException("[HCAL " + functionManager.FMname + "] Could not get value of: " + s,e);
     }
   }
-
-  // check the status of the HCAL supervisor and wait until it is in the "Ready" or "Failed" state
-  // This method is needed when _not_ talking to applications which talk asynchronous SOAP
-  //protected void waitforHCALsupervisor() {
-  //  if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-  //    {
-  //      String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for asking its state - good!";
-  //      logger.debug(debugMessage);
-  //    }
-
-  //    XDAQParameter pam = null;
-  //    String status   = "undefined";
-  //    String progress = "undefined";
-  //    String supervisorError = "";
-  //    int elapsedseconds = 0;
-  //    int timetosleep    = 1000;
-
-  //    // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
-  //    for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-  //      while ((!status.equals("Ready")) && (!status.equals("Failed"))) {
-  //        try {
-  //          logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState after sending the RunType, which is: " + status + " (still to go: " + progress + ")");
-
-  //          elapsedseconds +=(1*timetosleep/1000);
-  //          try { Thread.sleep(timetosleep); }
-  //          catch (Exception ignored) {}
-  //          logger.debug("[HCAL " + functionManager.FMname + "] ... slept for " + elapsedseconds + " sec");
-
-  //          pam =((XdaqApplication)qr).getXDAQParameter();
-  //          pam.select(new String[] {"PartitionState", "InitializationProgress"});
-  //          pam.get();
-  //          status = pam.getValue("PartitionState");
-  //          progress = pam.getValue("InitializationProgress");
-
-  //          localcompletion = Double.parseDouble(progress);
-
-  //          if (status.equals("Cold-Init")) {
-  //            logger.info("[HCAL " + functionManager.FMname + "] HCAL supervisor PartitionState reports: " + status + " , which means that the configuring takes longer because of e.g. firmware uploads, LUTs changes, etc. (still to go: " + progress + ")");
-  //            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT(status)));
-  //            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("please be patient ...")));
-  //            timetosleep = 10000;
-  //          }
-
-  //        }
-  //        catch (XDAQTimeoutException e) {
-  //          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: waitforHCALsupervisor()\n Perhaps this application is dead!?";
-  //          functionManager.goToError(errMessage,e);
-  //        }
-  //        catch (XDAQException e) {
-  //          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: waitforHCALsupervisor()";
-  //          functionManager.goToError(errMessage,e);
-  //        }
-  //      }
-  //    }
-
-  //    if (status.equals("Failed")) {
-  //      supervisorError = ((HCALlevelTwoFunctionManager)functionManager).getSupervisorErrorMessage();
-  //      String errMessage = "[HCAL " + functionManager.FMname + "] Error! HCAL supervisor reports error state: " + status + "; " + supervisorError;
-  //      functionManager.goToError(errMessage);
-  //    }
-
-  //    logger.info("[HCAL " + functionManager.FMname + "] Supervisor did his job in about: " + elapsedseconds + " sec");
-
-  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(HCALParameters.COMPLETION,new DoubleT(elapsedseconds)));
-  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT("needed " + elapsedseconds + " sec")));
-
-  //  }
-  //  else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.equals("HCALFM_904Int_TTCci")) ){
-  //    String errMessage = "[HCAL " + functionManager.FMname + "] Error! No HCAL supervisor found: waitforHCALsupervisor()";
-  //    logger.error(errMessage);
-  //    functionManager.sendCMSError(errMessage);
-  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.STATE,new StringT("Error")));
-  //    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(HCALParameters.ACTION_MSG,new StringT(errMessage)));
-  //    if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-  //  }
-  //}
 
 
   // checks if the TriggerAdapter is stopped

@@ -191,9 +191,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   // switch to enable async SOAP communication with the HCAL supervisor
   public boolean asynchcalSupervisor = true;
 
-  // switch to force switch off all async communication 
-  public boolean ForceNotToUseAsyncCommunication = false;
-
   // switch to remember FM history
   public boolean FMsWereConfiguredOnce = false;
   public boolean FMWasInRunningStateOnce = false;
