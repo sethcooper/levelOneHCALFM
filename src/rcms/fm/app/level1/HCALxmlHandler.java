@@ -167,7 +167,7 @@ public class HCALxmlHandler {
       int removedContexts = 0;
       int removedApplications = 0;
       for (StringT maskedApp: maskedAppArray) {
-        logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
+        //logger.info("[JohnLogVector] " + functionManager.FMname + ": about to start masking " + maskedApp.getString());
         String[] maskedAppParts = maskedApp.getString().split("_");
 
         //Remove masked applications from xc:Context nodes
@@ -280,7 +280,7 @@ public class HCALxmlHandler {
         transformer.transform(domSource, result);
         newExecXMLstring = writer.toString();
         newExecXMLstring = newExecXMLstring.replaceAll("(?m)^[ \t]*\r?\n", "");
-        logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
+        //logger.info("[JohnLogVector] " + functionManager.FMname + ": done masking " + maskedApp.getString());
       }
       return newExecXMLstring;
     }
