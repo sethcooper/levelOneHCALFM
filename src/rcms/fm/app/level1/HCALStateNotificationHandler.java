@@ -131,6 +131,15 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           fm.theEventHandler.computeNewState(notification);
           return;
         }
+        // ignore notifications to READY (which happens from intermediate transitions
+        //   in HCAL xdaq apps when doing, e.g., Running-->Halted, but set timeout
+        // also ignore notifications to configured, which we get in these intermediate transitions from TCDS
+        else if ( notification.getToState().equals(HCALStates.READY.toString()) || notification.getToState().equals(HCALStates.CONFIGURED.toString()) ) {
+          String msg = "HCAL is halting ";
+          fm.setAction(msg);
+          setTimeoutThread(true);
+          return;
+        }
       }
 
 
