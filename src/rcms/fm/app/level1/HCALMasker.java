@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import rcms.util.logger.RCMSLogger;
 import rcms.common.db.DBConnectorException;
@@ -42,6 +43,7 @@ public class HCALMasker {
     boolean hasAnEventBuilder = false;
     boolean hasAnFU = false;
     VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    logger.warn(maskedRss.toString());
     StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
 
     for (Resource level2resource : level2Children) {
@@ -174,8 +176,8 @@ public class HCALMasker {
 
     logger.info("[Martin log "+ functionManager.FMname + "]: The list of MaskedFMs from gui is " + MaskedFMs.toString());
     String userXmlMaskedFM = "not set";
+    String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
     try{
-        String localrunkey = ((StringT)functionManager.getHCALparameterSet().get("CFGSNIPPET_KEY_SELECTED").getValue()).getString();
         userXmlMaskedFM = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedFM");
         logger.info("[Martin log " + functionManager.FMname + "]: Got the following maskedFM from userXML: "+ userXmlMaskedFM );
     } catch (UserActionException e){
@@ -196,6 +198,18 @@ public class HCALMasker {
 
     //Update the MaskedResources for pickEvmTrig
     VectorT<StringT> allMaskedResources = new VectorT<StringT>();
+    String userXmlMaskedApps= "not set";
+    try{
+        userXmlMaskedApps = xmlHandler.getNamedUserXMLelementAttributeValue("RunConfig", localrunkey, "maskedapps");
+    } catch (UserActionException e){
+    }
+    if (!userXmlMaskedApps.equals("")) {
+      String[] userXmlMaskedAppsArray = userXmlMaskedApps.split((Pattern.quote("|")));
+      for (String xmlMaskedApp : userXmlMaskedAppsArray) {
+        MaskedFMs.add(new StringT(xmlMaskedApp));
+      }
+    }
+
     try {
       allMaskedResources = MaskedFMs.clone();
     }
