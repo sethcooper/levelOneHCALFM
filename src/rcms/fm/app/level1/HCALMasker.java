@@ -41,22 +41,27 @@ public class HCALMasker {
     boolean hasAdummy = false;
     boolean hasAnEventBuilder = false;
     boolean hasAnFU = false;
+    VectorT<StringT> maskedRss =  (VectorT<StringT>)functionManager.getHCALparameterSet().get("MASKED_RESOURCES").getValue();
+    StringT[] maskedRssArray = maskedRss.toArray(new StringT[maskedRss.size()]);
+
     for (Resource level2resource : level2Children) {
-      if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
-        logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a TA.");
-        hasAtriggerAdapter=true;
-        if (level2resource.getName().contains("DummyTriggerAdapter")) {
-          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a DummyTriggerAdapter.");
-          hasAdummy=true;
+      if (!Arrays.asList(maskedRssArray).contains(new StringT(level2resource.getName()))) {
+        if (level2resource.getName().contains("TriggerAdapter") || level2resource.getName().contains("FanoutTTCciTA")) {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a TA.");
+          hasAtriggerAdapter=true;
+          if (level2resource.getName().contains("DummyTriggerAdapter")) {
+            logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a DummyTriggerAdapter.");
+            hasAdummy=true;
+          }
         }
-      }
-      if (level2resource.getName().contains("hcalTrivialFU")) {
-        logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a FU.");
-        hasAnFU=true;
-      }
-      if (level2resource.getName().contains("hcalEventBuilder")) {
-        logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has an eventBuilder.");
-        hasAnEventBuilder=true;
+        if (level2resource.getName().contains("hcalTrivialFU")) {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has a FU.");
+          hasAnFU=true;
+        }
+        if (level2resource.getName().contains("hcalEventBuilder")) {
+          logger.info("[JohnLog2] " + functionManager.FMname + ": the FM being checked now has an eventBuilder.");
+          hasAnEventBuilder=true;
+        }
       }
     }
     Map<String, Boolean> response = new HashMap<String, Boolean>();
