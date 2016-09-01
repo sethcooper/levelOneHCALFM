@@ -1552,6 +1552,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               functionManager.goToError(errMessage,e);
             }
 
+            // waits for the TriggerAdapter to be in the Ready or Failed state, the timeout is 10s
+            waitforTriggerAdapter(10);
           }
           else {
             if (functionManager.FMrole.equals("EvmTrig")) {
@@ -1660,8 +1662,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
            }
            }
            */
-        // halt LPM
-        functionManager.haltLPMControllers();
 
         // stop the StorageManagers
         if (!functionManager.containerStorageManager.isEmpty()) {
@@ -1674,6 +1674,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             functionManager.goToError(errMessage,e);
           }
         }
+      }
+
+      // halt LPM
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        functionManager.haltLPMControllers();
       }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
