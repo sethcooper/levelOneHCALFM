@@ -28,10 +28,10 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   <meta Http-Equiv="Cache-Control" Content="no-cache">
   <meta Http-Equiv="Pragma" Content="no-cache">
   <meta Http-Equiv="Expires" Content="0">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,600,700" rel="stylesheet" type="text/css">
 
   <title>Run Control and Monitoring System</title>
-  <link rel="StyleSheet" href="../css/common.css" type="text/css"/>
-  <link rel="StyleSheet" href="../css/control.css" type="text/css"/>
+  <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/common.css" />
   <rcms.control:customResourceRenderer indentation="1" type="css" path="/css/hcalcontrol.css" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/jquery.min.js" />
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/hcalui.js" />
@@ -57,42 +57,87 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
   </script>
 
   <script>
-    function getfullpath() {
-      var fullpath = document.getElementsByClassName("control_label2")[0];
-      var eloginfo = document.getElementById("elogInfo");
-      eloginfo.innerHTML =  "Run # " + ${pars.RUN_NUMBER}  + " -  " + fullpath.innerHTML + " -  Local run key:  ${pars.CFGSNIPPET_KEY_SELECTED}  - " + ${pars.NUMBER_OF_EVENTS} + " events ";
-    }
-
     function activate_relevant_table(tbid) {
       if (<%= myFMPilotBean.getSessionState().isInputAllowed(FMPilotState.REFRESH) %>) {turn_on_visibility(tbid);}
       else {turn_off_visibility(tbid);}
     }
   </script>
-
   <rcms.control:customResourceRenderer indentation="1" type="js" path="/js/notifications.js" />
   <!-- Custom javascript section end -->
 
 </head>
 
-<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes("${pars.AVAILABLE_RESOURCES}");'>
+<body onload='hcalOnLoad(); makedropdown("${pars.AVAILABLE_RUN_CONFIGS}"); makecheckboxes();'>
 
 
 <!-- Table T1 begin -->
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<table width="100%" border="0" cellpadding="0" cellspacing="0" style="position:absolute; top:0; background-color: #3a5165;">
 
   <!-- Header fragment -->
-  <jsp:include page="./header.jsp"/>
+	<!-- T1_Row1 begin -->
+	<tr> 
+		<td height="97" align="center" class="header">
+			<!-- Logo begin-->
+      <div id="logoSpot">
+        <rcms.control:customResourceRenderer indentation="1" type="img" path="/icons/hcal.png" htmlId="hcalLogo" />
+        <br />
+			  <a href="https://twiki.cern.ch/twiki/bin/view/CMS/HCALFunctionManager" target="_blank">HCALFM documentation
+			  </a>
+			  <!-- Logo end -->
+			  <br />
+        <div id="hostport">
+			  <!-- Host : Port begin -->
+			  	<%=request.getLocalName()%>:<%=request.getLocalPort()%>
+			  <!-- Host : Port end -->
+        </div>
+      </div>
+		</td>
+
+		<!-- Central title begin -->
+		<th id="hcaltitle" width="50%" height="49" align="left" valign="central" bordercolor="#CC6600" class="header">
+		  HCAL Run Control
+		</th>
+		<!-- Central title end -->
+		
+		<td width="50%" align="right" class="header">
+			<!-- Version begin -->
+			Tag : <b><%=getServletContext().getAttribute("version")%></b>
+			<!-- Version end -->
+		  </p>
+			<!-- Tag begin -->
+			<%if (request.getRemoteUser() != null) {%>
+			  User : &nbsp;
+			<b><%= request.getRemoteUser()%></b>
+			<%}%>
+			<!-- Tag end -->
+			<p id="versionSpot"></p>
+      <p>
+			<!-- Bug-report link begin -->
+			  <a href="https://github.com/HCALRunControl/levelOneHCALFM/issues"> File a bug report </a>
+			<!-- Bug-report link  end -->
+		  </p>
+		</td>
+	</tr>
+	<!-- T1_Row1 end -->
+	
+	<!-- T1_Row2 begin -->
+	<tr> 
+		<td height="21" class="header">&nbsp;</td>
+		<td height="21" colspan="2" style="border-radius: 10px 0px 0px 0px; background-color: fdfdfd;">&nbsp;</td>
+	</tr>
+	<!-- T1_Row2 end -->
 
   <!-- T1_Row3 begin -->
   <tr>
     <!-- Menu begin -->
-    <td width="17%" valign="top" bgcolor="#EEEEEE">
-      <br>
+    <td id="sidebar" valign="top">
+      
+      <br />
       <rcms.menu:menuRenderer indentation="3"/>
     </td>
     <!-- Menu end -->
     <!-- Custom dynamic content begin -->
-    <td height="259" valign="top" colspan="2">
+    <td height="259" valign="top" colspan="2" style="background-color:#fdfdfd">
       <!-- Form begin -->
       <form name="FMPilotForm" id="FMPilotForm" method="POST" action="FMPilotServlet">
         <rcms.control:actionHiddenInputRenderer indentation="4"/>
@@ -113,15 +158,15 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
           <tr>
             <td align="center" valign="top">
               <!-- Control Console begin -->
-              <table border="1" cellpadding="10" cellspacing="1" align="left" width="280">
+              <table border="1" cellpadding="10" cellspacing="1" align="left" width="280" style="border: 1px solid black;">
                 <tr>
                   <td>
                     <rcms.control:stateRenderer titleClass="hcal_control_state" label="State:&nbsp;" indentation="10"/>
-                    <br><br>
+                    <br /><br />
                     <div id="fullPath">
                       <rcms.control:configurationPathRenderer titleClass="control_label1" label="Full Path:&nbsp;" contentClass="control_label2" indentation="10"/>
                     </div>
-                     <br><br>
+                     <br /><br />
                     <rcms.control:configurationNameRenderer titleClass="control_label1" label="Group Name:&nbsp;" contentClass="control_label2" indentation="10"/>
                   </td>
                 </tr>
@@ -131,18 +176,18 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                     <rcms.control:attachButtonRenderer cssClass="button1" onClickFunction="onAttachButton()" name="Attach" indentation="10"/>
                     <rcms.control:detachButtonRenderer cssClass="button1" onClickFunction="onDetachButton()" name="Detach" indentation="10"/>
                     <rcms.control:destroyButtonRenderer cssClass="button1" onClickFunction="onDestroyButton()" name="Destroy" indentation="10"/>
-                    <br><br>
+                    <br /><br />
                     <rcms.control:refreshButtonRenderer cssClass="button1" onClickFunction="onRefreshButton()" name="Refresh" indentation="10"/>
                     <rcms.control:showTreeButtonRenderer cssClass="button1" onClickFunction="onShowTreeButton()" name="Status Display" indentation="10"/>
                     <rcms.control:showStatusTableButtonRenderer cssClass="button1" onClickFunction="onShowStatusTableButton()" name="Status Table" indentation="10"/>
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" bgcolor="#cccccc">
+                  <td align="center">
                     <div id="commandSection">
                       <rcms.control:commandButtonsRenderer cssClass="button1" indentation="11"/>
                     </div>
-                    <br>
+                    <br />
                     <div id="commandParameterCheckBoxSection" class="control_label1">
                       <input id="commandParameterCheckBox" type="checkbox" onclick="onClickCommandParameterCheckBox(); toggle_visibility('Blork');" value="" name="commandParameterCheckBox ">  &nbsp; Show Command Parameter Section
                     </div>
@@ -159,81 +204,99 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                       <tr>
                         <td align="center" valign="top">
                           <!--New main table-->
-                            <table width="720" border="1" cellpadding="10" cellspacing="0">
+                            <table id="hcalmaintable" width="720" border="0" cellpadding="10" cellspacing="0">
                               <tr>
-                                <td class="title_center_black_yellow_bg" width="155">
-                                  Enable user control
+                                <td class="title_center_black_yellow_bg" width="60">
+                                  Modify
                                 </td>
                                 <td class="title_center_black_yellow_bg">
                                   Parameter
                                 </td>
-                                <td class="title_center_black_yellow_bg" width="155">
+                                <td class="title_center_black_yellow_bg" width="450px">
                                   Value
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black" width="155">
+                                <td id="newCFGSNIPPET_KEY_SELECTEDcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Local Run Key</strong><div id="dropdowndiv"></div>
                                 </td>
-                                <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black" width="155">
+                                <td id ="newCFGSNIPPET_KEY_SELECTED" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black" width="155">
+                                <td id="newRUN_CONFIG_SELECTEDcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Mastersnippet</strong>
                                 </td>
-                                <td id ="newRUN_CONFIG_SELECTED" class="label_center_black" width="155">
+                                <td id ="newRUN_CONFIG_SELECTED" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black" width="155">
+                                <td id="newMASK_SUMMARYcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Mask Summary</strong><br /><input id="showFullMasks" type="checkbox" onclick="$('#maskedResourcesField').toggle();" />Show full masks
+                                </td>
+                                <td id ="newMASK_SUMMARY" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr id="maskedResourcesField" style="display: none;">
+                                <td id="newMASKED_RESOURCEScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Masked Resources</strong>
                                 </td>
-                                <td id ="newMASKED_RESOURCES" class="label_center_black" width="155">
+                                <td id ="newMASKED_RESOURCES" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newNUMBER_OF_EVENTScheckbox" class="label_center_black" width="155">
+                                <td id="newNUMBER_OF_EVENTScheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Number of Events</strong>
                                 </td>
-                                <td id ="newNUMBER_OF_EVENTS" class="label_center_black" width="155">
+                                <td id ="newNUMBER_OF_EVENTS" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td class="label_center_black" width="155">
+                                <td class="label_center_black">
                                   &nbsp;
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Events Taken</strong>
                                 </td>
-                                <td id ="newHCAL_EVENTSTAKEN" class="label_center_black" width="155">
+                                <td id ="newHCAL_EVENTSTAKEN" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td id="newRUN_NUMBERcheckbox" class="label_center_black" width="155">
+                                <td id="newRUN_NUMBERcheckbox" class="label_center_black">
                                 </td>
                                 <td class="label_left_black">
                                   <strong>Run Number</strong>
                                 </td>
-                                <td id ="newRUN_NUMBER" class="label_center_black" width="155">
+                                <td id ="newRUN_NUMBER" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
-                                <td class="label_center_black" width="155">
+                                <td class="label_center_black">
                                   &nbsp;
                                 </td>
                                 <td class="label_left_black">
                                   <strong>FM Start Time</strong>
                                 </td>
-                                <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black" width="155">
+                                <td id ="newHCAL_TIME_OF_FM_START" class="label_center_black">
+                                </td>
+                              </tr>
+                              <tr>
+                                <td id="newACTION_MSGcheckbox" class="label_center_black">
+                                </td>
+                                <td class="label_left_black">
+                                  <strong>Action Message</strong>
+                                </td>
+                                <td id ="newACTION_MSG" class="label_center_black">
                                 </td>
                               </tr>
                               <tr>
@@ -253,7 +316,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_center_black" colspan="3" id="masked_resourses_td">
                                   <div>
                                     <input type="checkbox" onclick="toggle_visibility('masks');"><strong>Mask FMs</strong>
-                                    <br>
+                                    <br />
                                       Masked resources: <span id="maskTest"></span>
                                     <div id="masks" class="tbl"></div>
                                   </div>
@@ -264,14 +327,14 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                                 <td class="label_center_black" colspan="3">
                                   <div>
                                     <strong>Quick Info</strong>
-                                    <br>
+                                    <br />
                                     <div id="elogInfo"></div>
                                   </div>
                                 </td>
                               </tr>
                             </table>
-                          <br>
-                          <br>
+                          <br />
+                          <br />
                           <!--Buttons for main table -->
                           <center>
                             <input id="setGlobalParametersButton" class="button1" type="button" onclick="onClickSetGlobalParameters()" value="Set Enabled Parameters" name="setGlobalParametersButton">
@@ -280,12 +343,12 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                         </td>
                       </tr>
 
-                      <tr><td><br><br></td></tr>
+                      <tr><td><br /><br /></td></tr>
 
                       <tr>
                         <td align="center" class="label_center_black">
                           <input type="checkbox" onclick="toggle_visibility('GlobalParamsTable');"> <strong>&nbsp; View Global Parameters</strong>
-                          <br><br>
+                          <br /><br />
                           <table id="GlobalParamsTable" class="tbl">
                             <tr>
                               <td align="center">
@@ -303,7 +366,7 @@ FMPilotBean myFMPilotBean = (FMPilotBean)(pageContext.getRequest().getAttribute(
                             <table id="Blork" class="tbl">
                               <tr>
                                 <td>
-                                  <br>
+                                  <br />
                                   <table width="100%" border="1" cellpadding="10" cellspacing="0">
                                     <tr>
                                       <td class="title_center_black_yellow_bg">

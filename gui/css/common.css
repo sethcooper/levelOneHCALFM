@@ -1,74 +1,54 @@
 .label_center {
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	text-align: center;
 }
 
 .label_center_black {
-	font-family : Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : 9pt;
 	text-align : center;
 }
 
 .label_center_blu {
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	font-size: small;
 	text-align: center;
 	color: rgb(0, 0, 128);
 }
 
 .label_left_black {
-	font-family : Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : 9pt;
 	text-align : left;
 }
 
 .label_left_blu {
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	font-size: small;
 	text-align: left;
 	color: rgb(0, 0, 128);
 }
 
 .label_left_black_disabled {
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	font-size : 9pt;
 	color: black;
 	text-align : left;
+  width: 400px;
 }
 
 .label_left_black_enabled {
-	font-family: Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	font-size : 9pt;
 	color: black;
 	text-align : left;
-}
-
-.menuLinkSelected {
-	font-family : Arial, Helvetica, sans-serif;
-	color : #000099;
-	font-size : 9pt;
-	font-weight: bold;
-	text-align : left;
-}
-
-.menuLinkEnabled {
-	font-family : Arial, Helvetica, sans-serif;
-	color : #000099;
-	font-size : 9pt;
-	text-align : left;
-}
-
-.menuLinkDisabled {
-	font-family : Arial, Helvetica, sans-serif;
-	color : #666666;
-	font-size : 9pt;
-	text-align : left;
+  width: 400px;
 }
 
 .message_center_black {
-	font-family : Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : 9pt;
 	font-weight: bold;
@@ -76,7 +56,7 @@
 }
 
 .message_left_black {
-	font-family : Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : 9pt;
 	font-weight: bold;
@@ -97,9 +77,14 @@
 
 .title_center_black_yellow_bg {
 	background-color: #EEEEEE;
-	font-family : Arial, Helvetica, sans-serif;
+  font-family: "Open Sans",sans-serif;
 	color : black;
 	font-size : 9pt;
 	font-weight: bold;
 	text-align : center;
+}
+.parameterInputField {
+  font-family: "Open Sans",sans-serif;
+  font-size 100%;
+  width: 400px;
 }
