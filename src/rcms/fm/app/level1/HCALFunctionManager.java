@@ -906,4 +906,26 @@ public class HCALFunctionManager extends UserFunctionManager {
     if (qg != null) { qg.reset(); }
   }
 
+  /**----------------------------------------------------------------------
+   * get a configuration property
+   */
+  public String getProperty( String name ) throws Exception {
+
+    List<ConfigProperty> propertiesList = getGroup().getThisResource().getProperties();
+
+    if(propertiesList.isEmpty()) {
+      throw new Exception("Property list is empty");
+    }
+
+    ConfigProperty property = null;
+    Iterator<ConfigProperty> iter = propertiesList.iterator();
+    while(iter.hasNext()) {
+      property = iter.next();
+      if(property.getName().equals(name)) {
+        return property.getValue();
+      }
+    }
+    throw new Exception("Property "+name+" not found");
+  }
+
 }
