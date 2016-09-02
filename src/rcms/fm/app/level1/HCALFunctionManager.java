@@ -33,6 +33,7 @@ import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.resource.CommandException;
 
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.RSConnectorIF;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
