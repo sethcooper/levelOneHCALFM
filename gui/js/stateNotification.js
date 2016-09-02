@@ -93,8 +93,8 @@ function isCommandEnabled(transitions, command, state) {
             break;
           }
         }
-        }
       }
     }
-    return result;
   }
+  return result;
+}
