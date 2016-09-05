@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.Random;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.stream;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
