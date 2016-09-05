@@ -1855,6 +1855,50 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
+  HashMap getPartitionsFromFedMask(String FedEnableMaks) {
+    Boolean testNewFedMapParsing = true;
+
+    HashMap partitionStatus = new HashMap();
+    partitionStatus["HCAL"] = False;
+    partitionStatus["HBHEa"] = False;
+    partitionStatus["HBHEb"] = False;
+    partitionStatus["HBHEc"] = False;
+    partitionStatus["HF"] = False;
+    partitionStatus["HO"] = False;
+
+    HashMap fedPartitionMap = new HashMap();
+    if (testNewFedMapParsing) {
+      fedPartitionMap["HCAL"] = IntStream.rangeClosed(700, 731);
+      fedPartitionMap["HBHEa"] = IntStream.rangeClosed(700, 705);
+      fedPartitionMap["HBHEb"] = IntStream.rangeClosed(706, 711);
+      fedPartitionMap["HBHEc"] = IntStream.rangeClosed(712, 717);
+      fedPartitionMap["HF"] = IntStream.rangeClosed(718, 723);
+      fedPartitionMap["HO"] = IntStream.rangeClosed(724, 731);
+    } else {
+      // Load from configuration
+      String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
+      logger.error(errMessage);
+      for (String partition : partitionStatus.keySet()) {
+        partitionStatus[partition] = true;
+      }
+      return partitionStatus;
+    }
+
+    String[] FedValueArray = FedEnableMask.split("%");
+    for (Map.Entry<String, List<Integer> > entry : fedPartitionMap.entrySet()) {
+      String partition = entry.getKey();
+      List<Integer> partition_feds = entry.getValue();
+      for (String fed : FedValueArray) {
+        if (partition_feds.contains(fed)) {
+          partitionStatus[partition] = True;
+          break;
+        }
+      }
+    }
+
+    return partitionStatus;
+  }
+
   // determine the active HCAL FEDs from the ENABLE_FED_MASK string received in the configureAction()
   protected List<String> getEnabledHCALFeds(String FedEnableMask) {
     List<String> fedVector = new ArrayList<String>();
