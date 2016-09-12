@@ -22,7 +22,9 @@ import java.net.URISyntaxException;
 import java.util.Random;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.stream;
+import java.util.stream.IntStream;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -1856,42 +1858,44 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
-  HashMap getPartitionsFromFedMask(String FedEnableMaks) {
+  HashMap getMaskedPartitionsFromFedMask(String thisFedEnableMask) {
     Boolean testNewFedMapParsing = true;
 
-    HashMap partitionStatus = new HashMap();
-    partitionStatus["HCAL"] = False;
-    partitionStatus["HBHEa"] = False;
-    partitionStatus["HBHEb"] = False;
-    partitionStatus["HBHEc"] = False;
-    partitionStatus["HF"] = False;
-    partitionStatus["HO"] = False;
+    HashMap<String, Boolean> partitionStatus = new HashMap<String, Boolean>();
+    partitionStatus.put("HCAL", false);
+    partitionStatus.put("HBHEa", false);
+    partitionStatus.put("HBHEb", false);
+    partitionStatus.put("HBHEc", false);
+    partitionStatus.put("HF", false);
+    partitionStatus.put("HO", false);
 
-    HashMap fedPartitionMap = new HashMap();
+    HashMap<String, List<Integer> > fedPartitionMap = new HashMap<String, List<Integer> >();
     if (testNewFedMapParsing) {
-      fedPartitionMap["HCAL"] = IntStream.rangeClosed(700, 731);
-      fedPartitionMap["HBHEa"] = IntStream.rangeClosed(700, 705);
-      fedPartitionMap["HBHEb"] = IntStream.rangeClosed(706, 711);
-      fedPartitionMap["HBHEc"] = IntStream.rangeClosed(712, 717);
-      fedPartitionMap["HF"] = IntStream.rangeClosed(718, 723);
-      fedPartitionMap["HO"] = IntStream.rangeClosed(724, 731);
+      fedPartitionMap.put("HCAL", IntStream.rangeClosed(700, 731).boxed().collect(Collectors.toList()));
+      fedPartitionMap.put("HBHEa", IntStream.rangeClosed(700, 705).boxed().collect(Collectors.toList()));
+      fedPartitionMap.put("HBHEb", IntStream.rangeClosed(706, 711).boxed().collect(Collectors.toList()));
+      fedPartitionMap.put("HBHEc", IntStream.rangeClosed(712, 717).boxed().collect(Collectors.toList()));
+      fedPartitionMap.put("HF", IntStream.rangeClosed(718, 723).boxed().collect(Collectors.toList()));
+      fedPartitionMap.put("HO", IntStream.rangeClosed(724, 731).boxed().collect(Collectors.toList()));
     } else {
-      // Load from configuration
+      // Load from configuration... awaiting implementation.
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
       logger.error(errMessage);
       for (String partition : partitionStatus.keySet()) {
-        partitionStatus[partition] = true;
+        partitionStatus.put(partition, true);
       }
       return partitionStatus;
     }
 
-    String[] FedValueArray = FedEnableMask.split("%");
+    // Loop over feds in each partition, and check against list of masked feds. If a non-masked fed is found, set status to true (=on)
+    List<Integer> maskedFedArray = parseFedEnableMask(thisFedEnableMask);
+
     for (Map.Entry<String, List<Integer> > entry : fedPartitionMap.entrySet()) {
       String partition = entry.getKey();
-      List<Integer> partition_feds = entry.getValue();
-      for (String fed : FedValueArray) {
-        if (partition_feds.contains(fed)) {
-          partitionStatus[partition] = True;
+      List<Integer> partitionFeds = entry.getValue();
+      for (Integer fed : partitionFeds) {
+        if (!maskedFedArray.contains(fed)) {
+          partitionStatus.put(partition, true);
           break;
         }
       }
@@ -1900,6 +1904,61 @@ public class HCALEventHandler extends UserEventHandler {
     return partitionStatus;
   }
 
+  // Parse the FED enable mask and return a list of masked FEDs 
+  // (Masked is status==0, all other statuses are ignored; FED_ENABLE_MASK is formatted as FED_ID_1&STATUS_1%FED_ID_2&STATUS2%...)
+  protected List<Integer> parseFedEnableMask(String thisFedEnableMask) {
+    String[] fedIdValueArray = thisFedEnableMask.split("%");
+    List<Integer> maskedFeds = new ArrayList<Integer>();
+    for (String fedIdValueString : fedIdValueArray) {
+      String[] fedIdValue = fedIdValueString.split("&");
+
+      // Require 2 strings, the FED ID and the mask
+      if (fedIdValue.length!=2){
+        logger.warn("[HCAL " + functionManager.FMname + "] parseFedEnableMask: inconsistent fedIdValueString found (should be of format fedId&mask).\n The length is: " + fedIdValue.length + "\nString: " + fedIdValueString);
+        break;
+      }
+
+      // Get the FED ID
+      Integer fedId = null;
+      try {
+        fedId = new Integer(fedIdValue[0]);
+      } catch (NumberFormatException nfe) {
+        if (!RunType.equals("local")) {
+          logger.error("[HCAL " + functionManager.FMname + "] parseFedEnableMask: FedId format error: " + nfe.getMessage());
+        } else {
+          logger.debug("[HCAL " + functionManager.FMname + "] parseFedEnableMask: FedId format error: " + nfe.getMessage());
+        }
+        continue;
+      }
+
+      // Get the FED mask word
+      // bit  0 : SLINK ON / OFF
+      //      1 : ENABLED/DISABLED
+      //  2 & 0 : SLINK NA / BROKEN
+      //      4 : NO CONTROL
+      BigInteger fedMaskWord = null;
+      try {
+        fedMaskWord = new BigInteger( fedIdValue[1] );
+      } catch (NumberFormatException nfe) {
+        if (!RunType.equals("local")) {
+          logger.error("parseFedEnableMask: fedMaskWord format error: " + nfe.getMessage());
+        } else {
+          logger.debug("parseFedEnableMask: fedMaskWord format error: " + nfe.getMessage());
+        }
+        continue;
+      }
+      logger.debug("parseFedEnableMask: parsing result ...\n(FedId/Status) = (" + fedIdValue[0] + "/"+ fedIdValue[1] + ")");
+
+      // Criteria for on: ON && ENABLED && !BROKEN
+      if (!(fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3))) {
+        logger.debug("[HCAL " + functionManager.FMname + "] parseFedEnableMask: fedId" + fedIdValue[0] + " is masked in FED_ENABLE_MASK");
+        maskedFeds.add(fedId);
+      }
+    } // End loop over fedId:fedMaskWord
+    return maskedFeds;
+  }
+
+  // DEPRECATED
   // determine the active HCAL FEDs from the ENABLE_FED_MASK string received in the configureAction()
   protected List<String> getEnabledHCALFeds(String FedEnableMask) {
     List<String> fedVector = new ArrayList<String>();
