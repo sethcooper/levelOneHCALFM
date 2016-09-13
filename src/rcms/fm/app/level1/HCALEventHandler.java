@@ -1858,9 +1858,10 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
-  HashMap getMaskedPartitionsFromFedMask(String thisFedEnableMask) {
+  List<String> getMaskedPartitionsFromFedMask(String thisFedEnableMask) {
     Boolean testNewFedMapParsing = true;
 
+    // Map <partition name : partition enabled>. Initialize all partitions to false=off; if a non-masked partition is found, set to true=on. 
     HashMap<String, Boolean> partitionStatus = new HashMap<String, Boolean>();
     partitionStatus.put("HCAL", false);
     partitionStatus.put("HBHEa", false);
@@ -1868,6 +1869,8 @@ public class HCALEventHandler extends UserEventHandler {
     partitionStatus.put("HBHEc", false);
     partitionStatus.put("HF", false);
     partitionStatus.put("HO", false);
+
+    List<String> maskedPartitions = new ArrayList<String>();
 
     HashMap<String, List<Integer> > fedPartitionMap = new HashMap<String, List<Integer> >();
     if (testNewFedMapParsing) {
@@ -1881,34 +1884,43 @@ public class HCALEventHandler extends UserEventHandler {
       // Load from configuration... awaiting implementation.
       String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
       logger.error(errMessage);
-      for (String partition : partitionStatus.keySet()) {
-        partitionStatus.put(partition, true);
-      }
-      return partitionStatus;
+      return maskedPartitions;
     }
 
     // Loop over feds in each partition, and check against list of masked feds. If a non-masked fed is found, set status to true (=on)
-    List<Integer> maskedFedArray = parseFedEnableMask(thisFedEnableMask);
-
+    HashMap<Integer, BigInteger> parsedMask = parseFedEnableMask(thisFedEnableMask);
     for (Map.Entry<String, List<Integer> > entry : fedPartitionMap.entrySet()) {
       String partition = entry.getKey();
       List<Integer> partitionFeds = entry.getValue();
       for (Integer fed : partitionFeds) {
-        if (!maskedFedArray.contains(fed)) {
+        BigInteger fedMaskWord = parsedMask.get(fed);
+        Boolean fedIsMasked = (!(fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
+        if (!fedIsMasked) {
           partitionStatus.put(partition, true);
           break;
         }
       }
     }
 
-    return partitionStatus;
+    for (Map.Entry<String, Boolean> entry : partitionStatus.entrySet()) {
+      if (!entry.getValue()) {
+        maskedPartitions.add(entry.getKey());
+      }
+    }
+
+    return maskedPartitions;
   }
 
-  // Parse the FED enable mask and return a list of masked FEDs 
-  // (Masked is status==0, all other statuses are ignored; FED_ENABLE_MASK is formatted as FED_ID_1&STATUS_1%FED_ID_2&STATUS2%...)
-  protected List<Integer> parseFedEnableMask(String thisFedEnableMask) {
+  // Parse the FED enable mask string into a map <FedId:FedMaskWord>
+  // FED_ENABLE_MASK is formatted as FEDID_1&FEDMASKWORD_1%FEDID_2&FEDMASKWORD2%...
+  // The mask word is 3 for enabled FEDs:
+  // bit  0 : SLINK ON / OFF
+  //      1 : ENABLED/DISABLED
+  //  2 & 0 : SLINK NA / BROKEN
+  //      4 : NO CONTROL
+  protected HashMap<Integer, BigInteger> parseFedEnableMask(String thisFedEnableMask) {
     String[] fedIdValueArray = thisFedEnableMask.split("%");
-    List<Integer> maskedFeds = new ArrayList<Integer>();
+    HashMap<Integer, BigInteger> parsedFedEnableMask = new HashMap<Integer, BigInteger>();
     for (String fedIdValueString : fedIdValueArray) {
       String[] fedIdValue = fedIdValueString.split("&");
 
@@ -1931,11 +1943,6 @@ public class HCALEventHandler extends UserEventHandler {
         continue;
       }
 
-      // Get the FED mask word
-      // bit  0 : SLINK ON / OFF
-      //      1 : ENABLED/DISABLED
-      //  2 & 0 : SLINK NA / BROKEN
-      //      4 : NO CONTROL
       BigInteger fedMaskWord = null;
       try {
         fedMaskWord = new BigInteger( fedIdValue[1] );
@@ -1949,13 +1956,10 @@ public class HCALEventHandler extends UserEventHandler {
       }
       logger.debug("parseFedEnableMask: parsing result ...\n(FedId/Status) = (" + fedIdValue[0] + "/"+ fedIdValue[1] + ")");
 
-      // Criteria for on: ON && ENABLED && !BROKEN
-      if (!(fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3))) {
-        logger.debug("[HCAL " + functionManager.FMname + "] parseFedEnableMask: fedId" + fedIdValue[0] + " is masked in FED_ENABLE_MASK");
-        maskedFeds.add(fedId);
-      }
+      parsedFedEnableMask.put(fedId, fedMaskWord);
+
     } // End loop over fedId:fedMaskWord
-    return maskedFeds;
+    return parsedFedEnableMask;
   }
 
   // DEPRECATED
