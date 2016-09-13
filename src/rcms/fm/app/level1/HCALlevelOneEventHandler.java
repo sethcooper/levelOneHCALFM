@@ -50,6 +50,7 @@ import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.resourceservice.db.resource.Resource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
@@ -58,6 +59,7 @@ import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -736,6 +738,37 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread4.start();
 
 
+      // TEST PARTITION DISABLING HERE
+      // Make list of <partition : fed list>
+      HashMap<String, List<Integer> > partitionFedMap = new HashMap<String, List<Integer> >();
+      List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+      for(QualifiedResource qr : fmChildrenList) {
+        String childPartitionName = qr.getName();
+        List<Integer> childPartitionFeds = null;
+        List<ConfigProperty> propertiesList = qr.getResource().getProperties();
+        for (ConfigProperty property : propertiesList) {
+          if (property.getName().equals("FEDList")) {
+            childPartitionFeds = new ArrayList<Integer>();
+            String[] childPartitionFedsStr = property.getValue().replace("[","").replace("]","").split(",");
+            if (childPartitionFedsStr.length == 0) {
+              logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- partition " + childPartitionName + " has property FEDList, but I failed to parse the feds out of string " + property.getValue());
+            }
+            for(String s : childPartitionFedsStr) childPartitionFeds.add(Integer.valueOf(s));
+          }
+        }
+        if (childPartitionFeds == null) {
+          logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Did not find list of FEDs for child FM " + childPartitionName);
+        }
+        partitionFedMap.put(childPartitionName, childPartitionFeds);
+      }
+
+      List<String> maskedPartitions = getMaskedPartitionsFromFedMask(FedEnableMask, partitionFedMap);
+      for (String maskedPartition : maskedPartitions) {
+        logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Partition " + maskedPartition + " is masked.");
+      }
+      
+
+
       // prepare run mode to be passed to level 2
       //String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
@@ -779,7 +812,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         configureTaskSeq.addLast(l2Priority2Task);
 
         // now configure the rest in parallel
-        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+        //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
         List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList)
           normalFMsToConfigureList.add((FunctionManager)qr);

@@ -1858,7 +1858,7 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
-  List<String> getMaskedPartitionsFromFedMask(String thisFedEnableMask) {
+  List<String> getMaskedPartitionsFromFedMask(String thisFedEnableMask, HashMap<String, List<Integer> > partitionFedMap) {
     Boolean testNewFedMapParsing = true;
 
     // Map <partition name : partition enabled>. Initialize all partitions to false=off; if a non-masked partition is found, set to true=on. 
@@ -1872,24 +1872,24 @@ public class HCALEventHandler extends UserEventHandler {
 
     List<String> maskedPartitions = new ArrayList<String>();
 
-    HashMap<String, List<Integer> > fedPartitionMap = new HashMap<String, List<Integer> >();
-    if (testNewFedMapParsing) {
-      fedPartitionMap.put("HCAL", IntStream.rangeClosed(700, 731).boxed().collect(Collectors.toList()));
-      fedPartitionMap.put("HBHEa", IntStream.rangeClosed(700, 705).boxed().collect(Collectors.toList()));
-      fedPartitionMap.put("HBHEb", IntStream.rangeClosed(706, 711).boxed().collect(Collectors.toList()));
-      fedPartitionMap.put("HBHEc", IntStream.rangeClosed(712, 717).boxed().collect(Collectors.toList()));
-      fedPartitionMap.put("HF", IntStream.rangeClosed(718, 723).boxed().collect(Collectors.toList()));
-      fedPartitionMap.put("HO", IntStream.rangeClosed(724, 731).boxed().collect(Collectors.toList()));
-    } else {
-      // Load from configuration... awaiting implementation.
-      String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
-      logger.error(errMessage);
-      return maskedPartitions;
-    }
+    //HashMap<String, List<Integer> > partitionFedMap = new HashMap<String, List<Integer> >();
+    //if (testNewFedMapParsing) {
+    //  partitionFedMap.put("HCAL", IntStream.rangeClosed(700, 731).boxed().collect(Collectors.toList()));
+    //  partitionFedMap.put("HBHEa", IntStream.rangeClosed(700, 705).boxed().collect(Collectors.toList()));
+    //  partitionFedMap.put("HBHEb", IntStream.rangeClosed(706, 711).boxed().collect(Collectors.toList()));
+    //  partitionFedMap.put("HBHEc", IntStream.rangeClosed(712, 717).boxed().collect(Collectors.toList()));
+    //  partitionFedMap.put("HF", IntStream.rangeClosed(718, 723).boxed().collect(Collectors.toList()));
+    //  partitionFedMap.put("HO", IntStream.rangeClosed(724, 731).boxed().collect(Collectors.toList()));
+    //} else {
+    //  // Load from configuration... awaiting implementation.
+    //  String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
+    //  logger.error(errMessage);
+    //  return maskedPartitions;
+    //}
 
     // Loop over feds in each partition, and check against list of masked feds. If a non-masked fed is found, set status to true (=on)
     HashMap<Integer, BigInteger> parsedMask = parseFedEnableMask(thisFedEnableMask);
-    for (Map.Entry<String, List<Integer> > entry : fedPartitionMap.entrySet()) {
+    for (Map.Entry<String, List<Integer> > entry : partitionFedMap.entrySet()) {
       String partition = entry.getKey();
       List<Integer> partitionFeds = entry.getValue();
       for (Integer fed : partitionFeds) {
