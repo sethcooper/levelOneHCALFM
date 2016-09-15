@@ -1529,11 +1529,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         try {
-          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALRESET);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
+          //TODO: Make ASYNCRESET work in local runs
           //functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
         }
         catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (AsyncReset to hcalSupervisor) failed ...";
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (Reset to hcalSupervisor) failed ...";
           functionManager.goToError(errMessage,e);
         }
 
