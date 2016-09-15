@@ -738,7 +738,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread4.start();
 
 
-      // TEST PARTITION DISABLING HERE
+      // TEST PARTITION DISABLING FROM FED_ENABLE_MASK
       // Make list of <partition : fed list>
       HashMap<String, List<Integer> > partitionFedMap = new HashMap<String, List<Integer> >();
       List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
@@ -761,12 +761,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         partitionFedMap.put(childPartitionName, childPartitionFeds);
       }
-
+      // Use function HCALEventHandler::getMaskedPartitionsFromFedMask to get a list of the partitions to be masked.
       List<String> maskedPartitions = getMaskedPartitionsFromFedMask(FedEnableMask, partitionFedMap);
       for (String maskedPartition : maskedPartitions) {
         logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Partition " + maskedPartition + " is masked.");
       }
-      
+      // END TEST PARTITION DISABLING
 
 
       // prepare run mode to be passed to level 2
