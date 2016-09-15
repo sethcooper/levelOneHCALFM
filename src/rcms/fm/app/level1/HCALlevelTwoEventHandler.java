@@ -1529,7 +1529,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         try {
-          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALRESET);
+          //functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
         }
         catch (QualifiedResourceContainerException e) {
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (AsyncReset to hcalSupervisor) failed ...";
@@ -1605,8 +1606,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
            }
            }
            */
-        // halt LPM
-        functionManager.haltLPMControllers();
 
         // stop the StorageManagers
         if (!functionManager.containerStorageManager.isEmpty()) {
@@ -1621,6 +1620,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
+      // halt LPM
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        functionManager.haltLPMControllers();
+      }
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
         // when we came from TTSTestMode we need to give back control of sTTS to HW
