@@ -1792,6 +1792,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       publishRunInfoSummaryfromXDAQ(); 
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
+      if (!functionManager.ErrorState) {
+        functionManager.fireEvent( HCALInputs.SETCOLDRESET );
+      }
+
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
