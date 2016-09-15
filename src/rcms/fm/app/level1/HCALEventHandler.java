@@ -1131,19 +1131,11 @@ public class HCALEventHandler extends UserEventHandler {
           }
           catch (XDAQTimeoutException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage);
           }
           catch (XDAQException e) {
             String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException while querying the XDAQParameter names for " + qr.getName() + ". Message: " + e.getMessage();
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            functionManager.goToError(errMessage);
           }
         }
   }
