@@ -1858,57 +1858,45 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
-  List<String> getMaskedPartitionsFromFedMask(String thisFedEnableMask, HashMap<String, List<Integer> > partitionFedMap) {
-    Boolean testNewFedMapParsing = true;
+  List<String> getMaskedChildFMsFromFedMask(String thisFedEnableMask, HashMap<String, List<Integer> > childFMFedMap) {
+    // Make a list of FEDs to test mask/no mask
+    List<Integer> fedList = new ArrayList<Integer>();
+    for (Map.Entry<String, List<Integer> > entry : childFMFedMap.entrySet()) {
+      fedList.addAll(entry.getValue());
+    }
 
-    // Map <partition name : partition enabled>. Initialize all partitions to false=off; if a non-masked partition is found, set to true=on. 
-    HashMap<String, Boolean> partitionStatus = new HashMap<String, Boolean>();
-    partitionStatus.put("HCAL", false);
-    partitionStatus.put("HBHEa", false);
-    partitionStatus.put("HBHEb", false);
-    partitionStatus.put("HBHEc", false);
-    partitionStatus.put("HF", false);
-    partitionStatus.put("HO", false);
-
-    List<String> maskedPartitions = new ArrayList<String>();
-
-    //HashMap<String, List<Integer> > partitionFedMap = new HashMap<String, List<Integer> >();
-    //if (testNewFedMapParsing) {
-    //  partitionFedMap.put("HCAL", IntStream.rangeClosed(700, 731).boxed().collect(Collectors.toList()));
-    //  partitionFedMap.put("HBHEa", IntStream.rangeClosed(700, 705).boxed().collect(Collectors.toList()));
-    //  partitionFedMap.put("HBHEb", IntStream.rangeClosed(706, 711).boxed().collect(Collectors.toList()));
-    //  partitionFedMap.put("HBHEc", IntStream.rangeClosed(712, 717).boxed().collect(Collectors.toList()));
-    //  partitionFedMap.put("HF", IntStream.rangeClosed(718, 723).boxed().collect(Collectors.toList()));
-    //  partitionFedMap.put("HO", IntStream.rangeClosed(724, 731).boxed().collect(Collectors.toList()));
-    //} else {
-    //  // Load from configuration... awaiting implementation.
-    //  String errMessage = "[HCAL " + functionManager.FMname + "] Error! Loading partition-FED map from configuration not yet implemented. Returning true for all partitions";
-    //  logger.error(errMessage);
-    //  return maskedPartitions;
-    //}
-
-    // Loop over feds in each partition, and check against list of masked feds. If a non-masked fed is found, set status to true (=on)
-    HashMap<Integer, BigInteger> parsedMask = parseFedEnableMask(thisFedEnableMask);
-    for (Map.Entry<String, List<Integer> > entry : partitionFedMap.entrySet()) {
-      String partition = entry.getKey();
-      List<Integer> partitionFeds = entry.getValue();
-      for (Integer fed : partitionFeds) {
-        BigInteger fedMaskWord = parsedMask.get(fed);
-        Boolean fedIsMasked = (!(fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
-        if (!fedIsMasked) {
-          partitionStatus.put(partition, true);
-          break;
-        }
+    // Get mask/no mask for each FED
+    HashMap<Integer, BigInteger> parsedFedEnableMask = parseFedEnableMask(thisFedEnableMask);
+    HashMap<Integer, Boolean> fedStatusMap = new HashMap<Integer, Boolean>();
+    for (Integer fedId : fedList) {
+      BigInteger fedMaskWord = parsedFedEnableMask.get(fedId);
+      if (fedMaskWord == null) {
+        logger.warn("[HCAL " + functionManager.FMname + "] Warning! FED " + fedId + " was not found in the FED_ENABLE_MASK. I will consider it enabled, but you might want to investigate.");
+        fedStatusMap.put(fedId, true);
+      } else {
+        fedStatusMap.put(fedId, (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
       }
     }
 
-    for (Map.Entry<String, Boolean> entry : partitionStatus.entrySet()) {
+    // Loop over partitions, and determine if they have any enabled FEDs
+    HashMap<String, Boolean> childFMStatusMap = new HashMap<String, Boolean>();
+    for (Map.Entry<String, List<Integer> > entry : childFMFedMap.entrySet()) {
+      String childFMName = entry.getKey();
+      List<Integer> childFMFedList = entry.getValue();
+      Boolean fmStatus = false;
+      for (Integer fedId : childFMFedList) {
+        fmStatus = (fmStatus || fedStatusMap.get(fedId));
+      }
+      childFMStatusMap.put(childFMName, fmStatus);
+    }
+    // Convert to List<String> of masked partitions and return
+    List<String> maskedChildFMs = new ArrayList<String>();
+    for (Map.Entry<String, Boolean> entry : childFMStatusMap.entrySet()) {
       if (!entry.getValue()) {
-        maskedPartitions.add(entry.getKey());
+        maskedChildFMs.add(entry.getKey());
       }
     }
-
-    return maskedPartitions;
+    return maskedChildFMs;
   }
 
   // Parse the FED enable mask string into a map <FedId:FedMaskWord>

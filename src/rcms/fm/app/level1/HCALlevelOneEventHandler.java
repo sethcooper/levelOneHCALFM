@@ -740,31 +740,54 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // TEST PARTITION DISABLING FROM FED_ENABLE_MASK
       // Make list of <partition : fed list>
-      HashMap<String, List<Integer> > partitionFedMap = new HashMap<String, List<Integer> >();
+      HashMap<String, List<Integer> > childFMFedMap = new HashMap<String, List<Integer> >();
       List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
       for(QualifiedResource qr : fmChildrenList) {
-        String childPartitionName = qr.getName();
-        List<Integer> childPartitionFeds = null;
+        String childFMName = qr.getName();
+        List<Integer> childFMFeds = null;
         List<ConfigProperty> propertiesList = qr.getResource().getProperties();
         for (ConfigProperty property : propertiesList) {
           if (property.getName().equals("FEDList")) {
-            childPartitionFeds = new ArrayList<Integer>();
-            String[] childPartitionFedsStr = property.getValue().replace("[","").replace("]","").split(",");
-            if (childPartitionFedsStr.length == 0) {
-              logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- partition " + childPartitionName + " has property FEDList, but I failed to parse the feds out of string " + property.getValue());
+            childFMFeds = new ArrayList<Integer>();
+            String[] childFMFedsStr = property.getValue().replace("[","").replace("]","").split(";|,");
+            if (childFMFedsStr.length == 0) {
+              logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Child FM " + childFMName + " has property FEDList, but I failed to parse the feds out of string " + property.getValue());
             }
-            for(String s : childPartitionFedsStr) childPartitionFeds.add(Integer.valueOf(s));
+            for(String s : childFMFedsStr) {
+              childFMFeds.add(Integer.valueOf(s));
+            }
           }
         }
-        if (childPartitionFeds == null) {
-          logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Did not find list of FEDs for child FM " + childPartitionName);
+        if (childFMFeds == null) {
+          logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- For child FM " + childFMName + ", did not find list of FEDs. So, I won't consider disabling it with FED_ENABLE_MASK.");
+        } else {
+          logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- For child FM " + childFMName + ", found FEDs: " + childFMFeds.toString() + ". I will consider disabling it based on FED_ENABLE_MASK.");
+          childFMFedMap.put(childFMName, childFMFeds);
         }
-        partitionFedMap.put(childPartitionName, childPartitionFeds);
       }
-      // Use function HCALEventHandler::getMaskedPartitionsFromFedMask to get a list of the partitions to be masked.
-      List<String> maskedPartitions = getMaskedPartitionsFromFedMask(FedEnableMask, partitionFedMap);
-      for (String maskedPartition : maskedPartitions) {
-        logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Partition " + maskedPartition + " is masked.");
+
+      // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked.
+      List<String> maskedChildFMs = getMaskedChildFMsFromFedMask(FedEnableMask, childFMFedMap);
+      for(QualifiedResource qr : fmChildrenList) {
+        String childFMName = qr.getName();
+        if (maskedChildFMs.contains(childFMName)) {
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to mask and destroy FM child " + childFMName + "." );
+          // kill all XDAQ executives
+          //FunctionManager fm = (FunctionManager)qr;
+          //UserFunctionManager myFM = fm.getUserFunctionManager();
+          //UserFunctionManager myFM = UserFunctionManager(qr);
+          //logger.warn("[HCAL LVL1 " + functionManager.FMname + "] SethLog -- Found FM child named "+ ((HCALFunctionManager)(((FunctionManager)qr).getUserFunctionManager())).FMname+": will now mask it and kill its xdaqs!" );
+          //((HCALFunctionManager)((FunctionManager)qr).getUserFunctionManager()).destroyXDAQ();
+          qr.setActive(false);
+          try {
+            ((FunctionManager)qr).destroy();
+          }
+          //XXX FIXME: should be changed to the proper exception type
+          catch (Exception e) {
+            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Exception: destroy failed ...";
+            functionManager.goToError(errMessage);
+          }
+        }
       }
       // END TEST PARTITION DISABLING
 
