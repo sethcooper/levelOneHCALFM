@@ -22,9 +22,6 @@ import java.net.URISyntaxException;
 import java.util.Random;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.stream.IntStream;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -1940,6 +1937,7 @@ public class HCALEventHandler extends UserEventHandler {
         logger.warn("[HCAL " + functionManager.FMname + "] Warning! FED " + fedId + " was not found in the FED_ENABLE_MASK. I will consider it enabled, but you might want to investigate.");
         fedStatusMap.put(fedId, true);
       } else {
+        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==3 means enabled.
         fedStatusMap.put(fedId, (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
       }
     }
