@@ -766,12 +766,18 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
-      // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked.
+      // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked, and destroy.
       List<String> maskedChildFMs = getMaskedChildFMsFromFedMask(FedEnableMask, childFMFedMap);
+      String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString(); // For local runs, masking the evmTrigFM will cause problems, so forbid it.
       for(QualifiedResource qr : fmChildrenList) {
         String childFMName = qr.getName();
         if (maskedChildFMs.contains(childFMName)) {
           logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to mask and destroy FM child " + childFMName + "." );
+
+          // Check that the partition is not responsible for event building/triggering
+          if (childFMName.equals(evmTrigFM)) {
+            functionManager.goToError("[HCAL LVL 1 " + functionManager.FMname + "] Error! I want to disable " + childFMName + " based on FED_ENABLE_MASK, but it is designated as EVM_TRIG_FM.");
+          }
           // kill all XDAQ executives
           //FunctionManager fm = (FunctionManager)qr;
           //UserFunctionManager myFM = fm.getUserFunctionManager();
