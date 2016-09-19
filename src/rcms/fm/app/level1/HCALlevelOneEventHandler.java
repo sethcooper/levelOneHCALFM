@@ -738,8 +738,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread4.start();
 
 
-      // TEST PARTITION DISABLING FROM FED_ENABLE_MASK
-      // Make list of <partition : fed list>
+      // Disable FMs based on FED_ENABLE_MASK, if all FEDs in the FM partition are masked.
+      // First, make map <partition => fed list>
       HashMap<String, List<Integer> > childFMFedMap = new HashMap<String, List<Integer> >();
       List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
       for(QualifiedResource qr : fmChildrenList) {
