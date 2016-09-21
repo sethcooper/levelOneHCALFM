@@ -1498,6 +1498,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           LV2haltTaskSeq.addLast(SupervisorResetTask);
         }
       }
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
+        functionManager.goToError(errMessage);
+      }
 
       logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
       functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
