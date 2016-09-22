@@ -1583,10 +1583,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // halt LPM
-      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-        functionManager.haltLPMControllers();
-      }
+      // do not halt LPM with LPM FM. It is halted by supervisor in EvmTA FM
+      //if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+      //  functionManager.haltLPMControllers();
+      //}
+
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
         // when we came from TTSTestMode we need to give back control of sTTS to HW
