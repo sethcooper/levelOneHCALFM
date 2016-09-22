@@ -959,7 +959,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       startInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getActiveQRList();
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList)
           normalFMsToStartList.add((FunctionManager)qr);
