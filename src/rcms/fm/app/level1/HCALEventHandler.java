@@ -2705,5 +2705,16 @@ public class HCALEventHandler extends UserEventHandler {
       logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
     }
   }
+  // Function to check content of a QR container, return a String with all the names
+  String getQRnamesFromContainer(QualifiedResourceContainer qrc){
+    String Names = "";
+    if (!qrc.isEmpty()){
+      List<QualifiedResource> qrlist = qrc.getQualifiedResourceList();
+      for(QualifiedResource qr : qrlist){
+        Names += qr.getName() + ";";
+      }
+    }
+    return Names;
+  }
 
 }
