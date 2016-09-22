@@ -1102,7 +1102,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         TaskSequence haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
         // 1) EvmTrig (TA) FM
         if(!EvmTrigFMToHaltContainer.isEmpty()) {
-          SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting EvmTrig child FM");
+          SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_EVMTRIG_FM");
           haltTaskSeq.addLast(evmTrigTask);
           String evmTrigFMnames = getQRnamesFromContainer(EvmTrigFMToHaltContainer) ;
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to haltTask: "+ evmTrigFMnames);
@@ -1110,14 +1110,14 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         
         // 2) TCDSLPM FM
         if(!TCDSLPMToHaltContainer.isEmpty()) {
-          SimpleTask tcdslpmTask = new SimpleTask(TCDSLPMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting TCDSLPM child FM");
+          SimpleTask tcdslpmTask = new SimpleTask(TCDSLPMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_TCDS_FM");
           haltTaskSeq.addLast(tcdslpmTask);
           String tcdslpmFMnames = getQRnamesFromContainer(TCDSLPMToHaltContainer) ;
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TCDSLPM FMs to haltTask: "+ tcdslpmFMnames);
         }
         // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
         if(!normalFMsToHaltContainer.isEmpty()) {
-          SimpleTask fmChildrenTask = new SimpleTask(normalFMsToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"Halting normal child FMs");
+          SimpleTask fmChildrenTask = new SimpleTask(normalFMsToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_NORMAL_FM");
           haltTaskSeq.addLast(fmChildrenTask);
           String normalFMnames = getQRnamesFromContainer(normalFMsToHaltContainer) ;
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: "+ normalFMnames);
