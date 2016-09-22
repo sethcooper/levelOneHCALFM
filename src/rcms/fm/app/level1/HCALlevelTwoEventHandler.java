@@ -1483,7 +1483,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // 1) Stop the TA
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
-          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"Stopping Triggeradapter");
+          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
           LV2haltTaskSeq.addLast(evmTrigTask);
         }
       }
@@ -1491,9 +1491,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       if (functionManager.containerhcalSupervisor!=null) {
         if (!functionManager.containerhcalSupervisor.isEmpty()) {
           //Bring supervisor from RunningToConfigured (stop)
-          SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"Stopping supervisor");
+          SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
           //Bring supervisor from ConfiguredToHalted (reset)
-          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"Halting supervisor");
+          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
           LV2haltTaskSeq.addLast(SupervisorStopTask);
           LV2haltTaskSeq.addLast(SupervisorResetTask);
         }
@@ -1584,9 +1584,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       }
 
       // do not halt LPM with LPM FM. It is halted by supervisor in EvmTA FM
-      //if( functionManager.FMrole.equals("Level2_TCDSLPM")){
-      //  functionManager.haltLPMControllers();
-      //}
+      if( functionManager.FMrole.equals("Level2_TCDSLPM")){
+        functionManager.haltLPMControllers();
+      }
 
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
