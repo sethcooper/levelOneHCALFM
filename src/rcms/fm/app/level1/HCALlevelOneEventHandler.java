@@ -966,8 +966,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
         normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
         normalFMsToStartList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Laser.getQualifiedResourceList());
+        //normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Laser.getQualifiedResourceList());
         QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
+        String FMsToStart = "";
+        for(QualifiedResource qr: normalFMsToStartList){
+          FMsToStart += qr.getName()+";";
+        }
+        logger.warn("[Martin log HCAL LV1 "+functionManager.FMname+"] Starting these FMs: "+ FMsToStart);
         // no reason not to always prioritize FM starts
         // include scheduling
         // SIC TODO I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
@@ -995,7 +1000,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // 5) L2_Laser
         if(!functionManager.containerFMChildrenL2Laser.isEmpty()) {
           SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
-          startTaskSeq.addLast(l2LaserTask);
+        //  startTaskSeq.addLast(l2LaserTask);
         }
 
         logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
