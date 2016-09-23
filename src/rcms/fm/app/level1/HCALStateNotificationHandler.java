@@ -125,12 +125,13 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
           setTimeoutThread(true);
           return;
         }
-        else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
-          setTimeoutThread(false);
-          // calculate the updated state
-          fm.theEventHandler.computeNewState(notification);
-          return;
-        }
+        // don't ignore these! may need to step to the next task
+        //else if ( notification.getToState().equals(HCALStates.HALTED.toString()) ) {
+        //  setTimeoutThread(false);
+        //  // calculate the updated state
+        //  fm.theEventHandler.computeNewState(notification);
+        //  return;
+        //}
       }
 
 
@@ -202,68 +203,10 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
 
         setTimeoutThread(false);
         String infomsg = "Received a State Notification while taskSequence is null \n";
-        //logger.warn(infomsg);
 
-        //if (fm.isGlobal()) {
-        //        //XXX SIC FIXME TODO not sure what to do here
-        //        //// check if we are stepping
-        //        //String toState = notification.getToState();
-        //        //if ( toState.equals(HCALStates.XDAQ_STEPPING.toString())
-        //        //                || toState.equals(HCALStates.RUNNING.toString()) ) {
-        //        //        String msg = "HCALSupervisor is "+toState;
-        //        //        fm.addMsgToConsole(msg);
-        //        //        fm.setAction(msg);
-        //        //} else if ( toState.equals(HCALStates.XDAQ_RUNNINGSEU.toString()) ) {
-        //        //        String msg = "HCALSupervisor is "+toState+", let's sync!";
-        //        //        fm.addMsgToConsole(msg);
-        //        //        fm.setAction(msg);
-        //        //        fm.fireEvent(HCALInputs.SETRUN_SOFTERROR);
-        //        //} else {
-        //        //    String errMsg = "Application performed unexpected state change to state "+toState+"\n";
-        //        //errMsg += "URI: "+notification.getIdentifier()+"\n";
-        //        //errMsg += "Reason: "+notification.getReason();
-        //        //    fm.sendCMSError(errMsg,logger);
-        //        //    fm.setAction(" ");
-        //        //    fm.fireEvent(HCALInputs.SETERROR);
-        //        //    fm.forceParameterUpdate();
-        //        //}
-        //    return;
-        //} else {
         logger.debug("FM is in local mode");
-        //logger.warn("taskSequence==null; computeNewState");
-        // calculate the updated state
         fm.theEventHandler.computeNewState(notification);
-        //logger.debug("HCALFM is in state "+ fm.getState());
-
-        ////if state is already an error...
-        //if (fm.getState() == new State("Error"))
-        //    //fm.forceParameterUpdate();
-        //    return;
-        //}
-
-        ////sync with HCAL Supervisor in local mode
-        //    String toState = notification.getToState();
-        //if  (toState.equals(HCALStates.HALTED.toString())) {
-        //        fm.fireEvent(HCALInputs.SETHALT);
-        //        //fm.getParameterSet().put(new FunctionManagerParameter<IntegerT>
-        //        //    (HCALParameters.RUN_NUMBER, new IntegerT(0) ));
-        //} else if (toState.equals(HCALStates.CONFIGURED.toString())) {
-        //    //String transMsg = String.format( "services configured ["+fm.getConfiguredServices()+"]");
-        //    //fm.setTransitionMessage( transMsg );
-        //    fm.fireEvent(HCALInputs.SETCONFIGURE);
-        //    //fm.getParameterSet().put(new FunctionManagerParameter<IntegerT>
-        //    //        (HCALParameters.RUN_NUMBER, new IntegerT(HCALParameters.NULL_RUN_NUMBER) ));
-        //    //fm.forceParameterUpdate();
-        //} else if  (toState.equals(HCALStates.RUNNING.toString())) {
-        //    fm.fireEvent(HCALInputs.SETSTART);
-        //} else if  (toState.equals(HCALStates.PAUSED.toString())) {
-        //    fm.fireEvent(HCALInputs.SETPAUSE);
-        //} //else if (toState.equals(HCALStates.XDAQ_RUNNINGSEU.toString())) {
-        //  //          fm.fireEvent(HCALInputs.SETRUN_SOFTERROR);
-        ////}
-        ////fm.forceParameterUpdate();
         return;
-        //}
     }
 
 
@@ -272,11 +215,11 @@ public class HCALStateNotificationHandler extends UserEventHandler  {
         logger.info("Transition completed");
         completeTransition();
       } else {
-        //logger.info("[SethLog] Start executing: "+taskSequence.getDescription());
         taskSequence.startExecution();
+        logger.info("taskSequence not reported complete, start executing:" + taskSequence.getDescription());
+        //logger.info("[SethLog] Start executing: "+taskSequence.getDescription());
         //                fm.setAction("Executing: "+_taskSequence.getDescription());
         //                logger.debug("_taskSequence status after a second startExecution: "+_taskSequence.isCompleted() );
-        logger.info("taskSequence not reported complete");
       }
     } catch (Exception e){
       taskSequence = null;
