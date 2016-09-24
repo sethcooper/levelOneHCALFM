@@ -866,7 +866,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
   public void startAction(Object obj) throws UserActionException {
 
-    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing startAction");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] Executing startAction");
 
@@ -959,55 +958,42 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       startInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getActiveQRList();
+        //Schedule Task with active QR in the containers
+        List<QualifiedResource> fmChildrenList       = functionManager.containerFMChildren.getActiveQRList();
+        List<QualifiedResource> EvmTrigFMtoStartList = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
+
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : fmChildrenList)
+        for(QualifiedResource qr : fmChildrenList){
           normalFMsToStartList.add((FunctionManager)qr);
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
-        //normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Laser.getQualifiedResourceList());
-        QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
-        String FMsToStart = "";
-        for(QualifiedResource qr: normalFMsToStartList){
-          FMsToStart += qr.getName()+";";
         }
-        logger.warn("[Martin log HCAL LV1 "+functionManager.FMname+"] Starting these FMs: "+ FMsToStart);
+        normalFMsToStartList.removeAll(EvmTrigFMtoStartList);
+
+        QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
+        QualifiedResourceContainer EvmTrigFMtoStartContainer = new QualifiedResourceContainer(EvmTrigFMtoStartList);
+        
         // no reason not to always prioritize FM starts
         // include scheduling
         // SIC TODO I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
         TaskSequence startTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-        // 1) Level2_Priority_1
-        if(!functionManager.containerFMChildrenL2Priority1.isEmpty()) {
-          SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority1 child FMs");
-          startTaskSeq.addLast(l2Priority1Task);
-        }
-        // 2) Level2_Priority_2
-        if(!functionManager.containerFMChildrenL2Priority2.isEmpty()) {
-          SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
-          startTaskSeq.addLast(l2Priority2Task);
-        }
-        // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
+        // 1) Everyone besides EvmTrig FMs in parallel
         if(!normalFMsToStartContainer.isEmpty()) {
           SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
+          String normalFMnames      = getQRnamesFromContainer(normalFMsToStartContainer);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding normal FMs to startTask: "+ normalFMnames);
           startTaskSeq.addLast(fmChildrenTask);
         }
-        // 4) EvmTrig
-        if(!functionManager.containerFMChildrenEvmTrig.isEmpty()) {
-          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+        // 2) EvmTrig
+        if(!EvmTrigFMtoStartContainer.isEmpty()) {
+          SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+          String EvmTrigFMnames  = getQRnamesFromContainer(EvmTrigFMtoStartContainer);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to startTask: "+ EvmTrigFMnames);
           startTaskSeq.addLast(evmTrigTask);
         }
-        // 5) L2_Laser
-        if(!functionManager.containerFMChildrenL2Laser.isEmpty()) {
-          SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
-        //  startTaskSeq.addLast(l2LaserTask);
-        }
 
-        logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
-        functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
-
+      logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+      functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
       }
-    }
+
 
     // set action
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
