@@ -130,9 +130,6 @@ public class HCALFunctionManager extends UserFunctionManager {
   // container with all FunctionManagers except the EvmTrig and TCDSLPM
   public QualifiedResourceContainer containerFMChildrenNoEvmTrigNoTCDSLPM = null;
 
-  public QualifiedResourceContainer containerFMChildrenL2Priority1 = null;
-  public QualifiedResourceContainer containerFMChildrenL2Priority2 = null;
-  public QualifiedResourceContainer containerFMChildrenL2Laser = null;
   public QualifiedResourceContainer containerFMChildrenEvmTrig = null;
   public QualifiedResourceContainer containerFMChildrenNormal = null;
 
