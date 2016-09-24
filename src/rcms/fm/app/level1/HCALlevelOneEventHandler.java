@@ -833,22 +833,15 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
-        // configure Level2Priority1 FMs first
-        SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
-        configureTaskSeq.addLast(l2Priority1Task);
-        // then configure L2Priority2 FMs
-        SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
-        configureTaskSeq.addLast(l2Priority2Task);
-
         // now configure the rest in parallel
         //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
         List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList)
           normalFMsToConfigureList.add((FunctionManager)qr);
-        normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
-        normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+        String normalFMnames     = getQRnamesFromContainer(normalFMsToConfigureContainer);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: "+normalFMnames);
         configureTaskSeq.addLast(fmChildrenTask);
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
