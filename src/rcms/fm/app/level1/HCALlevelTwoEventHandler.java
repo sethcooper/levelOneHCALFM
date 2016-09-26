@@ -1479,71 +1479,33 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("halting")));
 
-      // stop i.e. halt the triggering immediately and not waiting for the trigger adapter to report that it is stopped
-      if (functionManager.FMrole.equals("EvmTrig")) {
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty()) {
-
-            {
-              String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapter for halting found- good!";
-              logger.debug(debugMessage);
-            }
-
-            try {
-              functionManager.containerTriggerAdapter.execute(HCALInputs.HCALDISABLE);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: TriggerAdapter Disable failed ...";
-              functionManager.goToError(errMessage,e);
-            }
-
-          }
-          else {
-            if (functionManager.FMrole.equals("EvmTrig")) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: haltingAction()";
-              functionManager.goToError(errMessage);
-            }
-          }
+      TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+      // 1) Stop the TA
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
+          LV2haltTaskSeq.addLast(evmTrigTask);
         }
       }
-
-      // halting HCAL
-      if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-        {
-          String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for haltAction() found- good!";
-          logger.debug(debugMessage);
+      // 2) Stop the supervisor
+      if (functionManager.containerhcalSupervisor!=null) {
+        if (!functionManager.containerhcalSupervisor.isEmpty()) {
+          //Bring supervisor from RunningToConfigured (stop)
+          SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
+          //Bring supervisor from ConfiguredToHalted (reset)
+          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
+          LV2haltTaskSeq.addLast(SupervisorStopTask);
+          LV2haltTaskSeq.addLast(SupervisorResetTask);
         }
-
-        // halt
-        try {
-
-          // define stop time
-          StopTime = new Date();
-
-          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALDISABLE);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 1/2 (Disable to hcalSupervisor) failed";
-          functionManager.goToError(errMessage,e);
-        }
-
-        try {
-          functionManager.containerhcalSupervisor.execute(HCALInputs.RESET);
-          //TODO: Make ASYNCRESET work in local runs
-          //functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCRESET);
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: halting step 2/2 (Reset to hcalSupervisor) failed ...";
-          functionManager.goToError(errMessage,e);
-        }
-
       }
       else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
         String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
         functionManager.goToError(errMessage);
       }
 
+      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+      functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
+    
       // stop the event building gracefully
       if (functionManager.FMrole.equals("EvmTrig")) {
 
@@ -1621,10 +1583,11 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // halt LPM
+      // do not halt LPM with LPM FM. It is halted by supervisor in EvmTA FM
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
         functionManager.haltLPMControllers();
       }
+
       // check from which state we came, i.e. if we were in sTTS test mode disable this DCC special mode
       if (functionManager.getPreviousState().equals(HCALStates.TTSTEST_MODE)) {
         // when we came from TTSTestMode we need to give back control of sTTS to HW
