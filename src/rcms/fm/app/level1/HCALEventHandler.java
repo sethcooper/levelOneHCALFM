@@ -940,28 +940,15 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
     // get masked FMs and remove them from container
-    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
-    fmChItr = allChildFMs.iterator();
-    while (fmChItr.hasNext()) {
-      FunctionManager fmChild = (FunctionManager) fmChItr.next();
-      if (!fmChild.isActive()) {
-        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-        // role is set at beginning of init() so it's already set here
-        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-        fmChItr.remove();
-      }
-    }
-
+    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getActiveQRList();
+    functionManager.containerFMChildren   = new QualifiedResourceContainer(allChildFMs);
+    
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
 
     // see if we have any "special" FMs
-    List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
-    List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
-    List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
@@ -970,17 +957,7 @@ public class HCALEventHandler extends UserEventHandler {
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-        if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
-          l2LaserFMList.add(fmChild);
-        }
-        else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
-            fmChild.getRole().toString().equals("Level2_Priority_1")) {
-          l2Priority1List.add(fmChild);
-        }
-        else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
-          l2Priority2List.add(fmChild);
-        }
-        else if (fmChild.getRole().toString().equals("EvmTrig")) {
+        if (fmChild.getRole().toString().equals("EvmTrig")) {
           evmTrigList.add(fmChild);
         }
         else {
@@ -988,9 +965,6 @@ public class HCALEventHandler extends UserEventHandler {
         }
       }
     }
-    functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
-    functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
-    functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
     functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
     functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
