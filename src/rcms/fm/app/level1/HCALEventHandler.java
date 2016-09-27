@@ -85,6 +85,7 @@ import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
 import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
+import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
@@ -879,59 +880,26 @@ public class HCALEventHandler extends UserEventHandler {
 
   // initialize qualified group, i.e. all XDAQ executives
   protected void initXDAQ() {
-    // Look if the configuration uses TCDS and handle accordingly.
-    // First check if TCDS is being used, and if so, tell RCMS that the TCDS executives are already initialized.
-    Boolean usingTCDS = false;
+    
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-    for (QualifiedResource qr : xdaqExecutiveList) {
-      String hostName = qr.getResource().getHostName();
-      // ===WARNING!!!=== This hostname is hardcoded and should NOT be!!!
-      // TODO This needs to be moved out into userXML or a snippet!!!
-      if (hostName.equals("tcds-control-hcal.cms") || hostName.equals("tcds-control-904.cms904") ) {
-        usingTCDS = true;
-        logger.info("[HCAL " + functionManager.FMname + "] initXDAQ() -- the TCDS executive on hostName " + hostName + " is being handled in a special way.");
-        qr.setInitialized(true);
-      }
-    }
+    
+    // find xdaq applications
+    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
+    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
+    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
+    // TCDS apps
+    List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
+    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
+    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
+    tcdsList.addAll(lpmList);
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
+    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
 
-    List<QualifiedResource> jobControlList = qg.seekQualifiedResourcesOfType(new JobControl());
-    for (QualifiedResource qr: jobControlList) {
-      if (qr.getResource().getHostName().equals("tcds-control-hcal.cms") || qr.getResource().getHostName().equals("tcds-control-904.cms904") ) {
-        logger.info("[HCAL " + functionManager.FMname + "] Masking the  application with name " + qr.getName() + " running on host " + qr.getResource().getHostName() );
-        qr.setActive(false);
-      }
-    }
-
-    // Now if we are using TCDS, give all of the TCDS applications the URN that they need.
-    // TODO
-      //XXX SIC PROOF OF CONCEPT
-      boolean setOne=false;
-      //XXX SIC PROOF OF CONCEPT
-      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-        //XXX SIC PROOF OF CONCEPT
-				if(!setOne) {
-					// let's try to set a supervisor URI
-					logger.warn("[SethLog] Found a supervisor with the URI:"+ qr.getURI());
-					String testURIStr = "http://cmshcaltb02.cern.ch:41111/urn:xdaq-application:lid=99";
-					logger.warn("[SethLog] Now try to set the URI to:"+testURIStr);
-					try {
-						URI testURI = new URI(testURIStr);
-						qr.getResource().setURI(testURI);
-					}
-					catch (URISyntaxException e)
-					{
-						logger.error("[SethLog]: GOT A URISyntaxException:",e);
-					}
-					catch (ResourceException e)
-					{
-						logger.error("[SethLog]: GOT A ResourceException:",e);
-					}
-					logger.warn("[SethLog] Now my supervisor has the URI:"+ qr.getURI());
-          setOne = true;
-				}
-        //XXX SIC END PROOF OF CONCEPT
-
+    // Now if we are using TCDS, give all of the TCDS applications the URN that they need, from FM properties (specified in template DB)
+    // And for the execs with TCDS apps, do not initialize them, and mask their jobcontrols
+    qg = setTcdsURIsAndMaskExecs( qg );
+    
+    // now try to intitialize the whole QualifiedGroup
     try {
       qg.init();
     }
@@ -943,11 +911,6 @@ public class HCALEventHandler extends UserEventHandler {
       String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " failed to initialize resources. Printing stacktrace: "+ sw.toString();
       functionManager.goToError(errMessage,e);
     }
-
-    // find xdaq applications
-    List<QualifiedResource> xdaqList = qg.seekQualifiedResourcesOfType(new XdaqApplication());
-    functionManager.containerXdaqApplication = new XdaqApplicationContainer(xdaqList);
-    logger.debug("[HCAL " + functionManager.FMname + "] Number of XDAQ applications controlled: " + xdaqList.size() );
 
     // fill applications for level one role
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving the possible defined function managers for different HCAL partitions ...")));
@@ -1027,13 +990,6 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("Retrieving HCAL XDAQ applications ...")));
 
     functionManager.containerhcalSupervisor = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalSupervisor"));
-    // TCDS apps
-    List<XdaqApplication> lpmList = functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::lpm::LPMController");
-    functionManager.containerlpmController = new XdaqApplicationContainer(lpmList);
-    List<XdaqApplication> tcdsList = new ArrayList<XdaqApplication>();
-    tcdsList.addAll(lpmList);
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::ici::ICIController"));
-    tcdsList.addAll(functionManager.containerXdaqApplication.getApplicationsOfClass("tcds::pi::PIController"));
     functionManager.containerTCDSControllers = new XdaqApplicationContainer(tcdsList);
 
     functionManager.containerhcalDCCManager = new XdaqApplicationContainer(functionManager.containerXdaqApplication.getApplicationsOfClass("hcalDCCManager"));
@@ -1069,12 +1025,12 @@ public class HCALEventHandler extends UserEventHandler {
     // find out if HCAL supervisor is ready for async SOAP communication
     if (!functionManager.containerhcalSupervisor.isEmpty()) {
 
-
       XDAQParameter pam = null;
 
       String dowehaveanasynchcalSupervisor="undefined";
 
-      // ask for the status of the HCAL supervisor and wait until it is Ready or Failed
+      // ask for the status of the HCA// ask for the status of the HCAL supervisor and wait until it is Ready or Failed
+      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
 
         try {
           pam =((XdaqApplication)qr).getXDAQParameter();
@@ -2674,6 +2630,88 @@ public class HCALEventHandler extends UserEventHandler {
     else{
       logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
     }
+  }
+
+
+  /**----------------------------------------------------------------------
+   * TCDS actions
+    If we are using TCDS, give all of the TCDS applications the URN that they need, from FM properties (specified in template DB)
+    additionally, for execs with a tcds app in them:
+    1) Do not initialize them, as they contain service applications
+    2) Do not try to use jobcontrol with them
+   */
+  private QualifiedGroup setTcdsURIsAndMaskExecs( QualifiedGroup qg ) {
+    Group origGroup = qg.getGroup();
+    logger.warn("Original group follows");
+    logger.warn(origGroup.toString());
+    
+    List<Resource> childrenList = origGroup.getChildrenResources();
+    List<QualifiedResource> xdaqExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
+    List<QualifiedResource> tcdsExecsList = new ArrayList<QualifiedResource>();
+    for (QualifiedResource qr : xdaqExecutiveList) {
+      XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
+      List<XdaqApplicationResource> appList = exec.getApplications();
+      boolean isTCDSExec = false;
+      for (XdaqApplicationResource xr : appList) {
+        if (xr.getName().contains("tcds") || xr.getName().contains("TCDS")) {
+          if(tcdsExecsList.indexOf(exec)<0)
+            tcdsExecsList.add(qr);
+          isTCDSExec = true;
+          logger.warn("[SethLog HCAL "+functionManager.FMname+" ] I found a TCDS exec; try to remove it from the list.");
+          childrenList.remove(qr.getResource());
+          logger.warn("[SethLog HCAL "+functionManager.FMname+" ] Removed; now try to see the XML.");
+          XdaqExecutive execu = (XdaqExecutive)qr;
+          XdaqExecutiveConfiguration config =  execu.getXdaqExecutiveConfiguration();
+          String oldExecXML = config.getXml();
+          logger.warn("Orig exec XML follows");
+          logger.warn(oldExecXML);
+
+          try {
+            URI tcdsURI = new URI("");
+            if (xr.getName().contains("lpm"))
+              tcdsURI = new URI(functionManager.getProperty("LPMControllerURI"));
+            else if (xr.getName().contains("pi"))
+              tcdsURI = new URI(functionManager.getProperty("PIControllerURI"));
+            else if (xr.getName().contains("ici"))
+              tcdsURI = new URI(functionManager.getProperty("ICIControllerURI"));
+            logger.warn("[SethLog HCAL "+functionManager.FMname+" ] Now set the URI to "+tcdsURI.toString());
+            xr.setURI(tcdsURI);
+          } catch (Exception e) {
+            String errMessage = "[HCAL " + functionManager.FMname + "] " + this.getClass().toString() + " could not extract TCDS *ControllerURI property, it couldn't be made into a well-formed URI, or the URI of " + qr.getResource().getName() + " could not be set";
+            functionManager.goToError(errMessage,e);
+          }
+        }
+      }
+      if(isTCDSExec) {
+        qr.setInitialized(true);
+        qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
+        XdaqExecutive newExec = new XdaqExecutive(qr.getResource());
+        logger.warn("[SethLog HCAL "+functionManager.FMname+" ] I found a TCDS exec; try to add it to the list.");
+        childrenList.add(newExec.getResource());
+        logger.warn("[SethLog HCAL "+functionManager.FMname+" ] Added; now try to see the XML.");
+        XdaqExecutiveConfiguration configNew =  newExec.getXdaqExecutiveConfiguration();
+        String newExecXML = configNew.getXml();
+        logger.warn("New exec XML follows");
+        logger.warn(newExecXML);
+      }
+    }
+    try {
+      origGroup.setChildrenResources(childrenList);
+    }
+    catch (Exception e) {
+      String errMessage = "[HCAL " + functionManager.FMname + "] got a GroupException while attempting to modify TCDS applications" ;
+      functionManager.goToError(errMessage,e);
+    }
+    QualifiedGroup newQG = new QualifiedGroup(origGroup);
+    logger.warn("Modified group follows");
+    logger.warn(origGroup.toString());
+    logger.warn(newQG.print());
+    return newQG;
+    //xdaqExecutiveList.removeAll(tcdsExecsList);
+    //for (QualifiedResource tcdsExec : tcdsExecsList) {
+    //  XdaqExecutive exec = new XdaqExecutive(tcdsExec);
+    //  xdaqExecutiveList.add(exec);
+    //}
   }
 
 }
