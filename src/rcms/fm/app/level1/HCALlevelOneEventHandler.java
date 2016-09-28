@@ -768,32 +768,24 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked, and destroy.
       List<String> maskedChildFMs = getMaskedChildFMsFromFedMask(FedEnableMask, childFMFedMap);
+      VectorT<StringT> EmptyFMs   = new VectorT<StringT>();
       String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString(); // For local runs, masking the evmTrigFM will cause problems, so forbid it.
       for(QualifiedResource qr : fmChildrenList) {
         String childFMName = qr.getName();
         if (maskedChildFMs.contains(childFMName)) {
-          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to mask and destroy FM child " + childFMName + "." );
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to destroy FM XDAQ " + childFMName + "." );
 
           // Check that the partition is not responsible for event building/triggering
           if (childFMName.equals(evmTrigFM)) {
             functionManager.goToError("[HCAL LVL 1 " + functionManager.FMname + "] Error! I want to disable " + childFMName + " based on FED_ENABLE_MASK, but it is designated as EVM_TRIG_FM.");
           }
-          // kill all XDAQ executives
-          //FunctionManager fm = (FunctionManager)qr;
-          //UserFunctionManager myFM = fm.getUserFunctionManager();
-          //UserFunctionManager myFM = UserFunctionManager(qr);
-          //logger.warn("[HCAL LVL1 " + functionManager.FMname + "] SethLog -- Found FM child named "+ ((HCALFunctionManager)(((FunctionManager)qr).getUserFunctionManager())).FMname+": will now mask it and kill its xdaqs!" );
-          //((HCALFunctionManager)((FunctionManager)qr).getUserFunctionManager()).destroyXDAQ();
-          qr.setActive(false);
-          try {
-            ((FunctionManager)qr).destroy();
-          }
-          //XXX FIXME: should be changed to the proper exception type
-          catch (Exception e) {
-            String errMessage = "[HCAL LVL1 " + functionManager.FMname + "] Error! Exception: destroy failed ...";
-            functionManager.goToError(errMessage);
-          }
+          // Add this FM to emptyFM           
+          EmptyFMs.add(new StringT(childFMName));
         }
+      }
+      String emptyFMnames      ="";
+      for(StringT FMname : EmptyFMs){
+        emptyFMnames += FMname.getString();
       }
       // END TEST PARTITION DISABLING
 
@@ -801,24 +793,26 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // prepare run mode to be passed to level 2
       //String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
-      pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-      pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE", new StringT(RunType)));
-      pSet.put(new CommandParameter<StringT>("RUN_KEY", new StringT(RunKey)));
-      pSet.put(new CommandParameter<StringT>("TPG_KEY", new StringT(TpgKey)));
-      pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK", new StringT(FedEnableMask)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH", new StringT(CfgCVSBasePath)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT", new StringT(FullCfgScript)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL", new StringT(FullTTCciControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL", new StringT(FullLTCControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TCDSCONTROL", new StringT(FullTCDSControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL", new StringT(FullLPMControlSequence)));
-      pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED", new BooleanT(ClockChanged)));
-      pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER", new BooleanT(UseResetForRecover)));
-      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL", new StringT(FullPIControlSequence)));
-      pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
-      pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
-      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH", new BooleanT(RunInfoPublish)));
-      pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS", new BooleanT(OfficialRunNumbers)));
+      pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER"            , new IntegerT(functionManager.RunNumber)));
+      pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE"          , new StringT(RunType)));
+      pSet.put(new CommandParameter<StringT>("RUN_KEY"                , new StringT(RunKey)));
+      pSet.put(new CommandParameter<StringT>("TPG_KEY"                , new StringT(TpgKey)));
+      pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
+      pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
+      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT"         , new StringT(FullCfgScript)));
+      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(FullTTCciControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(FullLTCControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_TCDSCONTROL"       , new StringT(FullTCDSControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"        , new StringT(FullLPMControlSequence)));
+      pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED"         , new BooleanT(ClockChanged)));
+      pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER" , new BooleanT(UseResetForRecover)));
+      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(FullPIControlSequence)));
+      pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS"      , new BooleanT(UsePrimaryTCDS)));
+      pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
+      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
+      pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
+      pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -841,7 +835,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
         String normalFMnames     = getQRnamesFromContainer(normalFMsToConfigureContainer);
+        
         logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: "+normalFMnames);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
         configureTaskSeq.addLast(fmChildrenTask);
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
