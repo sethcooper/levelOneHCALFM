@@ -138,12 +138,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           //logger.info("[JohnLog2] " + functionManager.FMname + ": " + functionManager.FMname + ": Starting to mask application " + MaskedApplication);
           //logger.info("[JohnLogVector] " + functionManager.FMname + ": Starting to mask application " + MaskedApplication.getString());
           for (QualifiedResource qr : xdaqApplicationList) {
-            //if (qr.getName().equals(MaskedApplication.getString()) || qr.getName().equals(MaskedAppWcolonsNoCommas)) {
             //logger.info("[JohnLogVector] " + functionManager.FMname + ": For masking application " + MaskedApplication.getString() + "checking for match with " + qr.getName());
             if (qr.getName().equals(MaskedApplication.getString())) {
-              //logger.info("[JohnLog] " + functionManager.FMname + ": found the matching application in the qr list: " + qr.getName());
-              //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list: " + qr.getName());
-              //logger.info("[JohnLog] " + functionManager.FMname + ": Going to call setActive(false) on "+qr.getName());
+              //logger.info("[HCAL LVL2 " + functionManager.FMname + "]: found the matching application in the qr list, calling setActive(false): " + qr.getName());
               logger.info("[HCAL LVL2 " + functionManager.FMname + "]: Going to call setActive(false) on "+qr.getName());
               qr.setActive(false);
             }
@@ -647,229 +644,243 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
       }
 
-      // configure PeerTransportATCPs
-      if (!functionManager.containerPeerTransportATCP.isEmpty()) {
-        String peerTransportATCPstateName = "";
-        for (QualifiedResource qr : functionManager.containerPeerTransportATCP.getApplications() ) {
-          try {
-            XDAQParameter pam = null;
-            pam = ((XdaqApplication)qr).getXDAQParameter();
-            pam.select(new String[] {"stateName"});
-            pam.get();
-            peerTransportATCPstateName =  pam.getValue("stateName");
-            logger.info("[HCAL " + functionManager.FMname + "] Got the PeerTransportATCP's stateName--it is: " + peerTransportATCPstateName);
+      // Instead of setting infospace, destoryXDAQ if this FM is mentioned in EmptyFM
+      if (parameterSet.get("EMPTY_FMS")!=null ) {
+        VectorT<StringT> EmptyFMs  = (VectorT<StringT>)parameterSet.get("EMPTY_FMS").getValue();
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
+        if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
+          // configure PeerTransportATCPs
+          if (!functionManager.containerPeerTransportATCP.isEmpty()) {
+            String peerTransportATCPstateName = "";
+            for (QualifiedResource qr : functionManager.containerPeerTransportATCP.getApplications() ) {
+              try {
+                XDAQParameter pam = null;
+                pam = ((XdaqApplication)qr).getXDAQParameter();
+                pam.select(new String[] {"stateName"});
+                pam.get();
+                peerTransportATCPstateName =  pam.getValue("stateName");
+                logger.info("[HCAL " + functionManager.FMname + "] Got the PeerTransportATCP's stateName--it is: " + peerTransportATCPstateName);
+              }
+              catch (XDAQTimeoutException e) {
+                String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: while getting the PeerTransportATCP stateName...";
+                logger.error(errMessage);
+                functionManager.sendCMSError(errMessage);
+              }
+              catch (XDAQException e) {
+                String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: while getting the PeerTransportATCP stateName...";
+                logger.error(errMessage);
+                functionManager.sendCMSError(errMessage);
+              }
+            }
+            try {
+              if (peerTransportATCPstateName.equals("Halted")) {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring PeerTransportATCPs ...");
+                functionManager.containerPeerTransportATCP.execute(HCALInputs.CONFIGURE);
+              }
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring PeerTransportATCPs failed ...";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+            }
           }
-          catch (XDAQTimeoutException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: while getting the PeerTransportATCP stateName...";
-            logger.error(errMessage);
-            functionManager.sendCMSError(errMessage);
-          }
-          catch (XDAQException e) {
-            String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: while getting the PeerTransportATCP stateName...";
-            logger.error(errMessage);
-            functionManager.sendCMSError(errMessage);
-          }
-        }
-        try {
-          if (peerTransportATCPstateName.equals("Halted")) {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring PeerTransportATCPs ...");
-            functionManager.containerPeerTransportATCP.execute(HCALInputs.CONFIGURE);
-          }
-        }
-        catch (QualifiedResourceContainerException e) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring PeerTransportATCPs failed ...";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-        }
-      }
 
-      if (functionManager.containerTriggerAdapter!=null) {
-        if (!functionManager.containerTriggerAdapter.isEmpty()) {
-          //TODO do here
-          Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
-          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
-          XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
-          logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
-          List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
-          logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
-          if (taResource.getName().contains("DummyTriggerAdapter")) { 
-            for (XdaqApplicationResource taSibling : taSiblingsList) {
-              logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
-              if (taSibling.getName().contains("DTCReadout")) { 
-                try {
-                  XDAQParameter pam = null;
-                  XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
-                  pam =taSiblingApp.getXDAQParameter();
+          if (functionManager.containerTriggerAdapter!=null) {
+            if (!functionManager.containerTriggerAdapter.isEmpty()) {
+              //TODO do here
+              Resource taResource = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+              logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's parent executive.");
+              XdaqExecutiveResource qrTAparentExec = ((XdaqApplicationResource)taResource).getXdaqExecutiveResourceParent() ;
+              logger.info("[JohnLog]: " + functionManager.FMname + " about to get the TA's siblings group.");
+              List<XdaqApplicationResource> taSiblingsList = qrTAparentExec.getApplications();
+              logger.info("[JohnLog]: " + functionManager.FMname + " about to loop over the TA's siblings group.");
+              if (taResource.getName().contains("DummyTriggerAdapter")) { 
+                for (XdaqApplicationResource taSibling : taSiblingsList) {
+                  logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+                  if (taSibling.getName().contains("DTCReadout")) { 
+                    try {
+                      XDAQParameter pam = null;
+                      XdaqApplication taSiblingApp = new XdaqApplication(taSibling);
+                      pam =taSiblingApp.getXDAQParameter();
 
-                  pam.select(new String[] {"PollingReadout"});
-                  pam.setValue("PollingReadout", "true");
-                  pam.send();
-                }
-                catch (XDAQTimeoutException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                      pam.select(new String[] {"PollingReadout"});
+                      pam.setValue("PollingReadout", "true");
+                      pam.send();
+                    }
+                    catch (XDAQTimeoutException e) {
+                      String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+                      logger.error(errMessage,e);
+                      functionManager.sendCMSError(errMessage);
+                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
-                }
-                catch (XDAQException e) {
-                  String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
-                  logger.error(errMessage,e);
-                  functionManager.sendCMSError(errMessage);
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-                  functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-                  if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+                    }
+                    catch (XDAQException e) {
+                      String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+                      logger.error(errMessage,e);
+                      functionManager.sendCMSError(errMessage);
+                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                      if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
 
+                    }
+                  }
                 }
               }
             }
           }
+          for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+            try {
+              XDAQParameter pam = null;
+              pam =((XdaqApplication)qr).getXDAQParameter();
+
+              pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
+              pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
+              logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
+              pam.setValue("TriggerKey", TpgKey);
+              pam.setValue("ReportStateToRCMS", "true");
+              logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
+
+              pam.send();
+            }
+            catch (XDAQTimeoutException e) {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+            }
+            catch (XDAQException e) {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
+              logger.error(errMessage,e);
+              functionManager.sendCMSError(errMessage);
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+
+            }
+          }
+          // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
+          if (!functionManager.ErrorState) {
+            sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence, FedEnableMask, UsePrimaryTCDS);
+          }
+
+          if (functionManager.FMrole.equals("EvmTrig")) {
+
+            // configure FEDStreamers ... nothing to do here
+
+            // configure EVMs
+            if (!functionManager.containerEVM.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring EVM ...");
+                functionManager.containerEVM.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring EVM failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+
+            // configure RUs
+            if (!functionManager.containerRU.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring RU ...");
+                functionManager.containerRU.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring RU failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+
+            // configure BUs
+            if (!functionManager.containerBU.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring BU ...");
+                functionManager.containerBU.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring BU failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+
+            // configure FUEventProcessors
+            if (!functionManager.containerFUEventProcessor.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring FUEventProcessor ...");
+                functionManager.containerFUEventProcessor.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring FUEventProcessor failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+
+            // configure FUResourceBrokers
+            if (!functionManager.containerFUResourceBroker.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring FUResourceBrokers ...");
+                functionManager.containerFUResourceBroker.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring FUResourceBrokers failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+
+            // configure StorageManagers
+            if (!functionManager.containerStorageManager.isEmpty()) {
+              try {
+                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring StorageManager ...");
+                functionManager.containerStorageManager.execute(HCALInputs.CONFIGURE);
+              }
+              catch (QualifiedResourceContainerException e) {
+                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring StorageManager failed ...";
+                logger.error(errMessage,e);
+                functionManager.sendCMSError(errMessage);
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
+                functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
+                if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              }
+            }
+          }
+        }else{
+          //Destroy XDAQ() for this FM
+          logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Going to destroyXDAQ for this FM as it is masked from FED list");
+          stopHCALSupervisorWatchThread = true;
+          functionManager.destroyXDAQ();
+          functionManager.fireEvent( HCALInputs.SETCONFIGURE );
         }
+      }else{
+        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Did not receive EMPTY_FMS from LV1.");
       }
-      for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-        try {
-          XDAQParameter pam = null;
-          pam =((XdaqApplication)qr).getXDAQParameter();
-
-          pam.select(new String[] {"IsLocalRun", "TriggerKey", "ReportStateToRCMS"});
-          pam.setValue("IsLocalRun", String.valueOf(RunType.equals("local")));
-          logger.info("[HCAL " + functionManager.FMname + "] Set IsLocalRun to: " + String.valueOf(RunType.equals("local")));
-          pam.setValue("TriggerKey", TpgKey);
-          pam.setValue("ReportStateToRCMS", "true");
-          logger.info("[HCAL " + functionManager.FMname + "] Set ReportStateToRCMS to: true.");
-
-          pam.send();
-        }
-        catch (XDAQTimeoutException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: configAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor\n Perhaps this application is dead!?";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
-        }
-        catch (XDAQException e) {
-          String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: onfigAction() when trying to send IsLocalRun and TriggerKey to the HCAL supervisor";
-          logger.error(errMessage,e);
-          functionManager.sendCMSError(errMessage);
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-          if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-
-        }
-      }
-      // configuring all created HCAL applications by means of sending the RunType to the HCAL supervisor
-      if (!functionManager.ErrorState) {
-        sendRunTypeConfiguration(FullCfgScript,FullTTCciControlSequence,FullLTCControlSequence,FullTCDSControlSequence,FullLPMControlSequence,FullPIControlSequence, FedEnableMask, UsePrimaryTCDS);
-      }
-
-      if (functionManager.FMrole.equals("EvmTrig")) {
-
-        // configure FEDStreamers ... nothing to do here
-
-        // configure EVMs
-        if (!functionManager.containerEVM.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring EVM ...");
-            functionManager.containerEVM.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring EVM failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // configure RUs
-        if (!functionManager.containerRU.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring RU ...");
-            functionManager.containerRU.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring RU failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // configure BUs
-        if (!functionManager.containerBU.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring BU ...");
-            functionManager.containerBU.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring BU failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // configure FUEventProcessors
-        if (!functionManager.containerFUEventProcessor.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring FUEventProcessor ...");
-            functionManager.containerFUEventProcessor.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring FUEventProcessor failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // configure FUResourceBrokers
-        if (!functionManager.containerFUResourceBroker.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring FUResourceBrokers ...");
-            functionManager.containerFUResourceBroker.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring FUResourceBrokers failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // configure StorageManagers
-        if (!functionManager.containerStorageManager.isEmpty()) {
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] configuring StorageManager ...");
-            functionManager.containerStorageManager.execute(HCALInputs.CONFIGURE);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: configuring StorageManager failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-      }
-
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
@@ -1479,33 +1490,52 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("halting")));
 
-      TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
-      // 1) Stop the TA
-      if (functionManager.containerTriggerAdapter!=null) {
-        if (!functionManager.containerTriggerAdapter.isEmpty()) {
-          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
-          LV2haltTaskSeq.addLast(evmTrigTask);
+      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
+        // Schedule the tasks for normal FMs 
+        TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+        // 1) Stop the TA
+        if (functionManager.containerTriggerAdapter!=null) {
+          if (!functionManager.containerTriggerAdapter.isEmpty()) {
+            SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
+            LV2haltTaskSeq.addLast(evmTrigTask);
+          }
         }
-      }
-      // 2) Stop the supervisor
-      if (functionManager.containerhcalSupervisor!=null) {
-        if (!functionManager.containerhcalSupervisor.isEmpty()) {
-          //Bring supervisor from RunningToConfigured (stop)
-          SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
-          //Bring supervisor from ConfiguredToHalted (reset)
-          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
-          LV2haltTaskSeq.addLast(SupervisorStopTask);
-          LV2haltTaskSeq.addLast(SupervisorResetTask);
+        // 2) Stop the supervisor
+        if (functionManager.containerhcalSupervisor!=null) {
+          if (!functionManager.containerhcalSupervisor.isEmpty()) {
+            //Bring supervisor from RunningToConfigured (stop)
+            SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
+            //Bring supervisor from ConfiguredToHalted (reset)
+            SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
+            LV2haltTaskSeq.addLast(SupervisorStopTask);
+            LV2haltTaskSeq.addLast(SupervisorResetTask);
+          }
         }
+        else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
+          functionManager.goToError(errMessage);
+        } 
+        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+        functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
       }
-      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
-        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
-        functionManager.goToError(errMessage);
+      else {
+        // Bring back the destroyed XDAQ
+        logger.info("[HCAL LV2 " + functionManager.FMname + "] Bringing back the XDAQs");
+        initXDAQ();
+        initXDAQinfospace();
+        if (stopHCALSupervisorWatchThread){
+            logger.info("[HCAL LV2 " + functionManager.FMname + "] Restarting supervisor watchthread");
+            HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
+            thread2.start();
+            stopHCALSupervisorWatchThread = false;
+        }
+        else{
+          logger.warn("[HCAL LV2 " + functionManager.FMname + "]WARNING: supervisorWatchthred is still running. Turn off the supervisorWatchthread before destroying XDAQs");
+        }
+        // Remove this FM from EmptyFM
+        functionManager.fireEvent(HCALInputs.SETHALT);
       }
-
-      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
-      functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
-    
       // stop the event building gracefully
       if (functionManager.FMrole.equals("EvmTrig")) {
 
