@@ -361,7 +361,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
-      //Reset EmptyFMs
+      //Reset all EmptyFMs as we are going to halted
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
@@ -875,21 +875,23 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               }
             }
           }
-        }else{
+        }
+        else{
           //Destroy XDAQ() for this FM
           logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Going to destroyXDAQ for this FM as it is masked from FED list");
           stopHCALSupervisorWatchThread = true;
           functionManager.destroyXDAQ();
           functionManager.fireEvent( HCALInputs.SETCONFIGURE );
         }
-      }else{
+      }
+      else{
         logger.warn("[HCAL LV2 "+ functionManager.FMname +"] Did not receive EMPTY_FMS from LV1.");
       }
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("configureAction executed ... - we're close ...")));
 
-      logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction executed ... - were are close ...");
+      logger.info("[HCAL LVL2 " + functionManager.FMname + "] configureAction executed.");
     }
   }
 
@@ -989,167 +991,169 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.warn("[HCAL LVL2 B] TestMode! ... RunInfo summary should be published.");
         }
       }
-
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
-      if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
+      if (EmptyFMs.contains(new StringT(functionManager.FMname))){
+        //Start EmptyFM
+        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Starting EmptyFM");
+        functionManager.fireEvent( HCALInputs.SETSTART ); 
+        // set action
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("startAction executed ...")));
+        return;
+      }
       
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+        //  //TODO do here
+        //  // determine run number and run sequence number and overwrite what was set before
+        //  try {
+        //    Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
+        //    Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
+        //    List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
+        //    for (Resource taSibling : taSiblingsList) {
+        //      logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
+        //    }
+        //  }
+        //  catch (DBConnectorException ex) {
+        //    logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
+        //  }
+            
+         // KKH For standalone LV2 runs. Deprecated.
+         // OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
+         // if (OfficialRunNumbers) {
+         //   RunNumberData rnd = getOfficialRunNumber();
+
+         //   functionManager.RunNumber    = rnd.getRunNumber();
+         //   RunSeqNumber = rnd.getSequenceNumber();
+
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
+         //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
+         // }
+        }
+        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to TriggerAdapter, etc.: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
+      }
+
+      logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to the HCAL supervisor: RunNumber=" +functionManager.RunNumber);
+
+      if (TestMode.equals("TriggerAdapterTest")) {
+        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapterTest: Sending to the TriggerAdapter: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
+      }
+
+      // start i.e. enable HCAL
+      if (!functionManager.containerhcalSupervisor.isEmpty()) {
+
+        {
+          String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for starting found - good!";
+          logger.debug(debugMessage);
+        }
+
+        // sending some info to the HCAL supervisor
+        {
+          XDAQParameter pam = null;
+
+          // prepare and set for all HCAL supervisors the RunType
+          for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
+            try {
+              pam =((XdaqApplication)qr).getXDAQParameter();
+
+              pam.select(new String[] {"RunNumber"});
+              pam.setValue("RunNumber",functionManager.RunNumber.toString());
+
+              pam.send();
+            }
+            catch (XDAQTimeoutException e) {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: startAction() when trying to send the functionManager.RunNumber to the HCAL supervisor\n Perhaps this application is dead!?";
+							functionManager.goToError(errMessage,e);
+            }
+            catch (XDAQException e) {
+              String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: startAction() when trying to send the functionManager.RunNumber to the HCAL supervisor";
+							functionManager.goToError(errMessage,e);
+            }
+          }
+        }
+
+        // start the PeerTransportATCPs
+        if (!functionManager.ATCPsWereStartedOnce) {
+
+          // make sure that the ATCP transports were only started only once
+          functionManager.ATCPsWereStartedOnce = true;
+
+          if (!functionManager.containerPeerTransportATCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] starting PeerTransportATCP ...");
+              functionManager.containerPeerTransportATCP.execute(HCALInputs.HCALSTART);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportATCP failed ...";
+							functionManager.goToError(errMessage,e);
+            }
+          }
+        }
+
+        try {
+
+          // define start time
+          StartTime = new Date();
+
+          functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCSTART);
+          logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending ASYNCSTART to supervisor");
+        }
+        catch (QualifiedResourceContainerException e) {
+          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (HCAL=Enable) failed ...";
+					functionManager.goToError(errMessage,e);
+        }
+
+        if (functionManager.FMrole.equals("EvmTrig")) {
+          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Now I am trying to talk to a TriggerAdapter (and EVMs, BUs and RUs in case they are defined) ...");
+        }
+
+        // handle TriggerAdapters and event building ...
         if (functionManager.containerTriggerAdapter!=null) {
           if (!functionManager.containerTriggerAdapter.isEmpty()) {
-          //  //TODO do here
-          //  // determine run number and run sequence number and overwrite what was set before
-          //  try {
-          //    Resource qrTAparentExec = functionManager.containerTriggerAdapter.getApplications().get(0).getResource();
-          //    Group taSiblingsGroup = functionManager.getQualifiedGroup().rs.retrieveLightGroup(qrTAparentExec);
-          //    List<Resource> taSiblingsList = taSiblingsGroup.getChildrenResources();
-          //    for (Resource taSibling : taSiblingsList) {
-          //      logger.info("[JohnLog]: " + functionManager.FMname + " has a trigger adapter with a sibling named: " + taSibling.getName());
-          //    }
-          //  }
-          //  catch (DBConnectorException ex) {
-          //    logger.error("[JohnLog]: " + functionManager.FMname + " Got a DBConnectorException when trying to retrieve TA sibling resources: " + ex.getMessage());
-          //  }
-              
-           // KKH For standalone LV2 runs. Deprecated.
-           // OfficialRunNumbers = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
-           // if (OfficialRunNumbers) {
-           //   RunNumberData rnd = getOfficialRunNumber();
 
-           //   functionManager.RunNumber    = rnd.getRunNumber();
-           //   RunSeqNumber = rnd.getSequenceNumber();
+            // send the run number etc. to the TriggerAdapters
+            {
+              XDAQParameter pam = null;
+              for (QualifiedResource qr : functionManager.containerTriggerAdapter.getApplications() ) {
+                try {
+                  logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Start of handling the TriggerAdapter ...");
 
-           //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-           //   functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
-           // }
-          }
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to TriggerAdapter, etc.: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
-        }
+                  pam =((XdaqApplication)qr).getXDAQParameter();
+                  pam.select(new String[] {"runType", "TriggersToTake", "RunNumber", "RunNumberSequenceId"});
 
-        logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Received parameters to sent to the HCAL supervisor: RunNumber=" +functionManager.RunNumber);
+                  pam.setValue("runType",RunType);
+                  pam.setValue("TriggersToTake",TriggersToTake.toString());
+                  pam.setValue("RunNumber",functionManager.RunNumber.toString());
+                  pam.setValue("RunNumberSequenceId",RunSeqNumber.toString());
 
-        if (TestMode.equals("TriggerAdapterTest")) {
-          logger.debug("[HCAL LVL2 " + functionManager.FMname + "] TriggerAdapterTest: Sending to the TriggerAdapter: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
-        }
+                  logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Sending to the TriggerAdapter: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
 
-        // start i.e. enable HCAL
-        if (!functionManager.containerhcalSupervisor.isEmpty()) {
-
-          {
-            String debugMessage = "[HCAL LVL2 " + functionManager.FMname + "] HCAL supervisor for starting found - good!";
-            logger.debug(debugMessage);
-          }
-
-          // sending some info to the HCAL supervisor
-          {
-            XDAQParameter pam = null;
-
-            // prepare and set for all HCAL supervisors the RunType
-            for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
-              try {
-                pam =((XdaqApplication)qr).getXDAQParameter();
-
-                pam.select(new String[] {"RunNumber"});
-                pam.setValue("RunNumber",functionManager.RunNumber.toString());
-
-                pam.send();
-              }
-              catch (XDAQTimeoutException e) {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQTimeoutException: startAction() when trying to send the functionManager.RunNumber to the HCAL supervisor\n Perhaps this application is dead!?";
-			  				functionManager.goToError(errMessage,e);
-              }
-              catch (XDAQException e) {
-                String errMessage = "[HCAL " + functionManager.FMname + "] Error! XDAQException: startAction() when trying to send the functionManager.RunNumber to the HCAL supervisor";
-			  				functionManager.goToError(errMessage,e);
-              }
-            }
-          }
-
-          // start the PeerTransportATCPs
-          if (!functionManager.ATCPsWereStartedOnce) {
-
-            // make sure that the ATCP transports were only started only once
-            functionManager.ATCPsWereStartedOnce = true;
-
-            if (!functionManager.containerPeerTransportATCP.isEmpty()) {
-              try {
-                logger.debug("[HCAL LVL2 " + functionManager.FMname + "] starting PeerTransportATCP ...");
-                functionManager.containerPeerTransportATCP.execute(HCALInputs.HCALSTART);
-              }
-              catch (QualifiedResourceContainerException e) {
-                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting PeerTransportATCP failed ...";
-			  				functionManager.goToError(errMessage,e);
-              }
-            }
-          }
-
-          try {
-
-            // define start time
-            StartTime = new Date();
-
-            functionManager.containerhcalSupervisor.execute(HCALInputs.HCALASYNCSTART);
-            logger.info("[HCAL LVL2 " + functionManager.FMname + "] Starting, sending ASYNCSTART to supervisor");
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: starting (HCAL=Enable) failed ...";
-			  		functionManager.goToError(errMessage,e);
-          }
-
-          if (functionManager.FMrole.equals("EvmTrig")) {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Now I am trying to talk to a TriggerAdapter (and EVMs, BUs and RUs in case they are defined) ...");
-          }
-
-          // handle TriggerAdapters and event building ...
-          if (functionManager.containerTriggerAdapter!=null) {
-            if (!functionManager.containerTriggerAdapter.isEmpty()) {
-
-              // send the run number etc. to the TriggerAdapters
-              {
-                XDAQParameter pam = null;
-                for (QualifiedResource qr : functionManager.containerTriggerAdapter.getApplications() ) {
-                  try {
-                    logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Start of handling the TriggerAdapter ...");
-
-                    pam =((XdaqApplication)qr).getXDAQParameter();
-                    pam.select(new String[] {"runType", "TriggersToTake", "RunNumber", "RunNumberSequenceId"});
-
-                    pam.setValue("runType",RunType);
-                    pam.setValue("TriggersToTake",TriggersToTake.toString());
-                    pam.setValue("RunNumber",functionManager.RunNumber.toString());
-                    pam.setValue("RunNumberSequenceId",RunSeqNumber.toString());
-
-                    logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Sending to the TriggerAdapter: RunType=" + RunType + ", TriggersToTake=" + TriggersToTake + ", RunNumber=" + functionManager.RunNumber + " and RunSeqNumber=" + RunSeqNumber);
-
-                    pam.send();
-                  }
-                  catch (XDAQTimeoutException e) {
-                    String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQTimeoutException: startAction()\n Perhaps the trigger adapter application is dead!?";
-			  						functionManager.goToError(errMessage,e);
-                  }
-                  catch (XDAQException e) {
-                    String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQException: startAction()";
-			  						functionManager.goToError(errMessage,e);
-                  }
+                  pam.send();
+                }
+                catch (XDAQTimeoutException e) {
+                  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQTimeoutException: startAction()\n Perhaps the trigger adapter application is dead!?";
+									functionManager.goToError(errMessage,e);
+                }
+                catch (XDAQException e) {
+                  String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! XDAQException: startAction()";
+									functionManager.goToError(errMessage,e);
                 }
               }
             }
-            else {
-              if (functionManager.FMrole.equals("EvmTrig")) {
-                String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: startAction()";
-			  			  functionManager.goToError(errMessage);
-              }
+          }
+          else {
+            if (functionManager.FMrole.equals("EvmTrig")) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No TriggerAdapter found: startAction()";
+						  functionManager.goToError(errMessage);
             }
           }
         }
-        else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: startAction()";
-			  	functionManager.goToError(errMessage);
-        }
       }
-      else{
-        //Start EmptyFM
-        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Starting EmptyFM");
-        functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: startAction()";
+				functionManager.goToError(errMessage);
       }
+
       if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
         functionManager.fireEvent( HCALInputs.SETSTART ); //TODO revisit this, a proper fix would get rid of this.
       } 
@@ -1238,6 +1242,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("pausing")));
 
+      // FireEvent and return if this FM is empty
+      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      if (EmptyFMs.contains(new StringT(functionManager.FMname))){
+        //Stop EmptyFM
+        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Pausing EmptyFM");
+        functionManager.fireEvent( HCALInputs.SETPAUSE ); 
+        // set actions
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("pasusingAction executed ...")));
+        return;
+      }
+
       // pause triggers
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
@@ -1289,6 +1305,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("resuming")));
 
+      // FireEvent and return if this FM is empty
+      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      if (EmptyFMs.contains(new StringT(functionManager.FMname))){
+        // Resume EmptyFM
+        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Resuming EmptyFM");
+        functionManager.fireEvent( HCALInputs.SETRESUME ); 
+        // set actions
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("resumeAction executed ...")));
+        return;
+      }
       // resume triggers
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
@@ -1341,42 +1368,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("halting")));
 
-      // publish info of the actual run taken
-      publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ();
-      functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
-
-
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
-      if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
-        // Schedule the tasks for normal FMs 
-        TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
-        // 1) Stop the TA
-        if (functionManager.containerTriggerAdapter!=null) {
-          if (!functionManager.containerTriggerAdapter.isEmpty()) {
-            SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
-            LV2haltTaskSeq.addLast(evmTrigTask);
-          }
-        }
-        // 2) Stop the supervisor
-        if (functionManager.containerhcalSupervisor!=null) {
-          if (!functionManager.containerhcalSupervisor.isEmpty()) {
-            //Bring supervisor from RunningToConfigured (stop)
-            SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
-            //Bring supervisor from ConfiguredToHalted (reset)
-            SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
-            LV2haltTaskSeq.addLast(SupervisorStopTask);
-            LV2haltTaskSeq.addLast(SupervisorResetTask);
-          }
-        }
-        else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
-          functionManager.goToError(errMessage);
-        } 
-        logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
-        functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
-      }
-      else {
+      if (EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Bring back the destroyed XDAQ
         logger.info("[HCAL LV2 " + functionManager.FMname + "] Bringing back the XDAQs");
         initXDAQ();
@@ -1391,7 +1384,46 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           logger.warn("[HCAL LV2 " + functionManager.FMname + "]WARNING: supervisorWatchthred is still running. Turn off the supervisorWatchthread before destroying XDAQs");
         }
         functionManager.fireEvent(HCALInputs.SETHALT);
+        // Reset the EmptyFMs for all LV2s
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",new VectorT<StringT>()));
+        // set action
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("haltAction executed ...")));
+        return;
       }
+
+      // publish info of the actual run taken
+      publishRunInfoSummary();
+      publishRunInfoSummaryfromXDAQ();
+      functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
+
+
+      // Schedule the tasks for normal FMs 
+      TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+      // 1) Stop the TA
+      if (functionManager.containerTriggerAdapter!=null) {
+        if (!functionManager.containerTriggerAdapter.isEmpty()) {
+          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerTriggerAdapter,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT TA:stop");
+          LV2haltTaskSeq.addLast(evmTrigTask);
+        }
+      }
+      // 2) Stop the supervisor
+      if (functionManager.containerhcalSupervisor!=null) {
+        if (!functionManager.containerhcalSupervisor.isEmpty()) {
+          //Bring supervisor from RunningToConfigured (stop)
+          SimpleTask SupervisorStopTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.HCALDISABLE,HCALStates.READY,HCALStates.READY,"LV2 HALT Supervisor step1/2:stop");
+          //Bring supervisor from ConfiguredToHalted (reset)
+          SimpleTask SupervisorResetTask = new SimpleTask(functionManager.containerhcalSupervisor,HCALInputs.RESET,HCALStates.UNINITIALIZED,HCALStates.UNINITIALIZED,"LV2 HALT Supervisor step2/2:reset");
+          LV2haltTaskSeq.addLast(SupervisorStopTask);
+          LV2haltTaskSeq.addLast(SupervisorResetTask);
+        }
+      }
+      else if (!functionManager.FMrole.equals("Level2_TCDSLPM")) {
+        String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! No HCAL supervisor found: haltAction()";
+        functionManager.goToError(errMessage);
+      } 
+      logger.warn("[HCAL LVL2 " + functionManager.FMname + "] executing Halt TaskSequence.");
+      functionManager.theStateNotificationHandler.executeTaskSequence(LV2haltTaskSeq);
 
       // Reset the EmptyFMs for all LV2s
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",new VectorT<StringT>()));
@@ -1556,6 +1588,18 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("stopping")));
 
+      // FireEvent and return if this FM is empty
+      VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
+      if (EmptyFMs.contains(new StringT(functionManager.FMname))){
+        //Stop EmptyFM
+        logger.warn("[HCAL LV2 "+ functionManager.FMname +"] This FM is empty. Stopping EmptyFM");
+        functionManager.fireEvent( HCALInputs.SETCONFIGURE ); 
+        // set actions
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("stoppingAction executed ...")));
+
+        return;
+      }
       // stop the triggering
       if (functionManager.FMrole.equals("EvmTrig")) {
         if (functionManager.containerTriggerAdapter!=null) {
@@ -1631,6 +1675,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
           }
         }
       }
+
       if (functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci")) {
         functionManager.fireEvent( HCALInputs.SETCONFIGURE ); //TODO revisit this, a proper fix would get rid of this.
       } 
