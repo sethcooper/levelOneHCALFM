@@ -2769,17 +2769,17 @@ public class HCALEventHandler extends UserEventHandler {
       if (pSet.get(PamName).getType().equals(StringT.class)){
         String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
       }
       if (pSet.get(PamName).getType().equals(IntegerT.class)){
         Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
         functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
       }
       if (pSet.get(PamName).getType().equals(BooleanT.class)){
         Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
         functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
-        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
       }
     }
     else{
