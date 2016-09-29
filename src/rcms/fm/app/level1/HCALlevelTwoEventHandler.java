@@ -1494,6 +1494,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("halting")));
 
+      // publish info of the actual run taken
+      publishRunInfoSummary();
+      publishRunInfoSummaryfromXDAQ();
+      functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
+
+
       VectorT<StringT> EmptyFMs  = (VectorT<StringT>)functionManager.getHCALparameterSet().get("EMPTY_FMS").getValue();
       if (!EmptyFMs.contains(new StringT(functionManager.FMname))){
         // Schedule the tasks for normal FMs 
@@ -1630,11 +1636,6 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
       }
-
-      // publish info of the actual run taken
-      publishRunInfoSummary();
-      publishRunInfoSummaryfromXDAQ();
-      functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
