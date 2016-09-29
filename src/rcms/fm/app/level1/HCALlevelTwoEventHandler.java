@@ -1396,6 +1396,25 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // Reset the EmptyFMs for all LV2s
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",new VectorT<StringT>()));
 
+      // stop the event building gracefully
+      if (functionManager.FMrole.equals("EvmTrig")) {
+
+        // include scheduling ToDo
+
+        // stop the PeerTransportATCPs
+        if (functionManager.StopATCP) {
+          if (!functionManager.containerPeerTransportATCP.isEmpty()) {
+            try {
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping PeerTransportATCPs ...");
+              functionManager.containerPeerTransportATCP.execute(HCALInputs.HALT);
+            }
+            catch (QualifiedResourceContainerException e) {
+              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportATCPs failed ...";
+              functionManager.goToError(errMessage,e);
+            }
+          }
+        }
+      }
       //  Halt LPM with LPM FM. 
       if( functionManager.FMrole.equals("Level2_TCDSLPM")){
         functionManager.haltLPMControllers();
@@ -1596,68 +1615,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // stop the event building gracefully
       if (functionManager.FMrole.equals("EvmTrig")) {
 
-        // check if all events were build before stopping
-        if(!isRUBuildersEmpty()) {
-          String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Could not flush the EVMs ...";
-          functionManager.goToError(errMessage);
-        }
-
         // include scheduling ToDo
-
-        // stop the FEDStreamers
-        if (functionManager.StopFEDStreamer) {
-          if (!functionManager.containerFEDStreamer.isEmpty()) {
-
-            logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Stopping FEDStreamers applications ...");
-
-            try {
-              logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping FEDStreamers ...");
-              functionManager.containerFEDStreamer.execute(HCALInputs.FEDSTREAMERSTOP);
-            }
-            catch (QualifiedResourceContainerException e) {
-              String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FEDStreamers failed ...";
-              functionManager.goToError(errMessage,e);
-            }
-          }
-        }
-
-        // stop the FUEventProcessors
-        if (!functionManager.containerFUEventProcessor.isEmpty()) {
-
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Stopping FUEventProcessors applications ...");
-
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping FUEventProcessors ...");
-            functionManager.containerFUEventProcessor.execute(HCALInputs.STOP);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FUEventProcessorss failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
-
-        // stop the FUResourceBrokers
-        if (!functionManager.containerFUResourceBroker.isEmpty()) {
-
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Stopping FUResourceBrokers applications ...");
-
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping FUEventProcessors ...");
-            functionManager.containerFUResourceBroker.execute(HCALInputs.STOP);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping FUEventProcessors failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
-          }
-        }
 
         // stop the PeerTransportATCPs
         if (functionManager.StopATCP) {
@@ -1668,31 +1626,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
             }
             catch (QualifiedResourceContainerException e) {
               String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping PeerTransportATCPs failed ...";
-              logger.error(errMessage,e);
-              functionManager.sendCMSError(errMessage);
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-              if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
+              functionManager.goToError(errMessage,e);
             }
-          }
-        }
-
-        // stop the StorageManagers
-        if (!functionManager.containerStorageManager.isEmpty()) {
-
-          logger.warn("[HCAL LVL2 " + functionManager.FMname + "] Stopping StorageManagers applications ...");
-
-          try {
-            logger.debug("[HCAL LVL2 " + functionManager.FMname + "] stopping StorageManagers ...");
-            functionManager.containerStorageManager.execute(HCALInputs.STOP);
-          }
-          catch (QualifiedResourceContainerException e) {
-            String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! QualifiedResourceContainerException: stopping StorageManagers failed ...";
-            logger.error(errMessage,e);
-            functionManager.sendCMSError(errMessage);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("Error")));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("oops - technical difficulties ...")));
-            if (TestMode.equals("off")) { functionManager.firePriorityEvent(HCALInputs.SETERROR); functionManager.ErrorState = true; return;}
           }
         }
       }
