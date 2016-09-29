@@ -1175,6 +1175,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
+      //All EmptyFMs should be back after halted.
+      VectorT<StringT> EmptyFMs = new VectorT<StringT>();
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));

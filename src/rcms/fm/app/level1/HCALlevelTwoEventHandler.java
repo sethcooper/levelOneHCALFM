@@ -361,6 +361,10 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       //Set instance numbers and HandleLPM in the infospace
       initXDAQinfospace();
 
+      //Reset EmptyFMs
+      VectorT<StringT> EmptyFMs = new VectorT<StringT>();
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectoT<StringT>>("EMPTY_FMS",EmptyFMs));
+
       // go to Halted
       if (!functionManager.ErrorState) {
         functionManager.fireEvent( HCALInputs.SETHALT );
@@ -1533,9 +1537,12 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         else{
           logger.warn("[HCAL LV2 " + functionManager.FMname + "]WARNING: supervisorWatchthred is still running. Turn off the supervisorWatchthread before destroying XDAQs");
         }
-        // Remove this FM from EmptyFM
         functionManager.fireEvent(HCALInputs.SETHALT);
       }
+
+      // Reset the EmptyFMs for all LV2s
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",new VectorT<StringT>());
+
       // stop the event building gracefully
       if (functionManager.FMrole.equals("EvmTrig")) {
 
