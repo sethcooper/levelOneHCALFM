@@ -2461,7 +2461,7 @@ public class HCALEventHandler extends UserEventHandler {
 
               {
                 String debugMessage = "[HCAL " + functionManager.FMname + "] HCAL supervisor found for checking its state i.e. health - good!";
-                logger.info(debugMessage);
+                logger.debug(debugMessage);
               }
 
               XDAQParameter pam = null;
