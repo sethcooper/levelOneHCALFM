@@ -561,14 +561,19 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         }
 
         // get the HCAL CfgCVSBasePath from LVL1 if the LVL1 has sent something
-        CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
-        CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
-        CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
-        CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
-        CheckAndSetParameter( parameterSet , "HCAL_TCDSCONTROL"    );
-        CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
-        CheckAndSetParameter( parameterSet , "HCAL_PICONTROL"      );
-
+        try{
+          CheckAndSetParameter( parameterSet , "HCAL_CFGCVSBASEPATH" );
+          CheckAndSetParameter( parameterSet , "HCAL_CFGSCRIPT"      );
+          CheckAndSetParameter( parameterSet , "HCAL_TTCCICONTROL"   );
+          CheckAndSetParameter( parameterSet , "HCAL_LTCCONTROL"     );
+          CheckAndSetParameter( parameterSet , "HCAL_TCDSCONTROL"    );
+          CheckAndSetParameter( parameterSet , "HCAL_LPMCONTROL"     );
+          CheckAndSetParameter( parameterSet , "HCAL_PICONTROL"      );
+        }
+        catch (UserActionException e){
+          String warnMessage = "[HCAL LVL2 " + functionManager.FMname + "] ConfigureAction: "+e.getMessage();
+          logger.warn(warnMessage);
+        }
       }
 
       // Fill the local variable with the value received from LV1
@@ -958,7 +963,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         } 
         catch (UserActionException e){
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Did not receive a run number ...";
-					functionManager.goToError(errMessage);
+					functionManager.goToError(errMessage,e);
         }
 
         try{
