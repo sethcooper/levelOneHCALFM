@@ -785,7 +785,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       }
       String emptyFMnames      ="";
       for(StringT FMname : EmptyFMs){
-        emptyFMnames += FMname.getString();
+        emptyFMnames += FMname.getString()+";";
       }
       // END TEST PARTITION DISABLING
 
@@ -834,9 +834,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           normalFMsToConfigureList.add((FunctionManager)qr);
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
-        String normalFMnames     = getQRnamesFromContainer(normalFMsToConfigureContainer);
         
-        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: "+normalFMnames);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: ");
+        PrintQRnames(normalFMsToConfigureContainer);
         logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
         configureTaskSeq.addLast(fmChildrenTask);
 
@@ -967,15 +967,16 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // 1) Everyone besides EvmTrig FMs in parallel
         if(!normalFMsToStartContainer.isEmpty()) {
           SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
-          String normalFMnames      = getQRnamesFromContainer(normalFMsToStartContainer);
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding normal FMs to startTask: "+ normalFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding normal FMs to startTask: ");
+          PrintQRnames(normalFMsToStartContainer);
           startTaskSeq.addLast(fmChildrenTask);
+
         }
         // 2) EvmTrig
         if(!EvmTrigFMtoStartContainer.isEmpty()) {
           SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
-          String EvmTrigFMnames  = getQRnamesFromContainer(EvmTrigFMtoStartContainer);
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to startTask: "+ EvmTrigFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to startTask: ");
+          PrintQRnames(EvmTrigFMtoStartContainer);
           startTaskSeq.addLast(evmTrigTask);
         }
 
@@ -1146,23 +1147,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         if(!EvmTrigFMToHaltContainer.isEmpty()) {
           SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_EVMTRIG_FM");
           haltTaskSeq.addLast(evmTrigTask);
-          String evmTrigFMnames = getQRnamesFromContainer(EvmTrigFMToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to haltTask: "+ evmTrigFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to haltTask: ");
+          PrintQRnames(EvmTrigFMToHaltContainer);
         }
         
         // 2) TCDSLPM FM
         if(!TCDSLPMToHaltContainer.isEmpty()) {
           SimpleTask tcdslpmTask = new SimpleTask(TCDSLPMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_TCDS_FM");
           haltTaskSeq.addLast(tcdslpmTask);
-          String tcdslpmFMnames = getQRnamesFromContainer(TCDSLPMToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TCDSLPM FMs to haltTask: "+ tcdslpmFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TCDSLPM FMs to haltTask: ");
+          PrintQRnames(TCDSLPMToHaltContainer);
         }
         // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
         if(!normalFMsToHaltContainer.isEmpty()) {
           SimpleTask fmChildrenTask = new SimpleTask(normalFMsToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_NORMAL_FM");
           haltTaskSeq.addLast(fmChildrenTask);
-          String normalFMnames = getQRnamesFromContainer(normalFMsToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: "+ normalFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: ");
+          PrintQRnames(normalFMsToHaltContainer);
         }
         logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
 

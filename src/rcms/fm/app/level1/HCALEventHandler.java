@@ -2788,8 +2788,8 @@ public class HCALEventHandler extends UserEventHandler {
       throw new UserActionException(errMessage);
     }
   }
-  // Function to check content of a QR container, return a String with all the names
-  String getQRnamesFromContainer(QualifiedResourceContainer qrc){
+  // Print of the names of the QR in a QRContainer 
+  void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
     if (!qrc.isEmpty()){
       List<QualifiedResource> qrlist = qrc.getQualifiedResourceList();
@@ -2797,7 +2797,7 @@ public class HCALEventHandler extends UserEventHandler {
         Names += qr.getName() + ";";
       }
     }
-    return Names;
+    logger.info(Names);
   }
 
 }
