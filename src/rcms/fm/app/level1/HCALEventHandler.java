@@ -2763,14 +2763,31 @@ public class HCALEventHandler extends UserEventHandler {
   }
   
   // Function to receive parameter
-  void CheckAndSetParameter(ParameterSet pSet , String PamName){
+  void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
+    Class StringTclass  = new StringT("").getClass();
+    Class IntegerTclass = new IntegerT(0).getClass();
+    Class BooleanTclass = new BooleanT(true).getClass();
     if( pSet.get(PamName) != null){
-      String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-      logger.info("[HCAL "+ functionManager.FMname +" ] Received "+ PamName +" from last input.\n Here it is: \n"+ PamValue);
+      if (pSet.get(PamName).getType().isInstance(StringTclass)){
+        String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
+      if (pSet.get(PamName).getType().isInstance(IntegerTclass)){
+        Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
+      if (pSet.get(PamName).getType().isInstance(BooleanTclass)){
+        Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set"+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
     }
     else{
-      logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
+      String errMessage ="[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled";
+      logger.warn(errMessage);
+      throw new UserActionException(errMessage);
     }
   }
   // Function to check content of a QR container, return a String with all the names
