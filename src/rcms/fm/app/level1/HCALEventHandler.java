@@ -2766,8 +2766,6 @@ public class HCALEventHandler extends UserEventHandler {
   void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
 
     if( pSet.get(PamName) != null){
-      logger.info("Parameter type  = " + pSet.get(PamName).getType());
-      logger.info("String class    = " + StringTclass);
       if (pSet.get(PamName).getType().equals(StringT.class)){
         String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
         functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
