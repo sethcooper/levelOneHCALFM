@@ -817,6 +817,8 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
         try{
           CheckAndSetParameter(parameterSet, "RUN_NUMBER");
+          functionManager.RunNumber = ((IntegerT)parameterSet.get("RUN_NUMBER").getValue()).getInteger();
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("STARTED_WITH_RUN_NUMBER",new IntegerT(functionManager.RunNumber)));
         } 
         catch (UserActionException e){
           String errMessage = "[HCAL LVL2 " + functionManager.FMname + "] Error! Did not receive a run number ...";
@@ -826,6 +828,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
         try{
           CheckAndSetParameter(parameterSet, "RUN_SEQ_NUMBER");
           CheckAndSetParameter(parameterSet, "NUMBER_OF_EVENTS");
+          TriggersToTake = ((IntegerT)parameterSet.get("NUMBER_OF_EVENTS").getValue()).getInteger();
         } 
         catch (UserActionException e){
           if (RunType.equals("local")){ 
