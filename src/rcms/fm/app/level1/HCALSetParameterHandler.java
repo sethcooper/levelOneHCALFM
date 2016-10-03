@@ -4,22 +4,11 @@ import java.util.Iterator;
 
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.fw.user.UserActionException;
-import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
-import rcms.errorFormat.CMS.CMSError;
 import rcms.fm.fw.EventHandlerException;
-import rcms.fm.fw.parameter.CommandParameter;
-import rcms.fm.fw.parameter.FunctionManagerParameter;
-import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
-import rcms.fm.resource.QualifiedGroup;
-import rcms.fm.resource.QualifiedResource;
-import rcms.fm.resource.QualifiedResourceContainer;
-import rcms.fm.resource.QualifiedResourceContainerException;
-import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.resource.CommandException;
 
 /**
 	* Set Parameter Handler class for HCAL Function Managers

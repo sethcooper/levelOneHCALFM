@@ -1,83 +1,37 @@
 package rcms.fm.app.level1;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-import java.lang.Double;
-
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.IOException;
 
 import net.hep.cms.xdaqctl.XDAQException;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQMessageException;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.w3c.dom.DOMException;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import rcms.errorFormat.CMS.CMSError;
 import rcms.fm.fw.StateEnteredEvent;
-import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
-import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.BooleanT;
-import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserActionException;
-import rcms.fm.fw.user.UserStateNotificationHandler;
-import rcms.resourceservice.db.Group;
 import rcms.resourceservice.db.resource.Resource;
 import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
 import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
-import rcms.common.db.DBConnectorException;
-import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
-import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
-import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
 import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
-import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
-import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
-import rcms.util.logsession.LogSessionException;
 import rcms.xdaqctl.XDAQParameter;
-import rcms.xdaqctl.XDAQMessage;
 import rcms.utilities.runinfo.RunNumberData;
-import rcms.statemachine.definition.Input;
 
 import rcms.utilities.fm.task.TaskSequence;
 import rcms.utilities.fm.task.SimpleTask;
-import rcms.utilities.fm.task.Task;
 
 /**
  * Event Handler class for Level 2 HCAL Function Manager

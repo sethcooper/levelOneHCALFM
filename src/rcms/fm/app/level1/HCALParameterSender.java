@@ -6,7 +6,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import rcms.util.logger.RCMSLogger;
-import rcms.util.logsession.LogSessionException;
 
 //import rcms.fm.ajaxFM.MyFunctionManager;
 //import rcms.fm.ajaxFM.myParameters.MyParameterSet;
