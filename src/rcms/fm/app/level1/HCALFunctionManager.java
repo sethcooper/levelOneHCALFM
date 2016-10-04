@@ -31,20 +31,15 @@ import rcms.errorFormat.CMS.CMSError;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.CommandParameter;
-import rcms.fm.resource.CommandException;
 
 import rcms.resourceservice.db.resource.config.ConfigProperty;
-import rcms.resourceservice.db.Group;
-import rcms.resourceservice.db.RSConnectorIF;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 
 import rcms.utilities.runinfo.RunInfo;
-import rcms.utilities.runinfo.RunInfoException;
 
 import rcms.util.logsession.LogSessionException;
 
 import java.text.DateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
@@ -52,9 +47,7 @@ import java.util.HashMap;
 import java.net.URL;
 import java.net.MalformedURLException;
 
-import rcms.fm.fw.parameter.Parameter;
 import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.parameter.type.IntegerT;
 
 import net.hep.cms.xdaqctl.WSESubscription;

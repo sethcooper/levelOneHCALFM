@@ -5,7 +5,6 @@ import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserErrorHandler;
 import rcms.statemachine.definition.State;
 import rcms.util.logger.RCMSLogger;
-import rcms.errorFormat.CMS.CMSError;
 
 /**
 	* Error Event Handler class for HCAL Function Managers
