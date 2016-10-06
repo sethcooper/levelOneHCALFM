@@ -1,12 +1,8 @@
 package rcms.fm.app.level1;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 import java.util.Date;
-import java.util.TimeZone;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -14,7 +10,6 @@ import java.lang.Integer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.lang.Double;
 import java.math.BigInteger;
 import java.net.URI;
@@ -31,14 +26,6 @@ import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQMessageException;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -46,37 +33,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.DOMException;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.soap.SOAPException;
-
-import rcms.fm.context.RCMSConstants;
 import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.Parameter;
-import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
-import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
-import rcms.fm.fw.parameter.type.DateT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.BooleanT;
-import rcms.fm.fw.parameter.ParameterException;
-import rcms.statemachine.definition.Input;
-import rcms.fm.fw.user.UserEvent;
 import rcms.fm.fw.user.UserActionException;
-import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.fm.fw.user.UserEventHandler;
-import rcms.fm.fw.user.UserFunctionManager;
-import rcms.resourceservice.db.Group;
-import rcms.resourceservice.db.resource.Resource;
-import rcms.common.db.DBConnectorException;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
@@ -87,10 +56,6 @@ import rcms.fm.resource.qualifiedresource.XdaqExecutive;
 import rcms.fm.resource.qualifiedresource.JobControl;
 import rcms.fm.resource.qualifiedresource.FunctionManager;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
-import rcms.resourceservice.db.resource.config.ConfigProperty;
-import rcms.resourceservice.db.resource.ResourceException;
-import rcms.resourceservice.db.resource.xdaq.XdaqApplicationResource;
-import rcms.resourceservice.db.resource.xdaq.XdaqExecutiveResource;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.util.logsession.LogSessionException;
@@ -101,20 +66,7 @@ import rcms.utilities.runinfo.RunInfoConnectorIF;
 import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
-import rcms.utilities.fm.task.CompositeTask;
-import rcms.utilities.fm.task.SimpleTask;
-import rcms.utilities.fm.task.TaskSequence;
-import rcms.fm.resource.CommandException;
 import rcms.util.logsession.LogSessionConnector;
-import rcms.util.logsession.LogSessionException;
-
-import net.hep.cms.xdaqctl.WSESubscription;
-import net.hep.cms.xdaqctl.XDAQMessageException;
-import net.hep.cms.xdaqctl.XDAQTimeoutException;
-import net.hep.cms.xdaqctl.XMASMessage;
-import net.hep.cms.xdaqctl.xdata.FlashList;
-import net.hep.cms.xdaqctl.xdata.SimpleItem;
-import net.hep.cms.xdaqctl.xdata.XDataType;
 
 /**
  * Event Handler base class for HCAL Function Managers

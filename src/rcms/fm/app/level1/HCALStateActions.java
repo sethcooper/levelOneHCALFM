@@ -3,12 +3,7 @@ package rcms.fm.app.level1;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserActions;
 import rcms.fm.fw.StateEnteredEvent;
-import rcms.fm.fw.user.UserEvent;
 import rcms.util.logger.RCMSLogger;
-import rcms.fm.fw.user.UserActionException;
-import rcms.fm.fw.user.UserActions;
-import rcms.ns.event.NotificationEvent;
-import rcms.ns.utils.NotificationHelper;
 
 /**
 * Class for callbacks associated to Entered and Exiting States.

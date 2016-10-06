@@ -3,12 +3,8 @@ package rcms.fm.app.level1;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Scanner;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,15 +22,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 import org.w3c.dom.DOMException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import rcms.fm.fw.user.UserActionException;
 
-import rcms.fm.resource.qualifiedresource.FunctionManager;
-import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
 import rcms.fm.fw.parameter.type.StringT;
@@ -44,7 +37,6 @@ import rcms.fm.fw.parameter.type.VectorT;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
-import rcms.util.logsession.LogSessionException;
 
 /**
  *  @author John Hakala

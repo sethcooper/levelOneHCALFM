@@ -1,37 +1,15 @@
 package rcms.fm.app.level1;
 
-import java.util.Iterator;
-import java.util.List;
-
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.type.StringT;
-import rcms.fm.fw.user.UserActionException;
-import rcms.fm.fw.user.UserFunctionManager;
 import rcms.fm.resource.QualifiedResource;
-import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.qualifiedresource.XdaqApplication;
-import rcms.fm.resource.qualifiedresource.XdaqApplicationContainer;
-import rcms.fm.resource.qualifiedresource.XdaqExecutive;
-import rcms.statemachine.definition.State;
 import rcms.statemachine.definition.StateMachineDefinitionException;
 import rcms.util.logger.RCMSLogger;
-import rcms.util.logsession.LogSessionConnector;
-
-import rcms.resourceservice.db.Group;
-import rcms.resourceservice.db.RSConnectorIF;
-import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
-
-import rcms.utilities.runinfo.RunInfo;
-import rcms.utilities.runinfo.RunInfoException;
 
 import rcms.xdaqctl.XDAQParameter;
 import net.hep.cms.xdaqctl.XDAQTimeoutException;
 import net.hep.cms.xdaqctl.XDAQException;
-
-import java.text.DateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 
 /**
 	* Function Machine to control a Level 2 HCAL Function Manager
