@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.HashMap;
 
 import java.io.StringReader; 
 import java.io.IOException;
