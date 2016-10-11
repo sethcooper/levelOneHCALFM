@@ -1147,7 +1147,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Get SID from parameter
     Sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
     if ( ric == null ) {
-      logger.warn("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e. is RunInfo DB down?");
+      logger.error("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e. Is there a RunInfo DB? Or is RunInfo DB down?");
 
       // by default give run number 0
       return new RunNumberData(new Integer(Sid),new Integer(0),functionManager.getOwner(),Calendar.getInstance().getTime());
