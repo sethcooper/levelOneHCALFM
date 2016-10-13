@@ -1232,6 +1232,10 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager = this.functionManager;
     String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
+
+    maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
+    emptyFMsForRunInfo   = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
+
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
     localParams.put(   "FM_URL"                ,  functionManager.FMurl                       );
@@ -1253,6 +1257,7 @@ public class HCALEventHandler extends UserEventHandler {
     if ( RunInfoPublish ) {
       logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
       // check availability of RunInfo DB
+      
       checkRunInfoDBConnection();
 
       if ( functionManager.HCALRunInfo == null) {
@@ -2369,8 +2374,6 @@ public class HCALEventHandler extends UserEventHandler {
             }
 
 
-            maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
-            emptyFMsForRunInfo   = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
             publishRunInfoSummary();
 
             String Message = "[HCAL " + functionManager.FMname + "] ... (possibly) updated run info at: " + now.toString();
