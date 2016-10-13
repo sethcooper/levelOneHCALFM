@@ -1333,7 +1333,7 @@ public class HCALEventHandler extends UserEventHandler {
             // fill HashMap Strings into the RunInfo compliant data type
             if (!key.equals("") && key!=null) {
               try {
-                logger.info("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + "to the RunInfo databse.");
+                logger.debug("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + " to the RunInfo database.");
                 functionManager.HCALRunInfo.publishWithHistory(new Parameter<StringT>(key, new StringT(setValue)));
               }
               catch (RunInfoException e) {
@@ -1342,7 +1342,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
             }
           }
-          logger.info("[HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
+          logger.info("[HCAL " + functionManager.FMname + "] publishRunInfoSummaryfromXDAQ done");
         }
         else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci"))) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! publishRunInfoSummaryfromXDAQ() requested but no hcalRunInfoServer application found - please check!";
