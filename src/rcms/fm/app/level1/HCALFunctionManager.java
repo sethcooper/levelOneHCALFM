@@ -414,6 +414,7 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopHCALSupervisorWatchThread = true;
     theEventHandler.stopTriggerAdapterWatchThread = true;
     theEventHandler.stopAlarmerWatchThread = true; 
+    theStateNotificationHandler.setTimeoutThread(false);
 
     destroyXDAQ();
 
