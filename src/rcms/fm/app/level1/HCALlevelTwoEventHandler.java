@@ -1851,7 +1851,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               // Configuring To configured
               else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString())){
                 functionManager.firePriorityEvent(HCALInputs.SETCONFIGURE);
-              }else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
+              //}else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
+              }else 
+              {
                 //Sleep when we are in configured
                 try {
                     Thread.sleep(15000);
@@ -1873,7 +1875,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
               // Configured To Halted
               else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
                 functionManager.firePriorityEvent(HCALInputs.SETHALT);
-              } else if(functionManager.getState().getStateString().equals(HCALStates.HALTED.toString())){
+              //} else if(functionManager.getState().getStateString().equals(HCALStates.HALTED.toString())){
+              } else 
+              {
                   //Sleep when we are in HALTED
                   try {
                       Thread.sleep(15000);
