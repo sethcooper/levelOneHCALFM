@@ -924,14 +924,21 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         List<QualifiedResource> fmChildrenList       = functionManager.containerFMChildren.getActiveQRList();
         List<QualifiedResource> EvmTrigFMtoStartList = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
 
+        List<FunctionManager> TTCciFMtoStartList  = new ArrayList<FunctionManager>();
+        for(QualifiedResource qr : functionManager.containerFMTCDSLPM.getActiveQRList()){
+          if (qr.getName().contains("TTCci"))
+            TTCciFMtoStartList.add((FunctionManager)qr);
+        }
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList){
           normalFMsToStartList.add((FunctionManager)qr);
         }
         normalFMsToStartList.removeAll(EvmTrigFMtoStartList);
+        normalFMsToStartList.removeAll(TTCciFMtoStartList);
 
         QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
         QualifiedResourceContainer EvmTrigFMtoStartContainer = new QualifiedResourceContainer(EvmTrigFMtoStartList);
+        QualifiedResourceContainer TTCciFMtoStartContainer = new QualifiedResourceContainer(TTCciFMtoStartList);
         
         // no reason not to always prioritize FM starts
         // include scheduling
@@ -951,6 +958,13 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to startTask: ");
           PrintQRnames(EvmTrigFMtoStartContainer);
           startTaskSeq.addLast(evmTrigTask);
+        }
+        // 3) TTCci should start last to let watchthread working
+        if(!TTCciFMtoStartContainer.isEmpty()) {
+          SimpleTask TTCciTask = new SimpleTask(TTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TTCci FMs to startTask: ");
+          PrintQRnames(TTCciFMtoStartContainer);
+          startTaskSeq.addLast(TTCciTask);
         }
 
       logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");

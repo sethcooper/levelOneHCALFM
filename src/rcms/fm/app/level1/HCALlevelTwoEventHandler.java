@@ -392,7 +392,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       if (!functionManager.containerTTCciControl.isEmpty()) {
         TTCciWatchThread ttcciwatchthread = new TTCciWatchThread(functionManager);
-        ttcciwatchthread.run();
+        ttcciwatchthread.start();
       }
      
       String CfgCVSBasePath           = "not set";
@@ -994,7 +994,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
-
+      
       // only in local runs when all triggers were sent the run is stopped with 60 sec timeout
       if (functionManager.FMrole.equals("EvmTrig")) {
 
@@ -1837,23 +1837,65 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
     }
     public void run() {
       while (!stopTTCciWatchThread && !functionManager.isDestroyed() && functionManager != null) {
-        for (QualifiedResource ttcciControlResource : functionManager.containerTTCciControl.getApplications()) {
-          XdaqApplication ttcciControl = (XdaqApplication) ttcciControlResource;
-          logger.warn("[JohnLog] " + functionManager.FMname + ": " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
-          if (ttcciControl.refreshState().toString().equals("configured") | ttcciControl.refreshState().toString().equals("halted")) {
-            stopTTCciWatchThread = true;
-            functionManager.firePriorityEvent(HCALInputs.SETCONFIGURE);
-          }
-          else { 
-            try {
-              Thread.sleep(4000);
+          for (QualifiedResource ttcciControlResource : functionManager.containerTTCciControl.getApplications()) {
+            XdaqApplication ttcciControl = (XdaqApplication) ttcciControlResource;
+            logger.warn("[JohnLog] " + functionManager.FMname + ": " + ttcciControl.getName() + " has state: " + ttcciControl.refreshState().toString());
+            //Poll the xdaq to issue transitions
+            if (ttcciControl.refreshState().toString().equals("configured") ) {
+              // Running To Stopping
+              if(  (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                        (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))  ){
+                stopTTCciWatchThread = true;
+                functionManager.firePriorityEvent(HCALInputs.STOP);
+              }
+              // Configuring To configured
+              else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString())){
+                functionManager.firePriorityEvent(HCALInputs.SETCONFIGURE);
+              }else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
+                //Sleep when we are in configured
+                try {
+                    Thread.sleep(15000);
+                  }
+                  catch (Exception e) {
+                    logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+                  }
+                //logger.info("[" + functionManager.FMname + "] TTCciWatchThread: slept 4s in configured");
+              }
             }
-            catch (Exception e) {
-              logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+            else  if ( ttcciControl.refreshState().toString().equals("halted")) {
+              //TODO: Running To Stopping
+              if(  (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString())) ||
+                        (functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()))  ){
+               // stopTTCciWatchThread = true;
+               // functionManager.firePriorityEvent(HCALInputs.STOP);
+                 logger.error("["+functionManager.FMname+"] TTCciWatchThread: Should not halt from Running!");
+              }
+              // Configured To Halted
+              else if(functionManager.getState().getStateString().equals(HCALStates.CONFIGURED.toString())){
+                functionManager.firePriorityEvent(HCALInputs.SETHALT);
+              } else if(functionManager.getState().getStateString().equals(HCALStates.HALTED.toString())){
+                  //Sleep when we are in HALTED
+                  try {
+                      Thread.sleep(15000);
+                    }
+                    catch (Exception e) {
+                      logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+                    }
+                 // logger.info("[" + functionManager.FMname + "] TTCciWatchThread: slept 4s in halted");
+              }
+            }  
+            else
+            {
+              //Sleep when we are not in configured or halted
+              try {
+                  Thread.sleep(4000);
+                }
+                catch (Exception e) {
+                  logger.error("[" + functionManager.FMname + "] Error during TTCciWatchThread.");
+                }
+              logger.info("[" + functionManager.FMname + "] TTCciWatchThread: waiting to reach configured");
             }
-            logger.warn("[JohnLog] " + functionManager.FMname + ": TTCciControl reached the configured state.");
-          }
-        }
+        } 
       }
     }
   }
