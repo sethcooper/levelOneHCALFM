@@ -860,16 +860,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           OfficialRunNumbers       = ((BooleanT)functionManager.getParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
           if (OfficialRunNumbers) {
 
-            RunNumberData rnd = getOfficialRunNumber();
+            //check availability of runInfo DB
+            if(functionManager.getRunInfoConnector()!=null){
+              RunNumberData rnd = getOfficialRunNumber();
 
-            functionManager.RunNumber    = rnd.getRunNumber();
-            RunSeqNumber = rnd.getSequenceNumber();
+              functionManager.RunNumber    = rnd.getRunNumber();
+              RunSeqNumber = rnd.getSequenceNumber();
 
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
 
-            logger.info("[HCAL LVL1 " + functionManager.FMname + "] ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
-
+              logger.info("[HCAL LVL1 " + functionManager.FMname + "] ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
+            }
+            else{
+              logger.error("[HCAL LVL1 "+functionManager.FMname+"] Official RunNumber requested, but cannot establish RunInfo Connection. Is there a RunInfo DB? or is RunInfo DB down?");
+              logger.info("[HCAL LVL1 "+functionManager.FMname+"] Going to use run number ="+functionManager.RunNumber+", RunSeqNumber = "+ RunSeqNumber);
+            }
           }
         }
       }
