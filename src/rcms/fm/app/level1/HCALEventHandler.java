@@ -143,6 +143,7 @@ public class HCALEventHandler extends UserEventHandler {
   private List<Thread> HCALSupervisorWatchThreadList =  new ArrayList<Thread>();  // For querying the hcalSupervisor periodically
   private List<Thread> AlarmerWatchThreadList        =  new ArrayList<Thread>();  // For querying alarmer periodically
   public String maskedAppsForRunInfo = "";
+  public String emptyFMsForRunInfo   = "";
 
 
   public HCALEventHandler() throws rcms.fm.fw.EventHandlerException {
@@ -892,28 +893,15 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager.containerFMEvmTrig = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("EvmTrig"));
     functionManager.containerFMTCDSLPM = new QualifiedResourceContainer(qualifiedGroup.seekQualifiedResourcesOfRole("Level2_TCDSLPM"));
     // get masked FMs and remove them from container
-    //List<QualifiedResource> allChildFMs = qualifiedGroup.seekQualifiedResourcesOfType(new rcms.fm.resource.qualifiedresource.FunctionManager());
-    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getQualifiedResourceList();
-    fmChItr = allChildFMs.iterator();
-    while (fmChItr.hasNext()) {
-      FunctionManager fmChild = (FunctionManager) fmChItr.next();
-      if (!fmChild.isActive()) {
-        //logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: FM named: " + fmChild.getName() + " found with role name: " + fmChild.getRole());
-        // role is set at beginning of init() so it's already set here
-        logger.warn("[HCAL " + functionManager.FMname + "] in containerFMChildren: REMOVE masked FM named: " + fmChild.getName() + " with role name: " + fmChild.getRole());
-        fmChItr.remove();
-      }
-    }
-
+    List<QualifiedResource> allChildFMs = functionManager.containerFMChildren.getActiveQRList();
+    functionManager.containerFMChildren   = new QualifiedResourceContainer(allChildFMs);
+    
     if (functionManager.containerFMChildren.isEmpty()) {
       String debugMessage = ("[HCAL " + functionManager.FMname + "] No FM childs found.\nThis is probably OK for a level 2 HCAL FM.\nThis FM has the role: " + functionManager.FMrole);
       logger.debug(debugMessage);
     }
 
     // see if we have any "special" FMs
-    List<FunctionManager> l2LaserFMList = new ArrayList<FunctionManager>();
-    List<FunctionManager> l2Priority1List = new ArrayList<FunctionManager>();
-    List<FunctionManager> l2Priority2List = new ArrayList<FunctionManager>();
     List<FunctionManager> evmTrigList = new ArrayList<FunctionManager>();
     List<FunctionManager> normalList = new ArrayList<FunctionManager>();
     // see if we have any "special" FMs; store them in containers
@@ -922,17 +910,7 @@ public class HCALEventHandler extends UserEventHandler {
       FunctionManager fmChild = null;
       while (it.hasNext()) {
         fmChild = (FunctionManager) it.next();
-        if (fmChild.getName().toString().equals("HCAL_Laser") || fmChild.getRole().toString().equals("Level2_Laser")) {
-          l2LaserFMList.add(fmChild);
-        }
-        else if (fmChild.getName().toString().equalsIgnoreCase("HCAL_RCTMaster") || fmChild.getName().toString().equalsIgnoreCase("HCAL_HCALMaster") ||
-            fmChild.getRole().toString().equals("Level2_Priority_1")) {
-          l2Priority1List.add(fmChild);
-        }
-        else if (fmChild.getRole().toString().equals("Level2_Priority_2")) {
-          l2Priority2List.add(fmChild);
-        }
-        else if (fmChild.getRole().toString().equals("EvmTrig")) {
+        if (fmChild.getRole().toString().equals("EvmTrig")) {
           evmTrigList.add(fmChild);
         }
         else {
@@ -940,9 +918,6 @@ public class HCALEventHandler extends UserEventHandler {
         }
       }
     }
-    functionManager.containerFMChildrenL2Laser = new QualifiedResourceContainer(l2LaserFMList);
-    functionManager.containerFMChildrenL2Priority1 = new QualifiedResourceContainer(l2Priority1List);
-    functionManager.containerFMChildrenL2Priority2 = new QualifiedResourceContainer(l2Priority2List);
     functionManager.containerFMChildrenEvmTrig = new QualifiedResourceContainer(evmTrigList);
     functionManager.containerFMChildrenNormal = new QualifiedResourceContainer(normalList);
 
@@ -1172,7 +1147,7 @@ public class HCALEventHandler extends UserEventHandler {
     // Get SID from parameter
     Sid = ((IntegerT)functionManager.getParameterSet().get("SID").getValue()).getInteger();
     if ( ric == null ) {
-      logger.warn("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e. is RunInfo DB down?");
+      logger.error("[HCAL " + functionManager.FMname + "] RunInfoConnector is empty i.e. Is there a RunInfo DB? Or is RunInfo DB down?");
 
       // by default give run number 0
       return new RunNumberData(new Integer(Sid),new Integer(0),functionManager.getOwner(),Calendar.getInstance().getTime());
@@ -1221,7 +1196,7 @@ public class HCALEventHandler extends UserEventHandler {
       parameter = new Parameter<StringT>(nameForDB, new StringT("empty string"));
     }
     try {
-      logger.info("[HCAL " + functionManager.FMname + "] Publishing local parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      logger.debug("[HCAL " + functionManager.FMname + "] Publishing local parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
       if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
     }
     catch (RunInfoException e) {
@@ -1239,7 +1214,7 @@ public class HCALEventHandler extends UserEventHandler {
       parameter = new Parameter<StringT>(nameForDB,new StringT("empty string"));
     }
     try {
-      logger.info("[HCAL " + functionManager.FMname + "] Publishing global parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
+      logger.debug("[HCAL " + functionManager.FMname + "] Publishing global parameter  '" + nameForDB + "' to the RunInfo DB; value = " + parameter.getValue().toString());
       if (functionManager.HCALRunInfo!=null) { functionManager.HCALRunInfo.publish(parameter); }
     }
     catch (RunInfoException e) {
@@ -1257,6 +1232,10 @@ public class HCALEventHandler extends UserEventHandler {
     functionManager = this.functionManager;
     String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
+
+    maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
+    emptyFMsForRunInfo   = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
+
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
     localParams.put(   "FM_URL"                ,  functionManager.FMurl                       );
@@ -1265,6 +1244,7 @@ public class HCALEventHandler extends UserEventHandler {
     localParams.put(   "STATE_ON_EXIT"         ,  functionManager.getState().getStateString() );
     localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
     localParams.put(   "MASKED_RESOURCES"      ,  maskedAppsForRunInfo                        );
+    localParams.put(   "EMPTY_FMS"             ,  emptyFMsForRunInfo                          );
     localParams.put(   "TRIGGERS"              ,  String.valueOf(TriggersToTake)              );
 
     // TODO JHak put in run start time and stop times. This was always broken.
@@ -1277,6 +1257,7 @@ public class HCALEventHandler extends UserEventHandler {
     if ( RunInfoPublish ) {
       logger.info("[HCAL " + functionManager.FMname + "]: publishingRunInfoSummary");
       // check availability of RunInfo DB
+      
       checkRunInfoDBConnection();
 
       if ( functionManager.HCALRunInfo == null) {
@@ -1352,7 +1333,7 @@ public class HCALEventHandler extends UserEventHandler {
             // fill HashMap Strings into the RunInfo compliant data type
             if (!key.equals("") && key!=null) {
               try {
-                logger.info("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + "to the RunInfo databse.");
+                logger.debug("[HCAL " + functionManager.FMname + "] Publishing the XDAQ RunInfo parameter with key name: " + key + " to the RunInfo database.");
                 functionManager.HCALRunInfo.publishWithHistory(new Parameter<StringT>(key, new StringT(setValue)));
               }
               catch (RunInfoException e) {
@@ -1361,7 +1342,7 @@ public class HCALEventHandler extends UserEventHandler {
               }
             }
           }
-          logger.info("[HCAL " + functionManager.FMname + "] ... publishing the info from the hcalRunInfoServer to the RunInfo DB Done.");
+          logger.info("[HCAL " + functionManager.FMname + "] publishRunInfoSummaryfromXDAQ done");
         }
         else if (!(functionManager.FMrole.equals("Level2_TCDSLPM") || functionManager.FMrole.contains("TTCci"))) {
           String errMessage = "[HCAL " + functionManager.FMname + "] Error! publishRunInfoSummaryfromXDAQ() requested but no hcalRunInfoServer application found - please check!";
@@ -1865,6 +1846,100 @@ public class HCALEventHandler extends UserEventHandler {
     return TAisstopped;
   }
 
+  List<String> getMaskedChildFMsFromFedMask(String thisFedEnableMask, HashMap<String, List<Integer> > childFMFedMap) {
+    // Make a list of FEDs to test mask/no mask
+    List<Integer> fedList = new ArrayList<Integer>();
+    for (Map.Entry<String, List<Integer> > entry : childFMFedMap.entrySet()) {
+      fedList.addAll(entry.getValue());
+    }
+
+    // Get mask/no mask for each FED
+    HashMap<Integer, BigInteger> parsedFedEnableMask = parseFedEnableMask(thisFedEnableMask);
+    HashMap<Integer, Boolean> fedStatusMap = new HashMap<Integer, Boolean>();
+    for (Integer fedId : fedList) {
+      BigInteger fedMaskWord = parsedFedEnableMask.get(fedId);
+      if (fedMaskWord == null) {
+        logger.warn("[HCAL " + functionManager.FMname + "] Warning! FED " + fedId + " was not found in the FED_ENABLE_MASK. I will consider it enabled, but you might want to investigate.");
+        fedStatusMap.put(fedId, true);
+      } else {
+        // See comment for function parseFedEnableMask for information about the fedMaskWord. In short, fedMaskWord==3 means enabled.
+        fedStatusMap.put(fedId, (fedMaskWord.testBit(0) && fedMaskWord.testBit(1) && !fedMaskWord.testBit(2) && !fedMaskWord.testBit(3)));
+      }
+    }
+
+    // Loop over partitions, and determine if they have any enabled FEDs
+    HashMap<String, Boolean> childFMStatusMap = new HashMap<String, Boolean>();
+    for (Map.Entry<String, List<Integer> > entry : childFMFedMap.entrySet()) {
+      String childFMName = entry.getKey();
+      List<Integer> childFMFedList = entry.getValue();
+      Boolean fmStatus = false;
+      for (Integer fedId : childFMFedList) {
+        fmStatus = (fmStatus || fedStatusMap.get(fedId));
+      }
+      childFMStatusMap.put(childFMName, fmStatus);
+    }
+    // Convert to List<String> of masked partitions and return
+    List<String> maskedChildFMs = new ArrayList<String>();
+    for (Map.Entry<String, Boolean> entry : childFMStatusMap.entrySet()) {
+      if (!entry.getValue()) {
+        maskedChildFMs.add(entry.getKey());
+      }
+    }
+    return maskedChildFMs;
+  }
+
+  // Parse the FED enable mask string into a map <FedId:FedMaskWord>
+  // FED_ENABLE_MASK is formatted as FEDID_1&FEDMASKWORD_1%FEDID_2&FEDMASKWORD2%...
+  // The mask word is 3 for enabled FEDs:
+  // bit  0 : SLINK ON / OFF
+  //      1 : ENABLED/DISABLED
+  //  2 & 0 : SLINK NA / BROKEN
+  //      4 : NO CONTROL
+  protected HashMap<Integer, BigInteger> parseFedEnableMask(String thisFedEnableMask) {
+    String[] fedIdValueArray = thisFedEnableMask.split("%");
+    HashMap<Integer, BigInteger> parsedFedEnableMask = new HashMap<Integer, BigInteger>();
+    for (String fedIdValueString : fedIdValueArray) {
+      String[] fedIdValue = fedIdValueString.split("&");
+
+      // Require 2 strings, the FED ID and the mask
+      if (fedIdValue.length!=2){
+        logger.warn("[HCAL " + functionManager.FMname + "] parseFedEnableMask: inconsistent fedIdValueString found (should be of format fedId&mask).\n The length is: " + fedIdValue.length + "\nString: " + fedIdValueString);
+        break;
+      }
+
+      // Get the FED ID
+      Integer fedId = null;
+      try {
+        fedId = new Integer(fedIdValue[0]);
+      } catch (NumberFormatException nfe) {
+        if (!RunType.equals("local")) {
+          logger.error("[HCAL " + functionManager.FMname + "] parseFedEnableMask: FedId format error: " + nfe.getMessage());
+        } else {
+          logger.debug("[HCAL " + functionManager.FMname + "] parseFedEnableMask: FedId format error: " + nfe.getMessage());
+        }
+        continue;
+      }
+
+      BigInteger fedMaskWord = null;
+      try {
+        fedMaskWord = new BigInteger( fedIdValue[1] );
+      } catch (NumberFormatException nfe) {
+        if (!RunType.equals("local")) {
+          logger.error("parseFedEnableMask: fedMaskWord format error: " + nfe.getMessage());
+        } else {
+          logger.debug("parseFedEnableMask: fedMaskWord format error: " + nfe.getMessage());
+        }
+        continue;
+      }
+      logger.debug("parseFedEnableMask: parsing result ...\n(FedId/Status) = (" + fedIdValue[0] + "/"+ fedIdValue[1] + ")");
+
+      parsedFedEnableMask.put(fedId, fedMaskWord);
+
+    } // End loop over fedId:fedMaskWord
+    return parsedFedEnableMask;
+  }
+
+  // DEPRECATED
   // determine the active HCAL FEDs from the ENABLE_FED_MASK string received in the configureAction()
   protected List<String> getEnabledHCALFeds(String FedEnableMask) {
     List<String> fedVector = new ArrayList<String>();
@@ -2299,7 +2374,6 @@ public class HCALEventHandler extends UserEventHandler {
             }
 
 
-            maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
             publishRunInfoSummary();
 
             String Message = "[HCAL " + functionManager.FMname + "] ... (possibly) updated run info at: " + now.toString();
@@ -2647,18 +2721,33 @@ public class HCALEventHandler extends UserEventHandler {
   }
   
   // Function to receive parameter
-  void CheckAndSetParameter(ParameterSet pSet , String PamName){
+  void CheckAndSetParameter(ParameterSet pSet , String PamName) throws UserActionException{
+
     if( pSet.get(PamName) != null){
-      String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
-      functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
-      logger.info("[HCAL "+ functionManager.FMname +" ] Received "+ PamName +" from last input.\n Here it is: \n"+ PamValue);
+      if (pSet.get(PamName).getType().equals(StringT.class)){
+        String PamValue = ((StringT)pSet.get(PamName).getValue()).getString();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<StringT>(PamName, new StringT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
+      if (pSet.get(PamName).getType().equals(IntegerT.class)){
+        Integer PamValue = ((IntegerT)pSet.get(PamName).getValue()).getInteger();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<IntegerT>(PamName, new IntegerT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
+      if (pSet.get(PamName).getType().equals(BooleanT.class)){
+        Boolean PamValue = ((BooleanT)pSet.get(PamName).getValue()).getBoolean();
+        functionManager.getParameterSet().put(new FunctionManagerParameter<BooleanT>(PamName, new BooleanT(PamValue)));
+        logger.info("[HCAL "+ functionManager.FMname +" ] Received and set "+ PamName +" from last input. Here it is: \n"+ PamValue);
+      }
     }
     else{
-      logger.warn("[HCAL "+ functionManager.FMname +" ] Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled");
+      String errMessage =" Did not receive "+ PamName +" from last input! Please check if "+ PamName+ " was filled";
+      logger.warn(errMessage);
+      throw new UserActionException(errMessage);
     }
   }
-  // Function to check content of a QR container, return a String with all the names
-  String getQRnamesFromContainer(QualifiedResourceContainer qrc){
+  // Print of the names of the QR in a QRContainer 
+  void PrintQRnames(QualifiedResourceContainer qrc){
     String Names = "";
     if (!qrc.isEmpty()){
       List<QualifiedResource> qrlist = qrc.getQualifiedResourceList();
@@ -2666,7 +2755,7 @@ public class HCALEventHandler extends UserEventHandler {
         Names += qr.getName() + ";";
       }
     }
-    return Names;
+    logger.info(Names);
   }
 
 }

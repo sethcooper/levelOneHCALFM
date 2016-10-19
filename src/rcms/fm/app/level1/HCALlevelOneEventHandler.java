@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.HashMap;
 
 import java.io.StringReader; 
 import java.io.IOException;
@@ -30,11 +31,14 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.user.UserActionException;
+import rcms.fm.fw.user.UserStateNotificationHandler;
+import rcms.resourceservice.db.resource.Resource;
 import rcms.fm.resource.QualifiedGroup;
 import rcms.fm.resource.QualifiedResource;
 import rcms.fm.resource.QualifiedResourceContainer;
 import rcms.fm.resource.QualifiedResourceContainerException;
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
+import rcms.resourceservice.db.resource.config.ConfigProperty;
 import rcms.stateFormat.StateNotification;
 import rcms.util.logger.RCMSLogger;
 import rcms.utilities.fm.task.SimpleTask;
@@ -707,27 +711,81 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       thread4.start();
 
 
+      // Disable FMs based on FED_ENABLE_MASK, if all FEDs in the FM partition are masked.
+      // First, make map <partition => fed list>
+      HashMap<String, List<Integer> > childFMFedMap = new HashMap<String, List<Integer> >();
+      List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+      for(QualifiedResource qr : fmChildrenList) {
+        String childFMName = qr.getName();
+        List<Integer> childFMFeds = null;
+        List<ConfigProperty> propertiesList = qr.getResource().getProperties();
+        for (ConfigProperty property : propertiesList) {
+          if (property.getName().equals("FEDList")) {
+            childFMFeds = new ArrayList<Integer>();
+            String[] childFMFedsStr = property.getValue().replace("[","").replace("]","").split(";|,");
+            if (childFMFedsStr.length == 0) {
+              logger.error("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- Child FM " + childFMName + " has property FEDList, but I failed to parse the feds out of string " + property.getValue());
+            }
+            for(String s : childFMFedsStr) {
+              childFMFeds.add(Integer.valueOf(s));
+            }
+          }
+        }
+        if (childFMFeds == null) {
+          logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- For child FM " + childFMName + ", did not find list of FEDs. So, I won't consider disabling it with FED_ENABLE_MASK.");
+        } else {
+          logger.info("[HCAL LVL 1 " + functionManager.FMname + "] DavidLog -- For child FM " + childFMName + ", found FEDs: " + childFMFeds.toString() + ". I will consider disabling it based on FED_ENABLE_MASK.");
+          childFMFedMap.put(childFMName, childFMFeds);
+        }
+      }
+
+      // Use function HCALEventHandler::getMaskedChildFMsFromFedMask to get a list of the partitions to be masked, and destroy.
+      List<String> maskedChildFMs = getMaskedChildFMsFromFedMask(FedEnableMask, childFMFedMap);
+      VectorT<StringT> EmptyFMs   = new VectorT<StringT>();
+      String evmTrigFM =  ((StringT)functionManager.getHCALparameterSet().get("EVM_TRIG_FM").getValue()).getString(); // For local runs, masking the evmTrigFM will cause problems, so forbid it.
+      for(QualifiedResource qr : fmChildrenList) {
+        String childFMName = qr.getName();
+        if (maskedChildFMs.contains(childFMName)) {
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] DavidLog -- Based on FED_ENABLE_MASK, I am attempting to destroy FM XDAQ " + childFMName + "." );
+
+          // Check that the partition is not responsible for event building/triggering
+          if (childFMName.equals(evmTrigFM)) {
+            functionManager.goToError("[HCAL LVL 1 " + functionManager.FMname + "] Error! I want to disable " + childFMName + " based on FED_ENABLE_MASK, but it is designated as EVM_TRIG_FM.");
+          }
+          // Add this FM to emptyFM           
+          EmptyFMs.add(new StringT(childFMName));
+        }
+      }
+      String emptyFMnames      ="";
+      for(StringT FMname : EmptyFMs){
+        emptyFMnames += FMname.getString()+";";
+      }
+      // END TEST PARTITION DISABLING
+
+
       // prepare run mode to be passed to level 2
       //String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get(HCALParameters.HCAL_CFGCVSBASEPATH).getValue()).getString();
       ParameterSet<CommandParameter> pSet = new ParameterSet<CommandParameter>();
-      pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-      pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE", new StringT(RunType)));
-      pSet.put(new CommandParameter<StringT>("RUN_KEY", new StringT(RunKey)));
-      pSet.put(new CommandParameter<StringT>("TPG_KEY", new StringT(TpgKey)));
-      pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK", new StringT(FedEnableMask)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH", new StringT(CfgCVSBasePath)));
-      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT", new StringT(FullCfgScript)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL", new StringT(FullTTCciControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL", new StringT(FullLTCControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_TCDSCONTROL", new StringT(FullTCDSControlSequence)));
-      pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL", new StringT(FullLPMControlSequence)));
-      pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED", new BooleanT(ClockChanged)));
-      pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER", new BooleanT(UseResetForRecover)));
-      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL", new StringT(FullPIControlSequence)));
-      pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS", new BooleanT(UsePrimaryTCDS)));
-      pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR", new StringT(SupervisorError)));
-      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH", new BooleanT(RunInfoPublish)));
-      pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS", new BooleanT(OfficialRunNumbers)));
+      pSet.put(new CommandParameter<IntegerT>("RUN_NUMBER"            , new IntegerT(functionManager.RunNumber)));
+      pSet.put(new CommandParameter<StringT>("HCAL_RUN_TYPE"          , new StringT(RunType)));
+      pSet.put(new CommandParameter<StringT>("RUN_KEY"                , new StringT(RunKey)));
+      pSet.put(new CommandParameter<StringT>("TPG_KEY"                , new StringT(TpgKey)));
+      pSet.put(new CommandParameter<StringT>("FED_ENABLE_MASK"        , new StringT(FedEnableMask)));
+      pSet.put(new CommandParameter<StringT>("HCAL_CFGCVSBASEPATH"    , new StringT(CfgCVSBasePath)));
+      pSet.put(new CommandParameter<StringT>("HCAL_CFGSCRIPT"         , new StringT(FullCfgScript)));
+      pSet.put(new CommandParameter<StringT>("HCAL_TTCCICONTROL"      , new StringT(FullTTCciControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_LTCCONTROL"        , new StringT(FullLTCControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_TCDSCONTROL"       , new StringT(FullTCDSControlSequence)));
+      pSet.put(new CommandParameter<StringT>("HCAL_LPMCONTROL"        , new StringT(FullLPMControlSequence)));
+      pSet.put(new CommandParameter<BooleanT>("CLOCK_CHANGED"         , new BooleanT(ClockChanged)));
+      pSet.put(new CommandParameter<BooleanT>("USE_RESET_FOR_RECOVER" , new BooleanT(UseResetForRecover)));
+      pSet.put(new CommandParameter<StringT>("HCAL_PICONTROL"         , new StringT(FullPIControlSequence)));
+      pSet.put(new CommandParameter<BooleanT>("USE_PRIMARY_TCDS"      , new BooleanT(UsePrimaryTCDS)));
+      pSet.put(new CommandParameter<StringT>("SUPERVISOR_ERROR"       , new StringT(SupervisorError)));
+      pSet.put(new CommandParameter<BooleanT>("HCAL_RUNINFOPUBLISH"   , new BooleanT(RunInfoPublish)));
+      pSet.put(new CommandParameter<BooleanT>("OFFICIAL_RUN_NUMBERS"  , new BooleanT(OfficialRunNumbers)));
+      pSet.put(new CommandParameter<VectorT<StringT>>("EMPTY_FMS"              , EmptyFMs));
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // prepare command plus the parameters to send
       Input configureInput= new Input(HCALInputs.CONFIGURE.toString());
@@ -742,22 +800,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         // include scheduling
         TaskSequence configureTaskSeq = new TaskSequence(HCALStates.CONFIGURING,HCALInputs.SETCONFIGURE);
 
-        // configure Level2Priority1 FMs first
-        SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority1 child FMs");
-        configureTaskSeq.addLast(l2Priority1Task);
-        // then configure L2Priority2 FMs
-        SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring L2Priority2 child FMs");
-        configureTaskSeq.addLast(l2Priority2Task);
-
         // now configure the rest in parallel
-        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+        //List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
         List<FunctionManager> normalFMsToConfigureList = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : fmChildrenList)
           normalFMsToConfigureList.add((FunctionManager)qr);
-        normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
-        normalFMsToConfigureList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
         QualifiedResourceContainer normalFMsToConfigureContainer = new QualifiedResourceContainer(normalFMsToConfigureList);
         SimpleTask fmChildrenTask = new SimpleTask(normalFMsToConfigureContainer,configureInput,HCALStates.CONFIGURING,HCALStates.CONFIGURED,"Configuring regular priority FM children");
+        
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Configuring these LV2 FMs: ");
+        PrintQRnames(normalFMsToConfigureContainer);
+        logger.info("[HCAL LVL1 " + functionManager.FMname +"] Destroying XDAQ for these LV2 FMs: "+emptyFMnames);
         configureTaskSeq.addLast(fmChildrenTask);
 
         logger.info("[HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
@@ -775,7 +828,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
   public void startAction(Object obj) throws UserActionException {
 
-    if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing startAction");
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] Executing startAction");
 
@@ -808,16 +860,22 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           OfficialRunNumbers       = ((BooleanT)functionManager.getParameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
           if (OfficialRunNumbers) {
 
-            RunNumberData rnd = getOfficialRunNumber();
+            //check availability of runInfo DB
+            if(functionManager.getRunInfoConnector()!=null){
+              RunNumberData rnd = getOfficialRunNumber();
 
-            functionManager.RunNumber    = rnd.getRunNumber();
-            RunSeqNumber = rnd.getSequenceNumber();
+              functionManager.RunNumber    = rnd.getRunNumber();
+              RunSeqNumber = rnd.getSequenceNumber();
 
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_NUMBER", new IntegerT(functionManager.RunNumber)));
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>("RUN_SEQ_NUMBER", new IntegerT(RunSeqNumber)));
 
-            logger.info("[HCAL LVL1 " + functionManager.FMname + "] ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
-
+              logger.info("[HCAL LVL1 " + functionManager.FMname + "] ... run number: " + functionManager.RunNumber + ", SequenceNumber: " + RunSeqNumber);
+            }
+            else{
+              logger.error("[HCAL LVL1 "+functionManager.FMname+"] Official RunNumber requested, but cannot establish RunInfo Connection. Is there a RunInfo DB? or is RunInfo DB down?");
+              logger.info("[HCAL LVL1 "+functionManager.FMname+"] Going to use run number ="+functionManager.RunNumber+", RunSeqNumber = "+ RunSeqNumber);
+            }
           }
         }
       }
@@ -868,50 +926,58 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       startInput.setParameters( pSet );
 
       if (!functionManager.containerFMChildren.isEmpty()) {
-        List<QualifiedResource> fmChildrenList = functionManager.containerFMChildren.getQualifiedResourceList();
+        //Schedule Task with active QR in the containers
+        List<QualifiedResource> fmChildrenList       = functionManager.containerFMChildren.getActiveQRList();
+        List<QualifiedResource> EvmTrigFMtoStartList = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
+
+        //Find TTCci FM by looking for FMs with TCDSLPM role and name contains "TTCci"
+        List<FunctionManager> TTCciFMtoStartList  = new ArrayList<FunctionManager>();
+        for(QualifiedResource qr : functionManager.containerFMTCDSLPM.getActiveQRList()){
+          if (qr.getName().contains("TTCci"))
+            TTCciFMtoStartList.add((FunctionManager)qr);
+        }
         List<FunctionManager> normalFMsToStartList = new ArrayList<FunctionManager>();
-        for(QualifiedResource qr : fmChildrenList)
+        for(QualifiedResource qr : fmChildrenList){
           normalFMsToStartList.add((FunctionManager)qr);
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority1.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Priority2.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenEvmTrig.getQualifiedResourceList());
-        normalFMsToStartList.removeAll(functionManager.containerFMChildrenL2Laser.getQualifiedResourceList());
+        }
+        normalFMsToStartList.removeAll(EvmTrigFMtoStartList);
+        normalFMsToStartList.removeAll(TTCciFMtoStartList);
+
         QualifiedResourceContainer normalFMsToStartContainer = new QualifiedResourceContainer(normalFMsToStartList);
+        QualifiedResourceContainer EvmTrigFMtoStartContainer = new QualifiedResourceContainer(EvmTrigFMtoStartList);
+        QualifiedResourceContainer TTCciFMtoStartContainer = new QualifiedResourceContainer(TTCciFMtoStartList);
+        
         // no reason not to always prioritize FM starts
         // include scheduling
         // SIC TODO I AM NOT CONVINCED THESE CHECKS ON THE EMPTINESS ARE NEEDED!
         TaskSequence startTaskSeq = new TaskSequence(HCALStates.STARTING,HCALInputs.SETSTART);
-        // 1) Level2_Priority_1
-        if(!functionManager.containerFMChildrenL2Priority1.isEmpty()) {
-          SimpleTask l2Priority1Task = new SimpleTask(functionManager.containerFMChildrenL2Priority1,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority1 child FMs");
-          startTaskSeq.addLast(l2Priority1Task);
-        }
-        // 2) Level2_Priority_2
-        if(!functionManager.containerFMChildrenL2Priority2.isEmpty()) {
-          SimpleTask l2Priority2Task = new SimpleTask(functionManager.containerFMChildrenL2Priority2,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
-          startTaskSeq.addLast(l2Priority2Task);
-        }
-        // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
+        // 1) Everyone besides EvmTrig FMs in parallel
         if(!normalFMsToStartContainer.isEmpty()) {
           SimpleTask fmChildrenTask = new SimpleTask(normalFMsToStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting regular priority FM children");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding normal FMs to startTask: ");
+          PrintQRnames(normalFMsToStartContainer);
           startTaskSeq.addLast(fmChildrenTask);
+
         }
-        // 4) EvmTrig
-        if(!functionManager.containerFMChildrenEvmTrig.isEmpty()) {
-          SimpleTask evmTrigTask = new SimpleTask(functionManager.containerFMChildrenEvmTrig,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+        // 2) EvmTrig
+        if(!EvmTrigFMtoStartContainer.isEmpty()) {
+          SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to startTask: ");
+          PrintQRnames(EvmTrigFMtoStartContainer);
           startTaskSeq.addLast(evmTrigTask);
         }
-        // 5) L2_Laser
-        if(!functionManager.containerFMChildrenL2Laser.isEmpty()) {
-          SimpleTask l2LaserTask = new SimpleTask(functionManager.containerFMChildrenL2Laser,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting L2Priority2 child FMs");
-          startTaskSeq.addLast(l2LaserTask);
+        // 3) TTCci should start last to let watchthread working
+        if(!TTCciFMtoStartContainer.isEmpty()) {
+          SimpleTask TTCciTask = new SimpleTask(TTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting TTCci child FMs");
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TTCci FMs to startTask: ");
+          PrintQRnames(TTCciFMtoStartContainer);
+          startTaskSeq.addLast(TTCciTask);
         }
 
-        logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
-        functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
-
+      logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
+      functionManager.theStateNotificationHandler.executeTaskSequence(startTaskSeq);
       }
-    }
+
 
     // set action
     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
@@ -1075,23 +1141,23 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         if(!EvmTrigFMToHaltContainer.isEmpty()) {
           SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_EVMTRIG_FM");
           haltTaskSeq.addLast(evmTrigTask);
-          String evmTrigFMnames = getQRnamesFromContainer(EvmTrigFMToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to haltTask: "+ evmTrigFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding EvmTrig FMs to haltTask: ");
+          PrintQRnames(EvmTrigFMToHaltContainer);
         }
         
         // 2) TCDSLPM FM
         if(!TCDSLPMToHaltContainer.isEmpty()) {
           SimpleTask tcdslpmTask = new SimpleTask(TCDSLPMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_TCDS_FM");
           haltTaskSeq.addLast(tcdslpmTask);
-          String tcdslpmFMnames = getQRnamesFromContainer(TCDSLPMToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TCDSLPM FMs to haltTask: "+ tcdslpmFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TCDSLPM FMs to haltTask: ");
+          PrintQRnames(TCDSLPMToHaltContainer);
         }
         // 3) Everyone else besides L2_Laser and EvmTrig FMs in parallel
         if(!normalFMsToHaltContainer.isEmpty()) {
           SimpleTask fmChildrenTask = new SimpleTask(normalFMsToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_NORMAL_FM");
           haltTaskSeq.addLast(fmChildrenTask);
-          String normalFMnames = getQRnamesFromContainer(normalFMsToHaltContainer) ;
-          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: "+ normalFMnames);
+          logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding other LV2 FMs to haltTask: ");
+          PrintQRnames(normalFMsToHaltContainer);
         }
         logger.warn("[SethLog HCAL LVL1 " + functionManager.FMname + "] executeTaskSequence.");
 
@@ -1104,6 +1170,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
+      //All EmptyFMs should be back after halted.
+      VectorT<StringT> EmptyFMs = new VectorT<StringT>();
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
