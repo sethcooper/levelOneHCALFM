@@ -930,6 +930,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         List<QualifiedResource> fmChildrenList       = functionManager.containerFMChildren.getActiveQRList();
         List<QualifiedResource> EvmTrigFMtoStartList = functionManager.containerFMChildrenEvmTrig.getActiveQRList();
 
+        //Find TTCci FM by looking for FMs with TCDSLPM role and name contains "TTCci"
         List<FunctionManager> TTCciFMtoStartList  = new ArrayList<FunctionManager>();
         for(QualifiedResource qr : functionManager.containerFMTCDSLPM.getActiveQRList()){
           if (qr.getName().contains("TTCci"))
@@ -967,7 +968,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
         // 3) TTCci should start last to let watchthread working
         if(!TTCciFMtoStartContainer.isEmpty()) {
-          SimpleTask TTCciTask = new SimpleTask(TTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting EvmTrig child FMs");
+          SimpleTask TTCciTask = new SimpleTask(TTCciFMtoStartContainer,startInput,HCALStates.STARTING,HCALStates.RUNNING,"Starting TTCci child FMs");
           logger.info("[HCAL LVL1 " + functionManager.FMname +"]  Adding TTCci FMs to startTask: ");
           PrintQRnames(TTCciFMtoStartContainer);
           startTaskSeq.addLast(TTCciTask);
