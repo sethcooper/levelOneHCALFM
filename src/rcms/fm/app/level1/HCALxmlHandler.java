@@ -232,7 +232,8 @@ public class HCALxmlHandler {
               if (!functionManager.FMrole.equals("Level2_TCDSLPM")) currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
             }
             if (xcApplicationClass.equals(ttcci)){
-              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+              //if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("HCALFM_904Int_TTCci")) {
+              if (!functionManager.FMrole.equals("EvmTrig") && !functionManager.FMname.contains("TTCci")) {
                 currentApplicationNode.getParentNode().removeChild(currentApplicationNode);
                 logger.warn("[JohnLog3] " + functionManager.FMname + ": just removed the ttcci context in an executive.");
               }
