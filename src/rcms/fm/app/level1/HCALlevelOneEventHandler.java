@@ -627,6 +627,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Parse the mastersnippet:
       String selectedRun = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
       String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      // Reset HCAL_CFGSCRIPT:
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
 
       // Try to find a common masterSnippet from MasterSnippet
       String CommonMasterSnippetFile ="";
