@@ -2701,7 +2701,7 @@ public class HCALEventHandler extends UserEventHandler {
               logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
               for (String partitionName : partitionWatchedAlarms.keySet()) {
                 String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " => ";
-                if (partitionWatchedAlarms.get(partitionName)) {
+                if (partitionStatuses.get(partitionName)) {
                   thisPartitionAlarmerResults = thisPartitionAlarmerResults + " OK";
                 } else {
                   thisPartitionAlarmerResults = thisPartitionAlarmerResults + " NOT OK";
