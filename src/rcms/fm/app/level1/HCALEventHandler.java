@@ -2670,7 +2670,7 @@ public class HCALEventHandler extends UserEventHandler {
             for (String partitionName : partitionWatchedAlarms.keySet()) {
               bool thisPartitionStatus = true;
               for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
-                thisPartitionStatus = (thisPartitionStatus && alarmerStatus.get(alarmName));
+                thisPartitionStatus = (thisPartitionStatus && alarmerStatuses.get(alarmName));
               }
               partitionStatuses.put(partitionName, thisPartitionStatus);
             }
@@ -2739,7 +2739,7 @@ public class HCALEventHandler extends UserEventHandler {
               // Alarmer status is OK. If RUNNINGDEGRADED, unset.
               if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
                 // if we got back to OK, go back to RUNNING
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName+" is " + alarmerStatusValue + " which should be OK; going to get out of RUNNINGDEGRADED state now");
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
                 functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
               }
             }
