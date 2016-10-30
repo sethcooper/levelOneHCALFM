@@ -2654,14 +2654,14 @@ public class HCALEventHandler extends UserEventHandler {
               pam.select(new String[] {thisAlarm});
               pam.get();
               String alarmerStatusString = pam.getValue(thisAlarm);
-              alarmerStatusStrings.add(thisAlarm, alarmerStatusString);
+              alarmerStatusStrings.put(thisAlarm, alarmerStatusString);
               if (alarmerStatusString == "OK") {
-                alarmerStatuses.add(thisAlarm, true);
+                alarmerStatuses.put(thisAlarm, true);
               } else if (alarmerStatusString == "") {
                 String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ".";
                 logger.warn(errMessage); 
               } else {
-                alarmerStatuses.add(thisAlarm, false);
+                alarmerStatuses.put(thisAlarm, false);
               }
             }
 
@@ -2672,7 +2672,7 @@ public class HCALEventHandler extends UserEventHandler {
               for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
                 thisPartitionStatus = (thisPartitionStatus && alarmerStatus.get(alarmName));
               }
-              partitionStatuses.add(partitionName, thisPartitionStatus);
+              partitionStatuses.put(partitionName, thisPartitionStatus);
             }
 
             // Calculate total alarmer status (= AND of all partition status, excluding empty and masked ones) 
