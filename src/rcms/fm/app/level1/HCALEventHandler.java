@@ -2668,7 +2668,7 @@ public class HCALEventHandler extends UserEventHandler {
             // Calculate the alarmer status for each partition
             HashMap<String, Boolean> partitionStatuses = new HashMap<String, Boolean>();
             for (String partitionName : partitionWatchedAlarms.keySet()) {
-              bool thisPartitionStatus = true;
+              Boolean thisPartitionStatus = true;
               for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
                 thisPartitionStatus = (thisPartitionStatus && alarmerStatuses.get(alarmName));
               }
@@ -2676,7 +2676,7 @@ public class HCALEventHandler extends UserEventHandler {
             }
 
             // Calculate total alarmer status (= AND of all partition status, excluding empty and masked ones) 
-            boolean totalStatus = true;
+            Boolean totalStatus = true;
             ArrayList<String> badAlarmerPartitions = new ArrayList<String>();
             for (String partitionName : partitionWatchedAlarms.keySet()) {
               if (emptyFMs.contains(partitionName) || maskedFMs.contains(partitionName)) {
