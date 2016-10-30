@@ -2668,7 +2668,7 @@ public class HCALEventHandler extends UserEventHandler {
             for (String partitionName : partitionWatchedAlarms.keys()) {
               bool thisPartitionStatus = true;
               for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
-                thisPartitionStatus = (thisPartitionStatus && alarmerStatus.get(alarmName);
+                thisPartitionStatus = (thisPartitionStatus && alarmerStatus.get(alarmName));
               }
               partitionStatuses.add(partitionName, thisPartitionStatus);
             }
