@@ -2,6 +2,7 @@ package rcms.fm.app.level1;
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Date;
 import java.util.Calendar;
@@ -2622,7 +2623,7 @@ public class HCALEventHandler extends UserEventHandler {
       }
 
       // Empty or masked partitions. Alarms will be ignored for these partitions.
-      VectorT<StringT> emptyFMs = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
+      VectorT<StringT> emptyFMs = (VectorT<StringT>)parameterSet.get("EMPTY_FMS").getValue();
       VectorT<StringT> maskedFMs = new VectorT<StringT>();
 
       stopAlarmerWatchThread = false;
@@ -2647,8 +2648,8 @@ public class HCALEventHandler extends UserEventHandler {
             // this does a lazy get. do we need to force the update before getting it?
 
             // Get the status for each watched alarm
-            Map<String, boolean> alarmerStatuses = new HashMap<String, boolean>();
-            Map<String, String> alarmerStatusStrings = new HashMap<String, String>();
+            HashMap<String, boolean> alarmerStatuses = new HashMap<String, boolean>();
+            HashMap<String, String> alarmerStatusStrings = new HashMap<String, String>();
             for (String thisAlarm : watchedAlarms) {
               pam.select(new String[] {thisAlarm});
               pam.get();
@@ -2665,7 +2666,7 @@ public class HCALEventHandler extends UserEventHandler {
             }
 
             // Calculate the alarmer status for each partition
-            Map<String, boolean> partitionStatuses = new HashMap<String, boolean>();
+            HashMap<String, boolean> partitionStatuses = new HashMap<String, boolean>();
             for (String partitionName : partitionWatchedAlarms.keys()) {
               bool thisPartitionStatus = true;
               for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
