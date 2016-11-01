@@ -2606,25 +2606,18 @@ public class HCALEventHandler extends UserEventHandler {
       // DEVELOPMENT : Hard-coded map from partition to list of alarms to watch. In full functionality, should look up from snippet. Also, should be a MapT?
 
       // Map specifying which alarms to watch for each partition
-      Map<String, ArrayList<String> > partitionWatchedAlarms = new HashMap<String, ArrayList<String> >();
-      partitionWatchedAlarms.put("HBHEa", new ArrayList<String>(Arrays.asList("HBHEa")));
-      partitionWatchedAlarms.put("HBHEb", new ArrayList<String>(Arrays.asList("HBHEb")));
-      partitionWatchedAlarms.put("HBHEc", new ArrayList<String>(Arrays.asList("HBHEc")));
-      partitionWatchedAlarms.put("HF", new ArrayList<String>(Arrays.asList("HF")));
-      partitionWatchedAlarms.put("HO", new ArrayList<String>(Arrays.asList("HO")));
-      partitionWatchedAlarms.put("Hcal_Laser", new ArrayList<String>(Arrays.asList("HF")));
+      Map<String, String> partitionAlarmMap = new HashMap<String, String>();
+      partitionAlarmMap.put("HBHEa", "HBHEa_Status");
+      partitionAlarmMap.put("HBHEb", "HBHEb_Status");
+      partitionAlarmMap.put("HBHEc", "HBHEc_Status");
+      partitionAlarmMap.put("HF", "HF_Status");
+      partitionAlarmMap.put("HO", "HO_Status");
+      partitionAlarmMap.put("Laser", "Laser_Status");
+      partitionAlarmMap.put("Dev", "Dev_Status");
+      partitionAlarmMap.put("Unknown", "Unknown_Status");
 
-      // (Unique) list of all alarms to watch
-      LinkedHashSet<String> watchedAlarms = new LinkedHashSet<String>();
-      for (ArrayList<String> thisAlarmerList : partitionWatchedAlarms.values()) {
-        for (String thisAlarm : thisAlarmerList) {
-          watchedAlarms.add(thisAlarm);
-        }
-      }
-
-      // Empty or masked partitions. Alarms will be ignored for these partitions.
-      VectorT<StringT> emptyFMs = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
-      VectorT<StringT> maskedFMs = new VectorT<StringT>();
+      // (Unique) list of all partitions to watch
+      LinkedHashSet<String> watchedPartitions = new LinkedHashSet<String>(Arrays.asList(new String[]{"HBHEa", "HBHEb", "HBHEc", "HF", "HO", "Laser", "Dev", "Unknown"}));
 
       stopAlarmerWatchThread = false;
       try {
@@ -2642,43 +2635,37 @@ public class HCALEventHandler extends UserEventHandler {
         if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
             functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
+            // Empty or masked partitions. Alarms will be ignored for these partitions.
+            VectorT<StringT> emptyFMs = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
+            VectorT<StringT> maskedFMs = (VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue();
             // ask for the status of the HCAL alarmer
             // ("http://hcalmon.cms:9945","hcalAlarmer",0);
             XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
             // this does a lazy get. do we need to force the update before getting it?
 
             // Get the status for each watched alarm
-            HashMap<String, Boolean> alarmerStatuses = new HashMap<String, Boolean>();
-            HashMap<String, String> alarmerStatusStrings = new HashMap<String, String>();
-            for (String thisAlarm : watchedAlarms) {
+            HashMap<String, Boolean> partitionStatuses = new HashMap<String, Boolean>();
+            HashMap<String, String> partitionStatusStrings = new HashMap<String, String>();
+            for (String thisPartition : watchedPartitions) {
+              String thisAlarm = partitionAlarmMap.get(thisPartition);
               pam.select(new String[] {thisAlarm});
               pam.get();
               String alarmerStatusString = pam.getValue(thisAlarm);
-              alarmerStatusStrings.put(thisAlarm, alarmerStatusString);
+              partitionStatusStrings.put(thisPartition, alarmerStatusString);
               if (alarmerStatusString == "OK") {
-                alarmerStatuses.put(thisAlarm, true);
+                partitionStatuses.put(thisPartition, true);
               } else if (alarmerStatusString == "") {
-                String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ".";
+                String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ", partition name " + thisPartition + ".";
                 logger.warn(errMessage); 
               } else {
-                alarmerStatuses.put(thisAlarm, false);
+                partitionStatuses.put(thisPartition, false);
               }
             }
 
-            // Calculate the alarmer status for each partition
-            HashMap<String, Boolean> partitionStatuses = new HashMap<String, Boolean>();
-            for (String partitionName : partitionWatchedAlarms.keySet()) {
-              Boolean thisPartitionStatus = true;
-              for (String alarmName : partitionWatchedAlarms.get(partitionName)) {
-                thisPartitionStatus = (thisPartitionStatus && alarmerStatuses.get(alarmName));
-              }
-              partitionStatuses.put(partitionName, thisPartitionStatus);
-            }
-
-            // Calculate total alarmer status (= AND of all partition status, excluding empty and masked ones) 
+            // Calculate total alarmer status (= AND of all partition statuses, excluding empty and masked ones) 
             Boolean totalStatus = true;
             ArrayList<String> badAlarmerPartitions = new ArrayList<String>();
-            for (String partitionName : partitionWatchedAlarms.keySet()) {
+            for (String partitionName : watchedPartitions) {
               if (emptyFMs.contains(partitionName) || maskedFMs.contains(partitionName)) {
                 continue;
               }
@@ -2690,17 +2677,10 @@ public class HCALEventHandler extends UserEventHandler {
 
             // Actions taken based on alarmer results
             if (!totalStatus) {
-              // Print alarmer results
-              logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Bad alarmer status. Printing alarmer statuses:");
-              for (Map.Entry<String, String> entry : alarmerStatusStrings.entrySet()) {
-                String alarmerResultsString = "[HCAL " + functionManager.FMname + "] David log : Alarmer " + entry.getKey() + " => " + entry.getValue();
-                logger.warn(alarmerResultsString);
-              }
-
               // Print partition results
               logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
-              for (String partitionName : partitionWatchedAlarms.keySet()) {
-                String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " => ";
+              for (String partitionName : watchedPartitions) {
+                String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " / alarm " + partitionAlarmMap.get(partitionName) + " => ";
                 if (partitionStatuses.get(partitionName)) {
                   thisPartitionAlarmerResults = thisPartitionAlarmerResults + " OK";
                 } else {

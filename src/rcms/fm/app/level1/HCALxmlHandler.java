@@ -504,6 +504,10 @@ public class HCALxmlHandler {
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
           }
       }
+      if (TagName.equals("FMParameter")) {
+        String parameterType = 
+
+      }
     }
     catch ( UserActionException e){
         // Warn when found more than one tag name in mastersnippet
