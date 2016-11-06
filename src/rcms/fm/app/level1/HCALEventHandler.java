@@ -1,6 +1,8 @@
 package rcms.fm.app.level1;
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Date;
 import java.util.Calendar;
@@ -2601,6 +2603,22 @@ public class HCALEventHandler extends UserEventHandler {
     }
 
     public void run() {
+      // DEVELOPMENT : Hard-coded map from partition to list of alarms to watch. In full functionality, should look up from snippet. Also, should be a MapT?
+
+      // Map specifying which alarms to watch for each partition
+      Map<String, String> partitionAlarmMap = new HashMap<String, String>();
+      partitionAlarmMap.put("HBHEa", "HBHEa_Status");
+      partitionAlarmMap.put("HBHEb", "HBHEb_Status");
+      partitionAlarmMap.put("HBHEc", "HBHEc_Status");
+      partitionAlarmMap.put("HF", "HF_Status");
+      partitionAlarmMap.put("HO", "HO_Status");
+      partitionAlarmMap.put("Laser", "Laser_Status");
+      partitionAlarmMap.put("Dev", "Dev_Status");
+      partitionAlarmMap.put("Unknown", "Unknown_Status");
+
+      // (Unique) list of all partitions to watch
+      LinkedHashSet<String> watchedPartitions = new LinkedHashSet<String>(Arrays.asList(new String[]{"HBHEa", "HBHEb", "HBHEc", "HF", "HO", "Laser", "Dev", "Unknown"}));
+
       stopAlarmerWatchThread = false;
       try {
         URL alarmerURL = new URL(functionManager.alarmerURL);
@@ -2617,80 +2635,91 @@ public class HCALEventHandler extends UserEventHandler {
         if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
             functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
+            // Empty or masked partitions. Alarms will be ignored for these partitions.
+            VectorT<StringT> emptyFMs = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
+            VectorT<StringT> maskedFMs = (VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue();
             // ask for the status of the HCAL alarmer
             // ("http://hcalmon.cms:9945","hcalAlarmer",0);
             XDAQParameter pam = new XDAQParameter(functionManager.alarmerURL,"hcalAlarmer",0);
             // this does a lazy get. do we need to force the update before getting it?
-            //logger.info("[SethLog] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus"));
-            String alarmerStatusValue = "";
-            String alarmerStatusName  = "GlobalStatus";
-            if (functionManager.RunType.equals("global") ){
-              logger.info("[Martin Log "+functionManager.FMname +"] Going to watch this alarmer status: "+functionManager.alarmerPartition); 
-              if(functionManager.alarmerPartition.equals("HBHEHO")){
-                alarmerStatusName = "GlobalStatus";
-              }
-              if(functionManager.alarmerPartition.equals("HF")){
-                alarmerStatusName = "HFStatus";
-              }
-              pam.select(new String[] {alarmerStatusName});
-              pam.get();
-              alarmerStatusValue = pam.getValue(alarmerStatusName);
 
-              if( alarmerStatusValue.equals("")){
-                String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue with parition name: "+functionManager.alarmerPartition;
+            // Get the status for each watched alarm
+            HashMap<String, Boolean> partitionStatuses = new HashMap<String, Boolean>();
+            HashMap<String, String> partitionStatusStrings = new HashMap<String, String>();
+            for (String thisPartition : watchedPartitions) {
+              String thisAlarm = partitionAlarmMap.get(thisPartition);
+              pam.select(new String[] {thisAlarm});
+              pam.get();
+              String alarmerStatusString = pam.getValue(thisAlarm);
+              partitionStatusStrings.put(thisPartition, alarmerStatusString);
+              if (alarmerStatusString == "OK") {
+                partitionStatuses.put(thisPartition, true);
+              } else if (alarmerStatusString == "") {
+                String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ", partition name " + thisPartition + ".";
                 logger.warn(errMessage); 
-              }
-              if( alarmerStatusValue.equals("OK")){
-                logger.info("[Martin Log "+functionManager.FMname +"] The alarmerStatus of partition "+functionManager.alarmerPartition+" with name "+alarmerStatusName+" is OK"); 
-              }
-              if (!alarmerStatusValue.equals("OK")) {
-                // go to degraded state if needed
-                if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-                  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+ alarmerStatusName +" is " + alarmerStatusValue + " which is not OK; going to RUNNINGDEGRADED state");
-                  functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-                  if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
-                  if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
-                }
-                else {
-                  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName +" is " +alarmerStatusValue +" which is not OK; going to stay in RUNNINGDEGRADED state");
-                  if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
-                  if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
-                }
-              }
-              else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-                // if we got back to OK, go back to RUNNING
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter "+alarmerStatusName+" is " + alarmerStatusValue + " which should be OK; going to get out of RUNNINGDEGRADED state now");
-                functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
+              } else {
+                partitionStatuses.put(thisPartition, false);
               }
             }
-            else {
-              // Assume we're in local if the RunType is not global. Watch both HBHEHO and HF status.
-              logger.info("[Martin Log "+functionManager.FMname +"] We are in local, going to watch both HBHEHO and HF status "); 
-              pam.select(new String[] {"GlobalStatus","HFStatus"});
-              pam.get();
-              String alarmerStatusValue_HBHEHO = pam.getValue("GlobalStatus");
-              String alarmerStatusValue_HF     = pam.getValue("HFStatus");
 
-              if( alarmerStatusValue_HBHEHO.equals("")|| alarmerStatusValue_HF.equals("") ){
-                String errMessage="[Martin Log "+functionManager.FMname +"] Cannot get alarmerStatusValue in local mode";
-                logger.warn(errMessage); 
+            // Calculate total alarmer status (= AND of all partition statuses, excluding empty and masked ones) 
+            Boolean totalStatus = true;
+            ArrayList<String> badAlarmerPartitions = new ArrayList<String>();
+            for (String partitionName : watchedPartitions) {
+              if (emptyFMs.contains(partitionName) || maskedFMs.contains(partitionName)) {
+                continue;
+              }
+              totalStatus = (totalStatus && partitionStatuses.get(partitionName));
+              if (!partitionStatuses.get(partitionName)) {
+                badAlarmerPartitions.add(partitionName);
+              }
+            }
+
+            // Actions taken based on alarmer results
+            if (!totalStatus) {
+              // Print partition results
+              logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread : Printing partition statuses:");
+              for (String partitionName : watchedPartitions) {
+                String thisPartitionAlarmerResults = "[HCAL " + functionManager.FMname + "] David log : Partition " + partitionName + " / alarm " + partitionAlarmMap.get(partitionName) + " => ";
+                if (partitionStatuses.get(partitionName)) {
+                  thisPartitionAlarmerResults = thisPartitionAlarmerResults + " OK";
+                } else {
+                  thisPartitionAlarmerResults = thisPartitionAlarmerResults + " NOT OK";
+                }
+                if (emptyFMs.contains(partitionName)) {
+                  thisPartitionAlarmerResults = thisPartitionAlarmerResults + " (but FM is EMPTY, so ignoring)";
+                }
+                if (maskedFMs.contains(partitionName)) {
+                  thisPartitionAlarmerResults = thisPartitionAlarmerResults + " (but FM is MASKED, so ignoring)";
+                }
+                logger.warn(thisPartitionAlarmerResults);
               }
 
-              if (!alarmerStatusValue_HBHEHO.equals("OK") || !alarmerStatusValue_HF.equals("OK") ) {
-                // go to degraded state if needed
-                if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
-                  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to RUNNINGDEGRADED state");
-                  functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
-                  functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
-                }
-                else {
-                  logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is not both OK; going to stay in RUNNINGDEGRADED state"); 
-                  functionManager.setAction("><))),> : HCAL/HF is in RunningDegraded, please contact HCAL DOC!!!");
-                }
+              // go to degraded state if needed
+              if(!functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to RUNNINGDEGRADED state");
+                functionManager.fireEvent(HCALInputs.SETRUNNINGDEGRADED);
+                if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+                if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
               }
-              else if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
+              else {
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: due to bad alarmer status (see previous messages), going to stay in RUNNINGDEGRADED state");
+                if(functionManager.alarmerPartition.equals("HBHEHO")) functionManager.setAction("><))),> : HCAL is in RunningDegraded, please contact HCAL DOC!");
+                if(functionManager.alarmerPartition.equals("HF"))     functionManager.setAction("><))),> : HF is in RunningDegraded, please contact HCAL DOC!");
+              }
+
+              // Put a message in the fishy box
+              String badAlarmerMessage = "><))),> : RunningDegraded state due to:";
+              for (String partitionName : badAlarmerPartitions) {
+                badAlarmerMessage = badAlarmerMessage + " " + partitionName;
+              }
+              badAlarmerMessage += ". Please contact HCAL DOC!";
+              functionManager.setAction(badAlarmerMessage);
+            } else {
+              // Alarmer status is OK. If RUNNINGDEGRADED, unset.
+              if(functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString())) {
                 // if we got back to OK, go back to RUNNING
-                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: value of alarmer parameter GlobalStatus is " + pam.getValue("GlobalStatus") + " and HFStatus is "+ pam.getValue("HFStatus") +" which is both OK; going to get out of RUNNINGDEGRADED state"); 
+                logger.warn("[HCAL " + functionManager.FMname + "] HCALEventHandler: alarmerWatchThread: Alarmer status is OK. Going to get out of RUNNINGDEGRADED state now");
                 functionManager.fireEvent(HCALInputs.UNSETRUNNINGDEGRADED);
               }
             }
