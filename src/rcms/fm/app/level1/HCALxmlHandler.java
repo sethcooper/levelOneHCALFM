@@ -18,6 +18,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -25,8 +26,6 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.DOMException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import org.json.*;
 
 import rcms.fm.fw.user.UserActionException;
 
@@ -517,6 +516,7 @@ public class HCALxmlHandler {
         }
         JSONObject json;
         String[] jsonKeys;
+        if (parameterType.contains("MapT")) {
           json = new JSONObject(parameterValue);
           jsonKeys = JSONObject.getNames(json);
          }
@@ -571,18 +571,26 @@ public class HCALxmlHandler {
             break;
           case "MapT<StringT,StringT>":
             MapT<StringT, StringT> tmpMap = new MapT<StringT, StringT>();
-            for (String key : jsonKeys) {
-              tmpMap.add(key, json.getString(key));
+            nNodes = NodeList.getLength()
+            for (Integer iNode = 0; iNode < nNodes; iNode++) {
+              Node thisNode = NodeList.item(iNode);
+              if (thisNode.getNodeName() == "entry") {
+                tmpMap.add(thisNode.getAttribute("key"), thisNode.getTextContent());
+              }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT, StringT>(tmpMap));
             break;
-          case "MapT<StringT, VectorT<IntegerT> >":
+          case "MapT<StringT,VectorT<IntegerT>>":
             MapT<StringT, VectorT<IntegerT> > tmpMap = new MapT<StringT, VectorT<IntegerT> >();
-            for (String key : jsonKeys) {
-              tmpMap.add(key, new VectorT<IntegerT>());
-              JSONArray jsonArray = json.getJSONArray(key);
-              for (int i = 0; i < jsonArray.length(); i++) {
-                tmpMap.get(key).add(jsonArray.getInt(i));
+            nNodes = NodeList.getLength()
+            for (Integer iNode = 0; iNode < nNodes; iNode++) {
+              Node thisNode = NodeList.item(iNode);
+              if (thisNode.getNodeName() == "entry") {
+                VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+                for (String listElement : thisNode.getTextContent().split(",")) {
+                  tmpVector.add(listElement.toInteger());
+                }
+                tmpMap.add(thisNode.getAttribute("key"), tmpVector);
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT, VectorT<IntegerT> >(tmpMap));
