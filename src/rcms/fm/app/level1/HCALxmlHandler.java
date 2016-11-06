@@ -571,7 +571,7 @@ public class HCALxmlHandler {
             break;
           case "MapT<StringT,StringT>":
             MapT<StringT, StringT> tmpMap = new MapT<StringT, StringT>();
-            nNodes = NodeList.getLength()
+            nNodes = NodeList.getLength();
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeList.item(iNode);
               if (thisNode.getNodeName() == "entry") {
@@ -582,7 +582,7 @@ public class HCALxmlHandler {
             break;
           case "MapT<StringT,VectorT<IntegerT>>":
             MapT<StringT, VectorT<IntegerT> > tmpMap = new MapT<StringT, VectorT<IntegerT> >();
-            nNodes = NodeList.getLength()
+            nNodes = NodeList.getLength();
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeList.item(iNode);
               if (thisNode.getNodeName() == "entry") {
