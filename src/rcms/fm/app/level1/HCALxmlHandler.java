@@ -18,7 +18,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -35,6 +34,15 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.ByteT;
+import rcms.fm.fw.parameter.type.DateT;
+import rcms.fm.fw.parameter.type.DoubleT;
+import rcms.fm.fw.parameter.type.FloatT;
+import rcms.fm.fw.parameter.type.LongT;
+import rcms.fm.fw.parameter.type.ShortT;
+import rcms.fm.fw.parameter.type.UnsignedIntegerT;
+import rcms.fm.fw.parameter.type.UnsignedShortT;
+import rcms.fm.fw.parameter.type.MapT;
 
 import rcms.resourceservice.db.resource.fm.FunctionManagerResource;
 import rcms.util.logger.RCMSLogger;
@@ -506,20 +514,20 @@ public class HCALxmlHandler {
           }
       }
       if (TagName.equals("FMParameter")) {
-        String parameterName = getTagTextContext(NodeListOfTagName, TagName, "name");
-        String parameterType = getTagTextContext(NodeListOfTagName, TagName, "type").replaceAll(" ", "");
-        String parameterValue = getTagTextContext(NodeListOfTagName, TagName, "value");
+        String parameterName = getTagTextContent(NodeListOfTagName, TagName, "name");
+        String parameterType = getTagTextContent(NodeListOfTagName, TagName, "type").replaceAll(" ", "");
+        String parameterValue = getTagTextContent(NodeListOfTagName, TagName, "value");
 
         String[] vectorValues;
         if (parameterType.contains("VectorT")) {
           vectorValues = (parameterValue.split(","));
         }
-        JSONObject json;
-        String[] jsonKeys;
-        if (parameterType.contains("MapT")) {
-          json = new JSONObject(parameterValue);
-          jsonKeys = JSONObject.getNames(json);
-         }
+        //JSONObject json;
+        //String[] jsonKeys;
+        //if (parameterType.contains("MapT")) {
+        //  json = new JSONObject(parameterValue);
+        //  jsonKeys = JSONObject.getNames(json);
+        // }
 
         switch (parameterType) {
           case "BooleanT":
@@ -571,11 +579,11 @@ public class HCALxmlHandler {
             break;
           case "MapT<StringT,StringT>":
             MapT<StringT, StringT> tmpMap = new MapT<StringT, StringT>();
-            nNodes = NodeList.getLength();
+            Integer nNodes = NodeList.getLength();
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeList.item(iNode);
               if (thisNode.getNodeName() == "entry") {
-                tmpMap.add(thisNode.getAttribute("key"), thisNode.getTextContent());
+                tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT, StringT>(tmpMap));
@@ -590,7 +598,7 @@ public class HCALxmlHandler {
                 for (String listElement : thisNode.getTextContent().split(",")) {
                   tmpVector.add(listElement.toInteger());
                 }
-                tmpMap.add(thisNode.getAttribute("key"), tmpVector);
+                tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), tmpVector);
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT, VectorT<IntegerT> >(tmpMap));
