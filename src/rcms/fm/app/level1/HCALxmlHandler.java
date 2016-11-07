@@ -627,7 +627,7 @@ public class HCALxmlHandler {
                 for (String listElement : thisNode.getTextContent().split(",")) {
                   tmpVector.add(new IntegerT(Integer.parseInt(listElement)));
                 }
-                tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), tmpVector);
+                tmpMap.put(new StringT(thisNode.getAttributes().getNamedItem("key").getNodeValue()), tmpVector);
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(parameterName, tmpMap));
