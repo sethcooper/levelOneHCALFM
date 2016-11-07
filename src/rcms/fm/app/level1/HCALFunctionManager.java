@@ -872,7 +872,13 @@ public class HCALFunctionManager extends UserFunctionManager {
         supervExecURI = qrSupervParentExec.getURI();
         QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
-        ex.destroy();
+        try{
+          ex.destroy();
+        }
+        catch(XDAQException e){
+          String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
+          goToError(errMessage,e);
+        }
       }
     }
 
@@ -883,7 +889,13 @@ public class HCALFunctionManager extends UserFunctionManager {
       while (it.hasNext()) {
         XdaqExecutive ex = (XdaqExecutive) it.next();
         if (!ex.getURI().equals(supervExecURI)) {
-          ex.destroy();
+          try{
+            ex.destroy();
+          }
+          catch(XDAQException e){
+            String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
+            goToError(errMessage,e);
+          }
         }
       }
     }
