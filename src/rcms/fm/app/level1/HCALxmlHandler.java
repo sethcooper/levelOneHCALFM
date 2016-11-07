@@ -518,7 +518,7 @@ public class HCALxmlHandler {
         String parameterType = getTagTextContent(NodeListOfTagName, "type").replaceAll(" ", "");
         String parameterValue = getTagTextContent(NodeListOfTagName, "value");
 
-        String[] vectorValues;
+        StringT[] vectorValues;
         if (parameterType.contains("VectorT")) {
           vectorValues = (parameterValue.split(","));
         }
@@ -598,7 +598,7 @@ public class HCALxmlHandler {
           {
             VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
             for (StringT vectorElement : vectorValues) {
-              tmpVector.add(new IntegerT(vectorElement));
+              tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
             break;
@@ -610,7 +610,7 @@ public class HCALxmlHandler {
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeListOfTagName.item(iNode);
               if (thisNode.getNodeName() == "entry") {
-                tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
+                tmpMap.put(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(tmpMap));
@@ -619,13 +619,13 @@ public class HCALxmlHandler {
           case "MapT<VectorT<IntegerT>>":
           {
             MapT< VectorT<IntegerT> > tmpMap = new MapT< VectorT<IntegerT> >();
-            nNodes = NodeListOfTagName.getLength();
+            Integer nNodes = NodeListOfTagName.getLength();
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeListOfTagName.item(iNode);
               if (thisNode.getNodeName() == "entry") {
                 VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
                 for (String listElement : thisNode.getTextContent().split(",")) {
-                  tmpVector.add(Integer.parseInt(listElement));
+                  tmpVector.add(new IntegerT(Integer.parseInt(listElement)));
                 }
                 tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), tmpVector);
               }
