@@ -613,7 +613,7 @@ public class HCALxmlHandler {
                 tmpMap.put(new StringT(thisNode.getAttributes().getNamedItem("key").getNodeValue()), new StringT(thisNode.getTextContent()));
               }
             }
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(tmpMap));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(parameterName, tmpMap));
             break;
           }
           case "MapT<VectorT<IntegerT>>":
@@ -630,7 +630,7 @@ public class HCALxmlHandler {
                 tmpMap.add(thisNode.getAttributes().getNamedItem("key").getNodeValue(), tmpVector);
               }
             }
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(tmpMap));
+            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(parameterName, tmpMap));
             break;
           }
           default:
