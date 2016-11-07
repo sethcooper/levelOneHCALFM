@@ -518,7 +518,7 @@ public class HCALxmlHandler {
         String parameterType = getTagTextContent(NodeListOfTagName, "type").replaceAll(" ", "");
         String parameterValue = getTagTextContent(NodeListOfTagName, "value");
 
-        StringT[] vectorValues;
+        String[] vectorValues;
         if (parameterType.contains("VectorT")) {
           vectorValues = (parameterValue.split(","));
         }
@@ -588,8 +588,8 @@ public class HCALxmlHandler {
           case "VectorT<StringT>":
           {
             VectorT<StringT> tmpVector = new VectorT<StringT>();
-            for (StringT vectorElement : vectorValues) {
-              tmpVector.add(vectorElement);
+            for (String vectorElement : vectorValues) {
+              tmpVector.add(new StringT(vectorElement));
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
             break;
@@ -597,7 +597,7 @@ public class HCALxmlHandler {
           case "VectorT<IntegerT>":
           {
             VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-            for (StringT vectorElement : vectorValues) {
+            for (String vectorElement : vectorValues) {
               tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
@@ -610,7 +610,7 @@ public class HCALxmlHandler {
             for (Integer iNode = 0; iNode < nNodes; iNode++) {
               Node thisNode = NodeListOfTagName.item(iNode);
               if (thisNode.getNodeName() == "entry") {
-                tmpMap.put(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
+                tmpMap.put(new StringT(thisNode.getAttributes().getNamedItem("key").getNodeValue()), new StringT(thisNode.getTextContent()));
               }
             }
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(tmpMap));
