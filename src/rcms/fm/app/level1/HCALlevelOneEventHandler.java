@@ -30,6 +30,7 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
+import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.resourceservice.db.resource.Resource;
@@ -688,6 +689,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       RunInfoPublish           = ((BooleanT)functionManager.getHCALparameterSet().get("HCAL_RUNINFOPUBLISH").getValue()).getBoolean();
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
       TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
+      String FMpartitionMap    = ((MapT)functionManager.getHCALparameterSet().get("FM_PARTITION_MAP").getValue()).toString();
 
 
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
@@ -701,6 +703,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The RunInfoPublish value is : "                  +RunInfoPublish                      );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The OfficialRunNumbers value is : "              +OfficialRunNumbers                  );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The NumberOfEvents is : "                        +TriggersToTake                      );
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] The FM-alarm partition map is : "                +FMpartitionMap                      );
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL

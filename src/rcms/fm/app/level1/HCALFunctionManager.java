@@ -875,7 +875,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         try{
           ex.destroy();
         }
-        catch(XDAQException e){
+        catch(Exception e){
           String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
           goToError(errMessage,e);
         }
@@ -892,7 +892,7 @@ public class HCALFunctionManager extends UserFunctionManager {
           try{
             ex.destroy();
           }
-          catch(XDAQException e){
+          catch(Exception e){
             String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
             goToError(errMessage,e);
           }
