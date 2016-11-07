@@ -518,7 +518,7 @@ public class HCALxmlHandler {
         String parameterType = getTagTextContent(NodeListOfTagName, "type").replaceAll(" ", "");
         String parameterValue = getTagTextContent(NodeListOfTagName, "value");
 
-        String[] vectorValues;
+        String[] vectorValues = new String[0];
         if (parameterType.contains("VectorT")) {
           vectorValues = (parameterValue.split(","));
         }
