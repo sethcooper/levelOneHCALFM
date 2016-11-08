@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -472,7 +473,7 @@ public class HCALxmlHandler {
 
     HashMap<String, String> mapValues = new HashMap<String, String>();
     if (parameterType.contains("MapT")) {
-      NodeList childNodes = Element.getChildNodes();
+      NodeList childNodes = fmParameterElement.getChildNodes();
       Integer nNodes = childNodes.getLength();
       for (Integer iNode = 0; iNode < nNodes; iNode++) {
         Node thisNode = childNodes.item(iNode);
