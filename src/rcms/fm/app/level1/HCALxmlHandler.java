@@ -432,8 +432,12 @@ public class HCALxmlHandler {
             logger.info("[HCAL "+functionManager.FMname+" ] parseMasterSnippet: Found TagName = "+ iTagName );
 
             if(isValidTag){
-              NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
-              SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath, NeventIsSetFromGUI);
+              if (iTagName == "FMParameter") {
+                SetHCALFMParameter(iElement);
+              } else {
+                NodeList iNodeList = masterSnippetElement.getElementsByTagName( iTagName ); 
+                SetHCALParameterFromTagName( iTagName , iNodeList, CfgCVSBasePath, NeventIsSetFromGUI);
+              }
             }
           }
         }
@@ -452,6 +456,139 @@ public class HCALxmlHandler {
     if(TagName.equals("LTCControl")  ) return "HCAL_LTCCONTROL";
     logger.error("[Martin log HCAL "+ functionManager.FMname +"]: Cannot find HCALParameter corresponding to TagName "+ TagName +". Please check the mapping");
     return emptyString;
+  }
+
+  public void SetHCALFMParameter(Element fmParameterElement) {
+    String parameterName  = fmParameterElement.getAttributes().getNamedItem("name").getNodeValue());
+    String parameterType  = fmParameterElement.getAttributes().getNamedItem("type").getNodeValue());
+    String parameterValue = "";
+    if(! (parameterType.contains("VectorT") || parameterType.contains("MapT"))){
+      parameterValue = fmParameterElement.getAttributes().getNamedItem("value").getNodeValue())
+    }
+    String[] vectorValues = new String[0];
+    if (parameterType.contains("VectorT")) {
+      vectorValues = (parameterValue.split(","));
+    }
+
+    HashMap<String, String> mapValues = new HashMap<String, String>();
+    if (parameterType.contains("MapT")) {
+      NodeList childNodes = Element.getChildNodes();
+      Integer nNodes = childNodes.getLength();
+      for (Integer iNode = 0; iNode < nNodes; iNode++) {
+        Node thisNode = childNodes.item(iNode);
+        if (thisNode.getNodeName() == "entry") {
+          mapValues.put(thisNode.getAttributes().getNamedItem("key").getNodeValue(), thisNode.getTextContent());
+        }
+      }
+    }
+
+    try{
+      switch (parameterType) {
+        case "BooleanT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(parameterName, new BooleanT(parameterValue)));
+          break;
+        }
+        case "ByteT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ByteT>(parameterName, new ByteT(parameterValue)));
+          break;
+        }
+        case "DateT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DateT>(parameterName, new DateT(parameterValue)));
+          break;
+        }
+        case "DoubleT ":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(parameterName, new DoubleT(parameterValue)));
+          break;
+        }
+        case "FloatT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<FloatT>(parameterName, new FloatT(parameterValue)));
+          break;
+        }
+        case "IntegerT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(parameterName, new IntegerT(parameterValue)));
+          break;
+        }
+        case "LongT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<LongT>(parameterName, new LongT(parameterValue)));
+          break;
+        }
+        case "ShortT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ShortT>(parameterName, new ShortT(parameterValue)));
+          break;
+        }
+        case "StringT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
+          break;
+        }
+        case "UnsignedIntegerT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedIntegerT>(parameterName, new UnsignedIntegerT(parameterValue)));
+          break;
+        }
+        case "UnsignedShortT":
+        {
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedShortT>(parameterName, new UnsignedShortT(parameterValue)));
+          break;
+        }
+        case "VectorT(StringT)":
+        {
+          VectorT<StringT> tmpVector = new VectorT<StringT>();
+          for (String vectorElement : vectorValues) {
+            tmpVector.add(new StringT(vectorElement));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
+          break;
+        }
+        case "VectorT(IntegerT)":
+        {
+          VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+          for (String vectorElement : vectorValues) {
+            tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
+          break;
+        }
+        case "MapT(StringT)":
+        {
+          MapT< StringT> tmpMap = new MapT<StringT>();
+          for (Map.Entry<String, String> entry : mapValues.entrySet()) {
+            tmpMap.put(new StringT(entry.getKey()), new StringT(entry.getValue()));
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(parameterName, tmpMap));
+          break;
+        }
+        case "MapT(VectorT(IntegerT))":
+        {
+          MapT< VectorT<IntegerT> > tmpMap = new MapT< VectorT<IntegerT> >();
+          for (Map.Entry<String, String> entry : mapValues.entrySet()) {
+            VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
+            for (String vectorEntry : entry.getValue().split(",")) {
+              tmpVector.add(Integer.parseInt(vectorEntry));
+            }
+            tmpMap.put(entry.getKey(), tmpVector);
+          }
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(parameterName, tmpMap));
+          break;
+        }
+        default:
+        {
+          String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for node " + TagName; 
+          throw new UserActionException(errMessage);
+        }
+      }
+    } catch (UserActionException e) {
+      // Warn when found more than one tag name in mastersnippet
+      functionManager.goToError(e.getMessage());
+    }
   }
 
 
@@ -512,143 +649,10 @@ public class HCALxmlHandler {
             String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
             functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
           }
-      }
-      if (TagName.equals("FMParameter")) {
-        for(int iFMParameter=0;iFMParameter<NodeListOfTagName.getLength();iFMParameter++){
-          String parameterName  = getTagAttribute(NodeListOfTagName,TagName, "name");
-          String parameterType  = getTagAttribute(NodeListOfTagName,TagName, "type").replaceAll(" ", "");
-          String parameterValue = "";
-          if(! (parameterType.contains("VectorT") || parameterType.contains("MapT"))){
-            parameterValue = getTagAttribute(NodeListOfTagName,TagName, "value");
-          }
-          String[] vectorValues = new String[0];
-          if (parameterType.contains("VectorT")) {
-            vectorValues = (parameterValue.split(","));
-          }
-          //JSONObject json;
-          //String[] jsonKeys;
-          //if (parameterType.contains("MapT")) {
-          //  json = new JSONObject(parameterValue);
-          //  jsonKeys = JSONObject.getNames(json);
-          // }
-
-          switch (parameterType) {
-            case "BooleanT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>(parameterName, new BooleanT(parameterValue)));
-              break;
-            }
-            case "ByteT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ByteT>(parameterName, new ByteT(parameterValue)));
-              break;
-            }
-            case "DateT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DateT>(parameterName, new DateT(parameterValue)));
-              break;
-            }
-            case "DoubleT ":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>(parameterName, new DoubleT(parameterValue)));
-              break;
-            }
-            case "FloatT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<FloatT>(parameterName, new FloatT(parameterValue)));
-              break;
-            }
-            case "IntegerT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<IntegerT>(parameterName, new IntegerT(parameterValue)));
-              break;
-            }
-            case "LongT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<LongT>(parameterName, new LongT(parameterValue)));
-              break;
-            }
-            case "ShortT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<ShortT>(parameterName, new ShortT(parameterValue)));
-              break;
-            }
-            case "StringT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>(parameterName, new StringT(parameterValue)));
-              break;
-            }
-            case "UnsignedIntegerT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedIntegerT>(parameterName, new UnsignedIntegerT(parameterValue)));
-              break;
-            }
-            case "UnsignedShortT":
-            {
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<UnsignedShortT>(parameterName, new UnsignedShortT(parameterValue)));
-              break;
-            }
-            case "VectorT(StringT)":
-            {
-              VectorT<StringT> tmpVector = new VectorT<StringT>();
-              for (String vectorElement : vectorValues) {
-                tmpVector.add(new StringT(vectorElement));
-              }
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT> >(parameterName, tmpVector));
-              break;
-            }
-            case "VectorT(IntegerT)":
-            {
-              VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-              for (String vectorElement : vectorValues) {
-                tmpVector.add(new IntegerT(Integer.parseInt(vectorElement)));
-              }
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<IntegerT> >(parameterName, tmpVector));
-              break;
-            }
-            case "MapT(StringT)":
-            {
-              MapT< StringT> tmpMap = new MapT<StringT>();
-              NodeList ChildNodes   = NodeListOfTagName.item(iFMParameter).getChildNodes();
-              Integer nNodes = ChildNodes.getLength();
-              for (Integer iNode = 0; iNode < nNodes; iNode++) {
-                Node thisNode = ChildNodes.item(iNode);
-                if (thisNode.getNodeName() == "entry") {
-                  tmpMap.put(new StringT(thisNode.getAttributes().getNamedItem("key").getNodeValue()), new StringT(thisNode.getTextContent()));
-                }
-                //logger.warn("[HCAL "+functionManager.FMname+"] value of "+thisNode.getNodeName()+" is "+thisNode.getTextContent());
-              }
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<StringT>>(parameterName, tmpMap));
-              break;
-            }
-            case "MapT(VectorT(IntegerT))":
-            {
-              MapT< VectorT<IntegerT> > tmpMap = new MapT< VectorT<IntegerT> >();
-              NodeList ChildNodes   = NodeListOfTagName.item(iFMParameter).getChildNodes();
-              Integer nNodes = ChildNodes.getLength();
-              for (Integer iNode = 0; iNode < nNodes; iNode++) {
-                Node thisNode = ChildNodes.item(iNode);
-                if (thisNode.getNodeName() == "entry") {
-                  VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
-                  for (String listElement : thisNode.getTextContent().split(",")) {
-                    tmpVector.add(new IntegerT(Integer.parseInt(listElement)));
-                  }
-                  tmpMap.put(new StringT(thisNode.getAttributes().getNamedItem("key").getNodeValue()), tmpVector);
-                }
-              }
-              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<MapT<VectorT<IntegerT> > >(parameterName, tmpMap));
-              break;
-            }
-            default:
-            {
-              String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for node " + TagName; 
-              throw new UserActionException(errMessage);
-            }
-          }
         }
       }
     }
-    catch ( UserActionException e){
+    catch (UserActionException e){
         // Warn when found more than one tag name in mastersnippet
         functionManager.goToError(e.getMessage());
     }
