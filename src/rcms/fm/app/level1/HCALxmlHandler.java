@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.HashMap;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
@@ -573,7 +574,7 @@ public class HCALxmlHandler {
           for (Map.Entry<String, String> entry : mapValues.entrySet()) {
             VectorT<IntegerT> tmpVector = new VectorT<IntegerT>();
             for (String vectorEntry : entry.getValue().split(",")) {
-              tmpVector.add(Integer.parseInt(vectorEntry));
+              tmpVector.add(new IntegerT(Integer.parseInt(vectorEntry)));
             }
             tmpMap.put(entry.getKey(), tmpVector);
           }
@@ -582,7 +583,7 @@ public class HCALxmlHandler {
         }
         default:
         {
-          String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for node " + TagName; 
+          String errMessage="[David log HCAL " + functionManager.FMname + "] Unknown FMParameter type (" + parameterType + ") for FMParameter named " + parameterName; 
           throw new UserActionException(errMessage);
         }
       }
