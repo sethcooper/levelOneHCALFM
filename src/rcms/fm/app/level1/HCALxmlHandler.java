@@ -459,11 +459,11 @@ public class HCALxmlHandler {
   }
 
   public void SetHCALFMParameter(Element fmParameterElement) {
-    String parameterName  = fmParameterElement.getAttributes().getNamedItem("name").getNodeValue());
-    String parameterType  = fmParameterElement.getAttributes().getNamedItem("type").getNodeValue());
+    String parameterName  = fmParameterElement.getAttributes().getNamedItem("name").getNodeValue();
+    String parameterType  = fmParameterElement.getAttributes().getNamedItem("type").getNodeValue();
     String parameterValue = "";
-    if(! (parameterType.contains("VectorT") || parameterType.contains("MapT"))){
-      parameterValue = fmParameterElement.getAttributes().getNamedItem("value").getNodeValue())
+    if(!(parameterType.contains("VectorT") || parameterType.contains("MapT"))) {
+      parameterValue = fmParameterElement.getAttributes().getNamedItem("value").getNodeValue();
     }
     String[] vectorValues = new String[0];
     if (parameterType.contains("VectorT")) {
@@ -646,15 +646,13 @@ public class HCALxmlHandler {
       }
       if(TagName.equals("FedEnableMask")){
         if (functionManager.RunType.equals("local")){
-            String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
-            functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
-          }
+          String tmpFedEnableMask = getTagTextContent( NodeListOfTagName, TagName);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("FED_ENABLE_MASK",new StringT(tmpFedEnableMask)));
         }
       }
-    }
-    catch (UserActionException e){
-        // Warn when found more than one tag name in mastersnippet
-        functionManager.goToError(e.getMessage());
+    } catch (UserActionException e) {
+      // Warn when found more than one tag name in mastersnippet
+      functionManager.goToError(e.getMessage());
     }
   }
 
