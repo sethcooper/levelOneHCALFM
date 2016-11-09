@@ -2614,16 +2614,16 @@ public class HCALEventHandler extends UserEventHandler {
       partitionAlarmMap.put("HF", "HF_Status");
       partitionAlarmMap.put("HO", "HO_Status");
       partitionAlarmMap.put("Laser", "Laser_Status");
-      partitionAlarmMap.put("Dev", "Dev_Status");
-      partitionAlarmMap.put("Unknown", "Unknown_Status");
+      //partitionAlarmMap.put("Dev", "Dev_Status");
+      //partitionAlarmMap.put("Unknown", "Unknown_Status");
 
-      // (Unique) list of all partitions to watch
-      LinkedHashSet<String> watchedPartitions = new LinkedHashSet<String>(Arrays.asList(new String[]{"HBHEa", "HBHEb", "HBHEc", "HF", "HO", "Laser", "Dev", "Unknown"}));
+      List<String> watchedPartitions =new ArrayList<String>( partitionAlarmMap.ketSet() );
+      Collections.sort(watchedPartitions);
+      String[] watchedAlarms = partitionAlarmMap.entrySet().toArray(new String[partitionAlarmMap.entrySet().size()]);
 
-      // For partition veto
+      // List of partitions to ignore due to being empty or masked
       MapT<StringT>    FMpartitionMap = (MapT<StringT>)functionManager.getParameterSet().get("FM_PARTITION_MAP").getValue();
-      VectorT<StringT> VetoPartitions = new VectorT<StringT>();
-      
+      LinkedHashSet<String> ignoredPartitions = new LinkedHashSet<String>();
 
       stopAlarmerWatchThread = false;
       try {
@@ -2646,26 +2646,31 @@ public class HCALEventHandler extends UserEventHandler {
             VectorT<StringT> maskedFMs      = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
             logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Before pulling setting Vetos");
             for(StringT FMname : emptyFMs){
-              if(!VetoPartitions.contains(FMname)){
-                if (FMpartitionMap.get(FMname)!=null){
-                  VetoPartitions.add(FMpartitionMap.get(FMname));
-                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+FMpartitionMap.get(FMname)+" because FM is empty: "+FMname.getString());
+              if (FMpartitionMap.get(FMname)!=null){
+                String partitionOfemptyFM = FMpartitionMap.get(FMname).getString();
+                if(!ignoredPartitions.contains(partitionOfemptyFM)){
+                  ignoredPartitions.add(partitionOfemptyFM);
+                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfemptyFM+" because FM is empty: "+FMname.getString());
                 }
-                else{
+              }
+              else{
                   logger.error("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: This FM:"+FMname+" is empty, but did not find the partition for it");
-                }
               }
             }
             for(StringT FMname : maskedFMs){
-              if(!VetoPartitions.contains(FMname) ){
-                if (FMpartitionMap.get(FMname)!=null){
-                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+FMpartitionMap.get(FMname)+" because FM is masked: "+FMname.getString());
-                  VetoPartitions.add(FMpartitionMap.get(FMname));
-                }
-                else{
-                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: This FM:"+FMname+" is masked, but did not find the partition for it.");
+              if (FMpartitionMap.get(FMname)!=null){
+                String partitionOfmaskedFM = FMpartitionMap.get(FMname).getString();
+                if(!ignoredPartitions.contains(partitionOfmaskedFM)){
+                  ignoredPartitions.add(partitionOfmaskedFM);
+                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Going to ignore this parition:"+partitionOfmaskedFM+" because FM is masked: "+FMname.getString());
                 }
               }
+              else{
+                  logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: This FM:"+FMname.getString()+" is masked, but did not find the partition for it");
+              }
+            }
+            for (String ignoredPartition : ignoredPartitions) {
+              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Alarms from this masked or empty partition will be ignored: "+ignoredPartition);
             }
 
             logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread: Before pulling statuses ");
@@ -2677,11 +2682,10 @@ public class HCALEventHandler extends UserEventHandler {
             // Get the status for each watched alarm
             HashMap<String, Boolean> partitionStatuses = new HashMap<String, Boolean>();
             HashMap<String, String> partitionStatusStrings = new HashMap<String, String>();
+            pam.select(watchedAlarms);
+            pam.get();
             for (String thisPartition : watchedPartitions) {
               String thisAlarm = partitionAlarmMap.get(thisPartition);
-              logger.warn("[HCAL " + functionManager.FMname+"] AlarmerWatchThread:pulling this status: "+thisAlarm);
-              pam.select(new String[] {thisAlarm});
-              pam.get();
               String alarmerStatusString = pam.getValue(thisAlarm);
               partitionStatusStrings.put(thisPartition, alarmerStatusString);
               if (alarmerStatusString == "OK") {
@@ -2700,7 +2704,7 @@ public class HCALEventHandler extends UserEventHandler {
             ArrayList<String> badAlarmerPartitions = new ArrayList<String>();
             for (String partitionName : watchedPartitions) {
               // Try to automatically veto the watching of emptyFMs if the name matches
-              if (VetoPartitions.contains(partitionName) || emptyFMs.contains(partitionName)) {
+              if (ignoredPartitions.contains(partitionName) || emptyFMs.contains(partitionName)) {
                 continue;
               }
               totalStatus = (totalStatus && partitionStatuses.get(partitionName));
