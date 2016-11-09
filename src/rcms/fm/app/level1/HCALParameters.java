@@ -94,7 +94,8 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASK_SUMMARY"             ,  new VectorT<StringT>()    ) );  // Summary of masked FMs for user understandability
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("EMPTY_FMS"                ,  new VectorT<StringT>()    ) );  // LV2 FMs without XDAQs
-		this.put( new FunctionManagerParameter<MapT<StringT> > ("FM_PARTITION_MAP"           ,  new MapT<StringT>()    ) );  // Map between LV2 FMs names to TCDS/Alarmer Partitions
+		this.put( new FunctionManagerParameter<MapT<StringT> > ("FM_PARTITION_MAP"           ,  new MapT<StringT>()       ) );  // Map from LV2 FMs names to TCDS/Alarmer Partitions
+		this.put( new FunctionManagerParameter<MapT<StringT> > ("PARTITION_ALARM_MAP"        ,  new MapT<StringT>()       ) );  // Map from TCDS/Alarmer Partitions to alarmer infospace parameter 
 	}
 
 	public static HCALParameters getInstance() {
