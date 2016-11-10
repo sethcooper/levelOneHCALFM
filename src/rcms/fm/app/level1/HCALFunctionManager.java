@@ -302,8 +302,6 @@ public class HCALFunctionManager extends UserFunctionManager {
       if (theEventHandler.TestMode.equals("off")) { firePriorityEvent(HCALInputs.SETERROR); ErrorState = true; return;}
     }
 
-    FMpartition = FMname.substring(5);
-
     System.out.println("[HCAL " + FMname + "] createAction called.");
     logger.debug("[HCAL " + FMname + "] createAction called.");
 
@@ -315,7 +313,6 @@ public class HCALFunctionManager extends UserFunctionManager {
     RunSetupDetails += "\nFM URL: " + FMurl;
     RunSetupDetails += "\nFM URI: " + FMuri;
     RunSetupDetails += "\nFM role: " + FMrole;
-    RunSetupDetails += "\nused for HCAL partition: " + FMpartition;
     RunSetupDetails += "\nthis FM was started at: " + utcFMtimeofstart;
 
     logger.info("[HCAL " + FMname + "] Run configuration details" + RunSetupDetails);

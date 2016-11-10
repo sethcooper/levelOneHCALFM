@@ -179,7 +179,7 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       // start the HCALSupervisor watchdog thread
       System.out.println("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] Starting HCAL supervisor watchdog thread ...");
-      if (!(functionManager.FMrole.equals("Level2_TCDSLPM"))) {
+      if (!functionManager.containerhcalSupervisor.isEmpty()) {
         HCALSupervisorWatchThread thread2 = new HCALSupervisorWatchThread();
         thread2.start();
       } 
