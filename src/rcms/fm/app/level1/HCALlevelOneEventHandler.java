@@ -385,6 +385,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         }
       }
 
+      //Stop alarmerWatchThread, restart new one during configuring
+      stopAlarmerWatchThread = true;
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("resetAction executed ...")));
@@ -705,10 +707,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // start the alarmer watch thread here, now that we have the alarmerURL
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
-      if( functionManager.alarmerPartition.equals("")){
-          functionManager.alarmerPartition = "HBHEHO";
-          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
-      }
       AlarmerWatchThread thread4 = new AlarmerWatchThread();
       thread4.start();
 
@@ -1176,6 +1174,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       VectorT<StringT> EmptyFMs = new VectorT<StringT>();
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<VectorT<StringT>>("EMPTY_FMS",EmptyFMs));
 
+      //Stop alarmerWatchThread, restart new one during configuring
+      stopAlarmerWatchThread = true;
+
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("haltAction executed ...")));
@@ -1343,7 +1344,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           }
         }
       }
-
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
