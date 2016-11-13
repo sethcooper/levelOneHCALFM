@@ -876,11 +876,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
         try{
-          if(FMname.equals("HCAL_HBHEa")){
             ex.destroy();
-          }else{
-            throw new Exception();
-          }
         }
         catch( Exception e){
           String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
