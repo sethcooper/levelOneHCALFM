@@ -400,8 +400,8 @@ public class HCALFunctionManager extends UserFunctionManager {
           }
           catch (Exception e) {
             String errMessage = "[HCAL " + FMname + "] Could not destroy FM client named: " + fmChild.getResource().getName().toString() +"\n The URI is: "+ fmChild.getResource().getURI().toString() + "\nThe exception is:\n" + e.toString();
-            logger.error(errMessage,e);
-            // supressed to not worry the CDAQ shifter sendCMSError(errMessage);
+            goToError(errMessage,e);
+            throw (UserActionException) e;
           }
         }
       }
@@ -413,8 +413,14 @@ public class HCALFunctionManager extends UserFunctionManager {
     theEventHandler.stopAlarmerWatchThread = true; 
     theStateNotificationHandler.setTimeoutThread(false);
 
-    destroyXDAQ();
-
+    try{
+      destroyXDAQ();
+    }
+    catch (UserActionException e){
+      String errMessage="[HCAL "+FMname+" ] Got an exception during destroyXDAQ():";
+      goToError(errMessage,e);
+      throw e;
+    }
     destroyed = true;
 
     System.out.println("[HCAL " + FMname + "] destroyAction executed ...");
@@ -859,7 +865,7 @@ public class HCALFunctionManager extends UserFunctionManager {
   /**----------------------------------------------------------------------
    * get all XDAQ executives and kill them
    */
-  protected void destroyXDAQ() {
+  protected void destroyXDAQ() throws UserActionException {
     // see if there is an exec with a supervisor and kill it first
     URI supervExecURI = null;
     if (containerhcalSupervisor != null) {
@@ -870,11 +876,16 @@ public class HCALFunctionManager extends UserFunctionManager {
         QualifiedResource qrExec = qualifiedGroup.seekQualifiedResourceOfURI(supervExecURI);
         XdaqExecutive ex = (XdaqExecutive) qrExec;
         try{
-          ex.destroy();
+          if(FMname.equals("HCAL_HBHEa")){
+            ex.destroy();
+          }else{
+            throw new Exception();
+          }
         }
-        catch(Exception e){
-          String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
+        catch( Exception e){
+          String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
           goToError(errMessage,e);
+          throw (UserActionException) e;
         }
       }
     }
@@ -890,8 +901,9 @@ public class HCALFunctionManager extends UserFunctionManager {
             ex.destroy();
           }
           catch(Exception e){
-            String errMessage="[HCAL "+FMname+"] Timed out when destroying this Executive:" + ex.getName(); 
+            String errMessage="[HCAL "+FMname+"] Exception when destroying executive named:" + ex.getName()+ " with URI " + supervExecURI.toString(); 
             goToError(errMessage,e);
+            throw (UserActionException)e;
           }
         }
       }
