@@ -30,7 +30,6 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
-import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserStateNotificationHandler;
 import rcms.resourceservice.db.resource.Resource;

@@ -1,8 +1,6 @@
 package rcms.fm.app.level1;
 
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Date;
@@ -13,7 +11,6 @@ import java.lang.Integer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.lang.Double;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,7 +43,6 @@ import rcms.fm.fw.parameter.type.IntegerT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
-import rcms.fm.fw.parameter.type.MapT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
