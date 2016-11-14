@@ -24,7 +24,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER"};
+ 	private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "EXIT"};
 
 	private HCALParameters() {
 		super();
@@ -88,6 +88,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 
 		this.put( new FunctionManagerParameter<BooleanT> ("CLOCK_CHANGED"                    ,  new BooleanT(false)       ) );  // Information from level0 on whether the clock source has changed
 		this.put( new FunctionManagerParameter<BooleanT> ("USE_RESET_FOR_RECOVER"            ,  new BooleanT(true)        ) );  // Switch for changing behavior of recover button
+		this.put( new FunctionManagerParameter<BooleanT> ("EXIT"                             ,  new BooleanT(false)       ) );  // Switch for changing behavior of recover button
 
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("AVAILABLE_RESOURCES"      ,  new VectorT<StringT>()    ) );  // Full list of qualified resources
 		this.put( new FunctionManagerParameter<VectorT<StringT>> ("MASKED_RESOURCES"         ,  new VectorT<StringT>()    ) );  // List of masked resources

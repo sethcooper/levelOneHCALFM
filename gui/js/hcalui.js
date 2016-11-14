@@ -45,6 +45,7 @@ function showsupervisorerror() {
 $(document).ready(function () {
     var initcolor = $('#currentState').text();
     $('#currentState').attr("class", "hcal_control_" + initcolor);
+    if ($('#currentState').text() == "Configured") {$('#Destroy').hide();}
     var cachedRunNo = $('#RUN_NUMBER').val();
     var cachedNevents = $('#NUMBER_OF_EVENTS').val();
     var cachedSupErr = $('#SUPERVISOR_ERROR').val();
@@ -62,6 +63,7 @@ $(document).ready(function () {
         else {
             $('#newRUN_CONFIG_SELECTEDcheckbox :checkbox').hide();
         }
+        if (currentState == "Configured") {$('#Destroy').hide();}
         if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
         if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
         if ($('#NUMBER_OF_EVENTS').val() !=  cachedNevents) { getfullpath(); }
@@ -69,6 +71,7 @@ $(document).ready(function () {
         cachedRunNo = $('#RUN_NUMBER').val();
         cachedNevents = $('#NUMBER_OF_EVENTS').val();
         cachedSupErr = $('#SUPERVISOR_ERROR').val();
+	if ($('#EXIT').val() == "true" && currentState=="Halted") { onDestroyButton(); }
     //$('#commandParameterCheckBox').attr("onclick", "onClickCommandParameterCheckBox(); toggle_visibility('Blork');");
     }, 750);
 

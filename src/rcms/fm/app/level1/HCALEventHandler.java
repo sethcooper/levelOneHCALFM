@@ -154,6 +154,7 @@ public class HCALEventHandler extends UserEventHandler {
     addAction(HCALStates.INITIALIZING,            "initAction");
     addAction(HCALStates.CONFIGURING,             "configureAction");
     addAction(HCALStates.HALTING,                 "haltAction");
+    addAction(HCALStates.EXITING,                 "exitAction");
     addAction(HCALStates.STOPPING,                "stoppingAction");
     addAction(HCALStates.PREPARING_TTSTEST_MODE,  "preparingTTSTestModeAction");
     addAction(HCALStates.TESTING_TTS,             "testingTTSAction");
