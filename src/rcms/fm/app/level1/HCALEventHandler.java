@@ -105,6 +105,7 @@ public class HCALEventHandler extends UserEventHandler {
   public boolean stopHCALSupervisorWatchThread =  false;  // For turning off the supervisor watch thread
   public boolean stopTriggerAdapterWatchThread =  false;  // For turning off the TA thread
   public boolean stopAlarmerWatchThread        =  false;  // For turning off the alarmer thread
+  public boolean delayAlarmerWatchThread       =  false;  // For delaying the alarmer thread at the start
   public boolean NotifiedControlledFMs         =  false;  // For notifications to level2s
   public boolean ClockChanged                  =  false;  // Flag for whether the clock source has changed
   public boolean UseResetForRecover            =  true;   // Switch to disable the "Recover" behavior and instead replace it with doing a "Reset" behavior
@@ -2652,6 +2653,11 @@ public class HCALEventHandler extends UserEventHandler {
         if (functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ||
             functionManager.getState().getStateString().equals(HCALStates.RUNNINGDEGRADED.toString()) ) {
           try {
+            if (delayAlarmerWatchThread){
+              try { Thread.sleep(60000); }   // delay the first poll by 60s when we enter Running state
+              catch (Exception ignored) { return; }
+              delayAlarmerWatchThread=false;
+            }
             // Empty or masked partitions. Alarms will be ignored for these partitions.
             VectorT<StringT> emptyFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
             VectorT<StringT> maskedFMs      = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
@@ -2689,15 +2695,22 @@ public class HCALEventHandler extends UserEventHandler {
             pam.get();
             for (String thisPartition : watchedPartitions) {
               String thisAlarm           = thisPartition+"_Status";
-              String alarmerStatusString = pam.getValue(thisAlarm);
-              partitionStatusStrings.put(thisPartition, alarmerStatusString);
-              if (alarmerStatusString.equals("OK")) {
-                partitionStatuses.put(thisPartition, true);
-              } else if (alarmerStatusString.equals("")) {
-                String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ", partition name " + thisPartition + ".";
-                logger.warn(errMessage); 
-              } else {
-                partitionStatuses.put(thisPartition, false);
+              if (pam.getValue(thisAlarm)!=null){
+                String alarmerStatusString = pam.getValue(thisAlarm);
+                partitionStatusStrings.put(thisPartition, alarmerStatusString);
+                if (alarmerStatusString.equals("OK")) {
+                  partitionStatuses.put(thisPartition, true);
+                } else if (alarmerStatusString.equals("")) {
+                  String errMessage = "[David Log " + functionManager.FMname + "] Cannot get alarmerStatusValue with alarmer name " + thisAlarm + ", partition name " + thisPartition + ".";
+                  logger.warn(errMessage); 
+                } else {
+                  partitionStatuses.put(thisPartition, false);
+                }
+              }
+              else{
+                String errMessage="HCAL "+functionManager.FMname+"] AlarmerWatchThread: No parameter named: "+thisAlarm+" in alarmer's infospace!";
+                logger.error(errMessage);
+                throw new Exception(errMessage);
               }
             }
 
@@ -2779,7 +2792,7 @@ public class HCALEventHandler extends UserEventHandler {
 
       // stop the HCAL supervisor watchdog thread
       //System.out.println("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
-      //logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
+      logger.debug("[HCAL " + functionManager.FMname + "] ... stopping HCAL supervisor watchdog thread done.");
       AlarmerWatchThreadList.remove(this);
     }
   }
