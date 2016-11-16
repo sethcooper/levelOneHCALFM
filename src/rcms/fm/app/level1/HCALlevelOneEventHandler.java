@@ -26,7 +26,9 @@ import rcms.fm.fw.StateEnteredEvent;
 import rcms.fm.fw.parameter.CommandParameter;
 import rcms.fm.fw.parameter.FunctionManagerParameter;
 import rcms.fm.fw.parameter.ParameterSet;
+import rcms.fm.fw.service.parameter.ParameterServiceException;
 import rcms.fm.fw.parameter.type.IntegerT;
+import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.BooleanT;
 import rcms.fm.fw.parameter.type.VectorT;
@@ -60,6 +62,10 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
   public HCALMasker masker = null;
+
+  private Double  progress           = 0.0;
+  private Integer nChildren          = 0;
+  private Boolean stopProgressThread = false;
 
   public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -439,6 +445,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   }
 
   public void configureAction(Object obj) throws UserActionException {
+    nChildren = functionManager.containerFMChildren.getQualifiedResourceList().size();
+    ProgressThread progressThread = new ProgressThread(functionManager);
+    progressThread.start();
 
     if (obj instanceof StateEnteredEvent) {
       System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing configureAction");
@@ -1103,6 +1112,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
+      stopProgressThread = true;
 
       // set action
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
@@ -1471,6 +1481,52 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] testingTTSAction executed ...");
+    }
+  }
+  protected class ProgressThread extends Thread {
+    protected HCALFunctionManager functionManager = null;
+    RCMSLogger logger = null;
+
+    public ProgressThread(HCALFunctionManager parentFunctionManager) {
+      this.logger = new RCMSLogger(HCALFunctionManager.class);
+      logger.info("Constructing ProgressThread");
+      this.functionManager = parentFunctionManager;
+      logger.info("Done constructing ProgressThread " + functionManager.FMname + ".");
+    }
+
+    public void run() {
+      stopProgressThread = false;
+      logger.info("[JohnLogProgress] " + functionManager.FMname + ": starting ProgressThread.");
+      while ( stopProgressThread == false && functionManager.isDestroyed() == false ) {
+
+        Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        while (it.hasNext()) {
+          FunctionManager childFM = (FunctionManager) it.next();
+          progress = 0.0;
+          if (childFM.isInitialized()) {
+            ParameterSet<FunctionManagerParameter> lvl2pars;
+            try {
+              lvl2pars = childFM.getParameter(functionManager.getHCALparameterSet());
+            }
+            catch (ParameterServiceException e) {
+              logger.warn("[HCAL " + functionManager.FMname + "] Could not update parameters for FM client: " + childFM.getResource().getName() + " The exception is:", e);
+              return;
+            }
+            logger.info("Got progress from level2 FM" + childFM.getName() + " = " +((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble());
+            progress += ((DoubleT)lvl2pars.get("PROGRESS").getValue()).getDouble();
+          }
+        }
+        logger.info("[JohnLogProgress] " + functionManager.FMname + ": got total progress " + progress);
+
+        functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress/(nChildren.doubleValue()))));
+
+        // delay between polls
+        try { Thread.sleep(1000); }
+        catch (Exception ignored) { return; }
+      }
+
+      // stop the Monitor watchdog thread
+      logger.debug("[HCAL " + functionManager.FMname + "] ... stopping ProgressThread.");
     }
   }
 }

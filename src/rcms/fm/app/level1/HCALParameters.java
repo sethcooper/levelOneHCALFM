@@ -24,7 +24,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 	static RCMSLogger logger = new RCMSLogger(HCALFunctionManager.class);
 
 	private static HCALParameters instance;
-  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER"};
+  private static final String guiParams[] = new String[] {"HCAL_EVENTSTAKEN", "NUMBER_OF_EVENTS", "ACTION_MSG", "SUPERVISOR_ERROR", "RUN_NUMBER", "CONFIGURED_WITH_RUN_NUMBER", "STARTED_WITH_RUN_NUMBER", "PROGRESS"};
 
 	private HCALParameters() {
 		super();
@@ -45,6 +45,7 @@ public class HCALParameters extends ParameterSet<FunctionManagerParameter> {
 		this.put( new FunctionManagerParameter<IntegerT> ("HCAL_EVENTSTAKEN"                 ,  new IntegerT(-1)       ,  FunctionManagerParameter.Exported.READONLY) );  // Events taken. Really the number of triggers the TA claims to have issued
 
 		this.put( new FunctionManagerParameter<DoubleT>  ("COMPLETION"                       ,  new DoubleT(-1)        ,  FunctionManagerParameter.Exported.READONLY) );  // Completion meter
+		this.put( new FunctionManagerParameter<DoubleT>  ("PROGRESS"                         ,  new DoubleT(-1)        ,  FunctionManagerParameter.Exported.READONLY) );  // Completion meter
 
 		this.put( new FunctionManagerParameter<StringT>  ("FED_ENABLE_MASK"                  ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // FED enable mask, typically handed to us by the level0
 		this.put( new FunctionManagerParameter<StringT>  ("STATE"                            ,  new StringT("")        ,  FunctionManagerParameter.Exported.READONLY) );  // State the Function Manager is currently in

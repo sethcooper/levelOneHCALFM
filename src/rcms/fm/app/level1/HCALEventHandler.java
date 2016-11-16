@@ -2437,10 +2437,18 @@ public class HCALEventHandler extends UserEventHandler {
 
                   status = pam.getValue("PartitionState");
                   stateName = pam.getValue("stateName");
+                  progress = pam.getValue("InitializationProgress");
 
                   if (status==null || stateName==null) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
                     functionManager.goToError(errMessage);
+                  }
+                  if (progress == null) {
+                    // TODO: do something more drastic in this case?
+                    logger.error("[JohnLogProgress] " + functionManager.FMname + " Something went wrong when asking the hcalSupervisor for her InitializationProgress...");
+                  }
+                  else {
+                    functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
                   }
 
                   logger.debug("[HCAL " + functionManager.FMname + "] asking for the HCAL supervisor PartitionState to see if it is still alive.\n The PartitionState is: " + status);
