@@ -2432,12 +2432,12 @@ public class HCALEventHandler extends UserEventHandler {
               for (QualifiedResource qr : functionManager.containerhcalSupervisor.getApplications() ){
                 try {
                   pam =((XdaqApplication)qr).getXDAQParameter();
-                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "stateName"});
+                  pam.select(new String[] {"TriggerAdapterName", "PartitionState", "InitializationProgress", "overallProgress",, "stateName"});
                   pam.get();
 
                   status = pam.getValue("PartitionState");
                   stateName = pam.getValue("stateName");
-                  progress = pam.getValue("InitializationProgress");
+                  progress = pam.getValue("overallProgress");
 
                   if (status==null || stateName==null) {
                     String errMessage = "[HCAL " + functionManager.FMname + "] Error! Asking the hcalSupervisor for the PartitionState and stateName to see if it is alive or not resulted in a NULL pointer - this is bad!";
@@ -2445,7 +2445,7 @@ public class HCALEventHandler extends UserEventHandler {
                   }
                   if (progress == null) {
                     // TODO: do something more drastic in this case?
-                    logger.error("[JohnLogProgress] " + functionManager.FMname + " Something went wrong when asking the hcalSupervisor for her InitializationProgress...");
+                    logger.error("[JohnLogProgress] " + functionManager.FMname + " Something went wrong when asking the hcalSupervisor for her overallProgress...");
                   }
                   else {
                     functionManager.getHCALparameterSet().put(new FunctionManagerParameter<DoubleT>("PROGRESS", new DoubleT(progress)));
