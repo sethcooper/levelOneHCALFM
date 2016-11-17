@@ -1500,9 +1500,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       while ( stopProgressThread == false && functionManager.isDestroyed() == false ) {
 
         Iterator it = functionManager.containerFMChildren.getQualifiedResourceList().iterator();
+        progress = 0.0;
         while (it.hasNext()) {
           FunctionManager childFM = (FunctionManager) it.next();
-          progress = 0.0;
           if (childFM.isInitialized()) {
             ParameterSet<FunctionManagerParameter> lvl2pars;
             try {
