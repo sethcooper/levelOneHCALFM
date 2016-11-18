@@ -79,9 +79,16 @@ $(document).ready(function () {
 });
 
 function setProgress(progress) {
+    var currentState = $('#currentState').text();
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
     var width = $(".container").width();
-    var progressPercent = 100 * progress / numberOfEvents;
+    var progressPercent = 0;
+    if (currentState == "Running") {
+      progressPercent = 100 * progress / numberOfEvents;
+    }
+    else {
+      progressPercent = 100 * progress;
+    }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);
