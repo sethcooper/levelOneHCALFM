@@ -78,15 +78,14 @@ $(document).ready(function () {
     });
 });
 
-function setProgress(progress) {
-    var currentState = $('#currentState').text();
+function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
     var width = $(".container").width();
     var progressPercent = 0;
-    if (currentState == "Running") {
+    if (parName == "HCAL_EVENTSTAKEN") {
       progressPercent = 100 * progress / numberOfEvents;
     }
-    else {
+    else if ( parName == "PROGRESS") {
       progressPercent = 100 * progress;
     }
     var progressBarWidth = progressPercent * (width / 100);
