@@ -60,6 +60,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
   static RCMSLogger logger = new RCMSLogger(HCALlevelOneEventHandler.class);
   public HCALxmlHandler xmlHandler = null;
   public HCALMasker masker = null;
+  private AlarmerWatchThread alarmerthread = null;
 
   public HCALlevelOneEventHandler() throws rcms.fm.fw.EventHandlerException {
     addAction(HCALStates.RUNNINGDEGRADED,                 "runningAction");
@@ -627,6 +628,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // Parse the mastersnippet:
       String selectedRun = ((StringT)functionManager.getHCALparameterSet().get("RUN_CONFIG_SELECTED").getValue()).getString();
       String CfgCVSBasePath = ((StringT)functionManager.getParameterSet().get("HCAL_CFGCVSBASEPATH").getValue()).getString();
+      // Reset HCAL_CFGSCRIPT:
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("HCAL_CFGSCRIPT",new StringT("not set")));
 
       // Try to find a common masterSnippet from MasterSnippet
       String CommonMasterSnippetFile ="";
@@ -687,7 +690,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       OfficialRunNumbers       = ((BooleanT)functionManager.getHCALparameterSet().get("OFFICIAL_RUN_NUMBERS").getValue()).getBoolean();
       TriggersToTake           = ((IntegerT)functionManager.getHCALparameterSet().get("NUMBER_OF_EVENTS").getValue()).getInteger();
 
-
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final TCDSControlSequence is like this: \n"  +FullTCDSControlSequence             );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final LPMControlSequence  is like this: \n"  +FullLPMControlSequence              );
       logger.info("[HCAL LVL1 " + functionManager.FMname + "] The final PIControlSequence   is like this: \n"  +FullPIControlSequence               );
@@ -702,14 +704,20 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
 
       // start the alarmer watch thread here, now that we have the alarmerURL
-      logger.debug("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
-      if( functionManager.alarmerPartition.equals("")){
-          functionManager.alarmerPartition = "HBHEHO";
-          logger.warn("[Martin log HCAL " + functionManager.FMname + "] Cannot find alarmer Partition in Mastersnippet/CommonMasterSnippet, going to use default HBHEHO. ");
+      if (alarmerthread!=null){
+        if (alarmerthread.isAlive()){
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] AlarmerWatchThread is alive, not creating a new one...");
+        }else{
+          logger.warn("[HCAL LVL1 " + functionManager.FMname + "] AlarmerWatchThread is not alive, creating a new one...");
+          alarmerthread = new AlarmerWatchThread();
+          alarmerthread.start();
+        }
       }
-      AlarmerWatchThread thread4 = new AlarmerWatchThread();
-      thread4.start();
-
+      else{
+        logger.warn("[HCAL LVL1 " + functionManager.FMname + "] Starting AlarmerWatchThread ...");
+        alarmerthread = new AlarmerWatchThread();
+        alarmerthread.start();
+      }
 
       // Disable FMs based on FED_ENABLE_MASK, if all FEDs in the FM partition are masked.
       // First, make map <partition => fed list>
@@ -833,6 +841,9 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
 
       // reset the non-async error state handling
       functionManager.ErrorState = false;
+
+      // delay the first poll of alarmerWatchThread
+      delayAlarmerWatchThread    = true;
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("calculating state")));
@@ -1341,7 +1352,6 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
           }
         }
       }
-
 
       // set actions
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT(functionManager.getState().getStateString())));
