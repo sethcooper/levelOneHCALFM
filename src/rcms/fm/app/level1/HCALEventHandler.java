@@ -1026,6 +1026,8 @@ public class HCALEventHandler extends UserEventHandler {
               logger.warn("HCAL LVL2 " + functionManager.FMname + "]: HCALparameter RU_INSTANCE is not set before calling initXDAQinfospace()"); 
             }
             for (String pamName : pam.getNames()){
+              // TODO: Understand why this block will sometimes cause null pointer exception 
+              logger.debug("[HCAL LVL2 " + functionManager.FMname + "]: Getting this pamName "+pamName+ " from this QR"+ qr.getName() );
               if (pamName.equals("RUinstance")) {
                 pam.select(new String[] {"RUinstance"});
                 pam.setValue("RUinstance", ruInstance.split("_")[1]);
