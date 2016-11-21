@@ -75,6 +75,10 @@ $(document).ready(function () {
           $('#commandSection :input[value="Exit"]').val("Halt+Destroy");
           $('#commandSection :input[value="Halt+Destroy"]').insertAfter($('#Destroy'));
         }
+        if (currentState == "Error") {
+          $('#Destroy').show();
+          $('#Destroy').siblings('input[value="Halt+Destroy"]').hide();
+        }
       }
       if ($('#SUPERVISOR_ERROR').val() !=  cachedSupErr) { showsupervisorerror(); }
       if ($('#RUN_NUMBER').val() !=  cachedRunNo) { getfullpath(); }
