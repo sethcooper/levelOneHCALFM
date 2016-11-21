@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.Random;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.lang.Math;
 
 import java.io.StringWriter;
 import java.io.PrintWriter;
@@ -2304,14 +2305,21 @@ public class HCALEventHandler extends UserEventHandler {
         }
 
         // move the little fishys every 2s
-        if (functionManager.FMrole.equals("HCAL") && icount%2==0) {
-          // move the little fishy when configuring
+        if ( icount%2==0) {
+          // tell little fishy in HCAL and HF to say configuration progress when configuring
           if ((functionManager != null) && (functionManager.isDestroyed() == false) && (functionManager.getState().getStateString().equals(HCALStates.CONFIGURING.toString()))) {
-            LittleA.movehim();
+            Double progress = ((DoubleT)functionManager.getHCALparameterSet().get("PROGRESS").getValue()).getDouble()*100;
+            Double RoundedProgress = Math.round(progress * 100.0) / 100.0 ;
+            if( RoundedProgress > 0.0){
+              String msg = "___><)))\'>: Configuration progress = "+ RoundedProgress +" %_________________________________________";
+              functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT(msg)));
+            }
           }
-          // move the little fishy when running
-          if ((functionManager != null) && (functionManager.isDestroyed() == false) && functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ) {
-            LittleB.movehim();
+          // move the little fishy in HCAL when running
+          if(functionManager.FMrole.equals("HCAL")){
+            if ((functionManager != null) && (functionManager.isDestroyed() == false) && functionManager.getState().getStateString().equals(HCALStates.RUNNING.toString()) ) {
+              LittleB.movehim();
+            }
           }
         }
 
