@@ -98,10 +98,16 @@ $(document).ready(function () {
     });
 });
 
-function setProgress(progress) {
+function setProgress(parName, progress) {
     var numberOfEvents = $("#NUMBER_OF_EVENTS").val();
     var width = $(".container").width();
-    var progressPercent = 100 * progress / numberOfEvents;
+    var progressPercent = 0;
+    if (parName == "HCAL_EVENTSTAKEN") {
+      progressPercent = 100 * progress / numberOfEvents;
+    }
+    else if ( parName == "PROGRESS") {
+      progressPercent = 100 * progress;
+    }
     var progressBarWidth = progressPercent * (width / 100);
     //$(".progressbar").width(progressBarWidth);
     progressPercent = progressPercent.toFixed(2);
