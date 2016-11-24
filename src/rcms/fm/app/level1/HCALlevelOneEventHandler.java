@@ -1122,6 +1122,7 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       publishRunInfoSummary();
       functionManager.HCALRunInfo = null; // make RunInfo ready for the next round of run info to store
 
+      TaskSequence  haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
       if (!functionManager.containerFMChildren.isEmpty()) {
 
         // define stop time
@@ -1147,7 +1148,12 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
         QualifiedResourceContainer TCDSLPMToHaltContainer   = new QualifiedResourceContainer(ActiveTCDSLPMList);
 
         // Schedule the tasks
-        TaskSequence haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+        haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+	// Allow halt to happen during the exiting state
+	if ( functionManager.getState().equals(HCALStates.EXITING) )  {
+          haltTaskSeq = new TaskSequence(HCALStates.EXITING,HCALInputs.SETHALT);
+          functionManager.getHCALparameterSet().put(new FunctionManagerParameter<BooleanT>("EXIT", new BooleanT(true)));
+	}
         // 1) EvmTrig (TA) FM
         if(!EvmTrigFMToHaltContainer.isEmpty()) {
           SimpleTask evmTrigTask = new SimpleTask(EvmTrigFMToHaltContainer,HCALInputs.HALT,HCALStates.HALTING,HCALStates.HALTED,"LV1_HALT_EVMTRIG_FM");
@@ -1481,6 +1487,17 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("testingTTSAction executed ...")));
 
       logger.debug("[HCAL LVL1 " + functionManager.FMname + "] testingTTSAction executed ...");
+    }
+  }
+  public void exitAction(Object obj) throws UserActionException {
+
+    if (obj instanceof StateEnteredEvent) {
+      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing exitAction");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] Executing exitAction");
+
+      haltAction(obj);
+      functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("STATE",new StringT("EXITING")));
+      logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
     }
   }
 }

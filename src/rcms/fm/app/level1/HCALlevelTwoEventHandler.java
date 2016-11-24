@@ -1219,6 +1219,9 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
 
       // Schedule the tasks for normal FMs 
       TaskSequence LV2haltTaskSeq = new TaskSequence(HCALStates.HALTING,HCALInputs.SETHALT);
+      if ( functionManager.getState().equals(HCALStates.EXITING) )  {
+        LV2haltTaskSeq = new TaskSequence(HCALStates.EXITING,HCALInputs.SETHALT);
+      }
       // 1) Stop the TA
       if (functionManager.containerTriggerAdapter!=null) {
         if (!functionManager.containerTriggerAdapter.isEmpty()) {
@@ -1359,6 +1362,17 @@ public class HCALlevelTwoEventHandler extends HCALEventHandler {
       functionManager.getHCALparameterSet().put(new FunctionManagerParameter<StringT>("ACTION_MSG",new StringT("haltAction executed ...")));
 
       logger.debug("[HCAL LVL2 " + functionManager.FMname + "] haltAction executed ...");
+    }
+  }
+
+  public void exitAction(Object obj) throws UserActionException {
+
+    if (obj instanceof StateEnteredEvent) {
+      System.out.println("[HCAL LVL1 " + functionManager.FMname + "] Executing exitAction");
+      logger.info("[HCAL LVL1 " + functionManager.FMname + "] Executing exitAction");
+
+      haltAction(obj);
+      logger.debug("[JohnLog " + functionManager.FMname + "] exitAction executed ...");
     }
   }
 
