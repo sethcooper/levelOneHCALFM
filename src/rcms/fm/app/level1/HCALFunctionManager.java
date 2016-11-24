@@ -554,7 +554,7 @@ public class HCALFunctionManager extends UserFunctionManager {
         sv.registerConditionState(containerFMChildren,HCALStates.CONFIGURING);
         sv.registerConditionState(containerlpmController,HCALStates.CONFIGURING);
         if (asynchcalSupervisor) {
-          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.INIT));
+          sv.registerConditionState(containerhcalSupervisor,Arrays.asList(HCALStates.PREINIT,HCALStates.COLDINIT,HCALStates.INIT));
         }
         svCalc.add(sv);
       }
