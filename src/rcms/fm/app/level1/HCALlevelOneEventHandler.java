@@ -1551,7 +1551,8 @@ public class HCALlevelOneEventHandler extends HCALEventHandler {
       // stop the Monitor watchdog thread
       logger.info("[HCAL " + functionManager.FMname + "]: Total progress is " + progress+ ". Done configuring. Stopping ProgressThread.");
       logger.debug("[HCAL " + functionManager.FMname + "] ... stopping ProgressThread.");
-
+    }
+  }
   public void exitAction(Object obj) throws UserActionException {
 
     if (obj instanceof StateEnteredEvent) {
