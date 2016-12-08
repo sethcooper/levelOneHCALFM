@@ -2876,17 +2876,9 @@ public class HCALEventHandler extends UserEventHandler {
        boolean isTCDSExec = false;
        XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
        List<XdaqApplicationResource> appList = exec.getApplications();
-//       //output
-//       XdaqExecutive theExec = (XdaqExecutive) qr;
-//       //System.out.println("[SethLog HCAL " + functionManager.FMname + "] exec with URI: " + qr.getResource().getURI().toString() + " has the following list of apps: " + appList);
-//      XdaqExecutiveConfiguration config =  theExec.getXdaqExecutiveConfiguration();
-//      String oldExecXML = config.getXml();
-//      System.out.println("[SethLog HCAL " + functionManager.FMname + "] ConvertTCDSAppsToServiceApps() -- exec with URI: " + qr.getResource().getURI().toString() + " has configXML: " + oldExecXML);
-//      //output
        for (ListIterator<XdaqApplicationResource> iterator = appList.listIterator(); iterator.hasNext();) {
          XdaqApplicationResource xar = iterator.next();
          if (xar.getName().contains("tcds") || xar.getName().contains("TCDS")) {
-//      System.out.println("[SethLog HCAL " + functionManager.FMname + "] ConvertTCDSAppsToServiceApps() -- exec with URI: " + qr.getResource().getURI().toString() + " -- CONVERTING TCDS TO SERVICE APP");
            isTCDSExec = true;
            childrenRscList.remove(xar); // remove the app!
            iterator.remove();
@@ -2917,69 +2909,18 @@ public class HCALEventHandler extends UserEventHandler {
          functionManager.goToError(errMessage,e);
        }
 
-//       //output
-//       List<QualifiedResource> xdaqQRExecutiveList2 = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-//     for (QualifiedResource qr : xdaqQRExecutiveList2) {
-//       XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
-//       List<XdaqApplicationResource> appList = exec.getApplications();
-//       XdaqExecutive theExec = (XdaqExecutive) qr;
-//       //System.out.println("[SethLog HCAL " + functionManager.FMname + "] exec with URI: " + qr.getResource().getURI().toString() + " has the following list of apps: " + appList);
-//      XdaqExecutiveConfiguration config =  theExec.getXdaqExecutiveConfiguration();
-//      String oldExecXML = config.getXml();
-//      System.out.println("[SethLog HCAL " + functionManager.FMname + "] ConvertTCDSAppsToServiceApps() [after modification1; existing QRExecList] -- exec with URI: " + qr.getResource().getURI().toString() + " has configXML: " + oldExecXML);
-//      }
-//      //output
-
        // make new QG
        QualifiedGroup newQG = new QualifiedGroup(origGroup);
-
        // mark TCDS execs as initialized and mask their JobControl
        List<QualifiedResource> xdaqNewQRExecutiveList = newQG.seekQualifiedResourcesOfType(new XdaqExecutive());
        for (QualifiedResource qr : xdaqNewQRExecutiveList) {
          if (qr.getResource().getHostName().contains("tcds") || qr.getResource().getName().contains("tcds")) {
-         //logger.warn("[SethLog HCAL "+functionManager.FMname+" ] Found QR named: "+qr.getResource().getName()+"; setting initialized=true and disabling JC");
            qr.setInitialized(true);
            newQG.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
          }
        }
 
-//       //output
-//     for (QualifiedResource qr : xdaqNewQRExecutiveList) {
-//       XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
-//       List<XdaqApplicationResource> appList = exec.getApplications();
-//       XdaqExecutive theExec = (XdaqExecutive) qr;
-//       //System.out.println("[SethLog HCAL " + functionManager.FMname + "] exec with URI: " + qr.getResource().getURI().toString() + " has the following list of apps: " + appList);
-//      XdaqExecutiveConfiguration config =  theExec.getXdaqExecutiveConfiguration();
-//      String oldExecXML = config.getXml();
-//      System.out.println("[SethLog HCAL " + functionManager.FMname + "] ConvertTCDSAppsToServiceApps() [after modification2] -- exec with URI: " + qr.getResource().getURI().toString() + " has configXML: " + oldExecXML);
-//      }
-//      //output
-
        return newQG;
-
-// test not returning new QG
-//       // mark TCDS execs as initialized and mask their JobControl
-//       List<QualifiedResource> xdaqNewQRExecutiveList = qg.seekQualifiedResourcesOfType(new XdaqExecutive());
-//       for (QualifiedResource qr : xdaqNewQRExecutiveList) {
-//         if (qr.getResource().getHostName().contains("tcds") || qr.getResource().getName().contains("tcds")) {
-//         logger.warn("[SethLog HCAL "+functionManager.FMname+" ] Found QR named: "+qr.getResource().getName()+"; setting initialized=true and disabling JC");
-//           qr.setInitialized(true);
-//           qg.seekQualifiedResourceOnPC(qr, new JobControl()).setActive(false);
-//         }
-//       }
-//
-//       //output
-//     for (QualifiedResource qr : xdaqNewQRExecutiveList) {
-//       XdaqExecutiveResource exec = (XdaqExecutiveResource) qr.getResource();
-//       List<XdaqApplicationResource> appList = exec.getApplications();
-//       XdaqExecutive theExec = (XdaqExecutive) qr;
-//       //System.out.println("[SethLog HCAL " + functionManager.FMname + "] exec with URI: " + qr.getResource().getURI().toString() + " has the following list of apps: " + appList);
-//      XdaqExecutiveConfiguration config =  theExec.getXdaqExecutiveConfiguration();
-//      String oldExecXML = config.getXml();
-//      System.out.println("[SethLog HCAL " + functionManager.FMname + "] ConvertTCDSAppsToServiceApps() [after modification2] -- exec with URI: " + qr.getResource().getURI().toString() + " has configXML: " + oldExecXML);
-//      }
-//      //output
-
      }
 
      return qg;
