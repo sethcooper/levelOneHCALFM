@@ -849,14 +849,6 @@ public class HCALEventHandler extends UserEventHandler {
   protected void initXDAQ() {
     // Look if the configuration uses TCDS and handle accordingly.
     QualifiedGroup qg = functionManager.getQualifiedGroup();
-    //XXX SIC TEST
-    //LinkedHashMap<StringT,MapT> LocalRunKeyMap = new LinkedHashMap<StringT,MapT<StringT>>();
-    //MapT<MapT<StringT> > LocalRunKeyMapT =  MapT.createFromMap(LocalRunKeyMap);
-
-    LinkedHashMap<StringT, MapT<StringT>> test = new LinkedHashMap<StringT, MapT<StringT>>();
-    MapT<ParameterType<?>> test2 = MapT.createFromMap(test);
-
-    //XXX SIC TEST
 
     try {
       qg.init();
