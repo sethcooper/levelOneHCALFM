@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Random;
 import java.util.ListIterator;
+import java.util.LinkedHashMap;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.Math;
@@ -46,6 +47,7 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.BooleanT;
+import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
 import rcms.fm.resource.QualifiedGroup;
@@ -76,6 +78,9 @@ import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
 
 import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
+
+import rcms.fm.fw.parameter.type.MapT;
+import rcms.fm.fw.parameter.type.ParameterType;
 
 /**
  * Event Handler base class for HCAL Function Managers
@@ -844,6 +849,14 @@ public class HCALEventHandler extends UserEventHandler {
   protected void initXDAQ() {
     // Look if the configuration uses TCDS and handle accordingly.
     QualifiedGroup qg = functionManager.getQualifiedGroup();
+    //XXX SIC TEST
+    //LinkedHashMap<StringT,MapT> LocalRunKeyMap = new LinkedHashMap<StringT,MapT<StringT>>();
+    //MapT<MapT<StringT> > LocalRunKeyMapT =  MapT.createFromMap(LocalRunKeyMap);
+
+    LinkedHashMap<StringT, MapT<StringT>> test = new LinkedHashMap<StringT, MapT<StringT>>();
+    MapT<ParameterType<?>> test2 = MapT.createFromMap(test);
+
+    //XXX SIC TEST
 
     try {
       qg.init();
@@ -1214,8 +1227,8 @@ public class HCALEventHandler extends UserEventHandler {
     String globalParams[] = new String[] {"HCAL_LPMCONTROL", "HCAL_TCDSCONTROL", "HCAL_PICONTROL", "HCAL_TTCCICONTROL", "SUPERVISOR_ERROR", "HCAL_COMMENT", "HCAL_CFGSCRIPT", "RUN_KEY",  "HCAL_TIME_OF_FM_START"};
     Hashtable<String, String> localParams = new Hashtable<String, String>();
 
-    maskedAppsForRunInfo = ((VectorT<StringT>)functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
-    emptyFMsForRunInfo   = ((VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
+    maskedAppsForRunInfo = ParameterTypeFactory.toSimple(functionManager.getParameterSet().get("MASKED_RESOURCES").getValue()).toString();
+    emptyFMsForRunInfo   = ParameterTypeFactory.toSimple(functionManager.getParameterSet().get("EMPTY_FMS").getValue()).toString();
 
     localParams.put(   "FM_FULLPATH"           ,  functionManager.FMfullpath                  );
     localParams.put(   "FM_NAME"               ,  functionManager.FMname                      );
@@ -2652,8 +2665,8 @@ public class HCALEventHandler extends UserEventHandler {
               delayAlarmerWatchThread=false;
             }
             // Empty or masked partitions. Alarms will be ignored for these partitions.
-            VectorT<StringT> emptyFMs       = (VectorT<StringT>)functionManager.getParameterSet().get("EMPTY_FMS").getValue();
-            VectorT<StringT> maskedFMs      = (VectorT<StringT>)functionManager.getParameterSet().get("MASK_SUMMARY").getValue();
+            VectorT<StringT> emptyFMs       = ParameterTypeFactory.toSimple(functionManager.getParameterSet().get("EMPTY_FMS").getValue());
+            VectorT<StringT> maskedFMs      = ParameterTypeFactory.toSimple(functionManager.getParameterSet().get("MASK_SUMMARY").getValue());
             LinkedHashSet<String> ignoredPartitions = new LinkedHashSet<String>();
 
             for(StringT FMname : emptyFMs){
