@@ -45,8 +45,6 @@ import rcms.fm.fw.parameter.type.StringT;
 import rcms.fm.fw.parameter.type.DoubleT;
 import rcms.fm.fw.parameter.type.VectorT;
 import rcms.fm.fw.parameter.type.BooleanT;
-import rcms.fm.fw.parameter.type.MapT;
-import rcms.fm.fw.parameter.type.ParameterType;
 import rcms.fm.fw.parameter.type.ParameterTypeFactory;
 import rcms.fm.fw.user.UserActionException;
 import rcms.fm.fw.user.UserEventHandler;
@@ -71,8 +69,6 @@ import rcms.utilities.runinfo.RunInfoException;
 import rcms.utilities.runinfo.RunNumberData;
 import rcms.utilities.runinfo.RunSequenceNumber;
 import rcms.util.logsession.LogSessionConnector;
-
-import rcms.fm.resource.qualifiedresource.XdaqExecutiveConfiguration;
 
 /**
  * Event Handler base class for HCAL Function Managers
